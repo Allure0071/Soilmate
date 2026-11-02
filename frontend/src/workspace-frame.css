@@ -217,21 +217,20 @@
 .edge-backdrop .edge-field small,
 .edge-backdrop .edge-texture small { color: #4f6353; font-size: 12px; }
 
-.browser-backdrop, .edge-backdrop {
+.edge-backdrop {
   padding: 14px 18px 18px;
   background: #28513b;
 }
-.browser-backdrop .data-browser, .edge-backdrop .edge-workbench {
+.edge-backdrop .edge-workbench {
   height: 100%;
   overflow: hidden;
   border: 1px solid #dbe6d8;
   border-radius: 22px;
   box-shadow: 0 14px 44px rgba(8, 30, 17, .22);
 }
-.browser-backdrop .product-catalog {
+.resource-workspace .product-catalog {
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(36, 65, 42, .07);
 }
 .edge-backdrop :is(.edge-form, .edge-result, .edge-batch) {
   box-shadow: 0 10px 28px rgba(36, 65, 42, .09);
@@ -280,15 +279,15 @@
     min-height: 34px;
     margin-left: auto;
   }
-  .browser-backdrop, .edge-backdrop { padding: 8px; }
-  .browser-backdrop .data-browser, .edge-backdrop .edge-workbench { border-radius: 15px; }
+  .edge-backdrop { padding: 8px; }
+  .edge-backdrop .edge-workbench { border-radius: 15px; }
   #app .scientific-workbench { inset: 8px; border-radius: 15px; }
 }
 
 @media (max-width: 620px) {
-  .browser-backdrop .data-browser { overflow-y: auto; }
-  .browser-backdrop .data-browser :is(.browser-head, .browser-tabs, .browser-layer-tools, .browser-pagination) { flex: none; }
-  .browser-backdrop .product-catalog { display: block; flex: none; overflow: visible; }
-  .browser-backdrop .product-list { max-height: 200px; }
-  .browser-backdrop .product-detail { min-height: 0; overflow: visible; }
+  .resource-workspace { overflow-y: auto; }
+  .resource-workspace :is(.browser-head, .browser-tabs, .browser-layer-tools, .browser-pagination) { flex: none; }
+  .resource-workspace .product-catalog { display: block; flex: none; overflow: visible; }
+  .resource-workspace .product-list { max-height: 200px; }
+  .resource-workspace .product-detail { min-height: 0; overflow: visible; }
 }

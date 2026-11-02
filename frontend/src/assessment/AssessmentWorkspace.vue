@@ -1,11 +1,11 @@
 <template>
-  <main class="assessment-workspace" aria-labelledby="assessment-title">
+  <component :is="embedded ? 'section' : 'main'" class="assessment-workspace" aria-labelledby="assessment-title">
     <div class="assessment-inner">
       <div class="assessment-breadcrumb"><span>健康评价</span><span aria-hidden="true">/</span><span>{{ steps[pageIndex]?.label }}</span><span class="assessment-review-tag">前端审核预览</span></div>
 
-      <nav class="assessment-progress" aria-label="录入步骤"><ol><li v-for="(item, index) in steps" :key="item.id" :class="{ current: page === item.id, completed: index < pageIndex }" :aria-current="page === item.id ? 'step' : undefined"><button v-if="index < pageIndex" type="button" :aria-label="`返回${item.label}`" @click="goPage(item.id)"><span class="assessment-step-marker"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg></span><b>{{ item.label }}</b></button><span v-else class="assessment-step-label"><span class="assessment-step-marker">{{ index + 1 }}</span><b>{{ item.label }}</b></span></li></ol></nav>
+      <nav v-if="!embedded || page !== 'mode'" class="assessment-progress" aria-label="录入步骤"><ol><li v-for="(item, index) in steps" :key="item.id" :class="{ current: page === item.id, completed: index < pageIndex }" :aria-current="page === item.id ? 'step' : undefined"><button v-if="index < pageIndex" type="button" :aria-label="`返回${item.label}`" @click="goPage(item.id)"><span class="assessment-step-marker"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg></span><b>{{ item.label }}</b></button><span v-else class="assessment-step-label"><span class="assessment-step-marker">{{ index + 1 }}</span><b>{{ item.label }}</b></span></li></ol></nav>
       <header class="assessment-intro">
-        <div class="assessment-intro-copy"><h1 id="assessment-title" tabindex="-1">{{ pageTitle }}</h1><p>{{ pageDescription }}</p></div>
+        <div class="assessment-intro-copy"><component :is="embedded ? 'h2' : 'h1'" id="assessment-title" tabindex="-1">{{ pageTitle }}</component><p>{{ pageDescription }}</p></div>
         <button type="button" class="assessment-map-link" @click="$emit('navigate', 'explore')"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16" /></svg>返回地图</button>
       </header>
 
@@ -71,14 +71,14 @@
       <div class="assessment-feedback" aria-live="polite" role="status"><p v-if="message">{{ message }}</p></div>
       <footer class="assessment-footer"><span>{{ storageAvailable ? '草稿仅存当前浏览器，分析服务尚未接入。' : '浏览器存储不可用，请自行保留当前输入。' }}</span><button type="button" @click="$emit('navigate', 'home')">返回首页</button></footer>
     </div>
-  </main>
+  </component>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { createRow, inspectRows, restoreRows, reviewIndicators } from './measurementDraft.js'
 
-const props = defineProps({ account: { type: Object, default: null }, preview: { type: Boolean, default: false }, mapPoint: { type: Object, default: null } })
+const props = defineProps({ account: { type: Object, default: null }, preview: { type: Boolean, default: false }, mapPoint: { type: Object, default: null }, embedded: { type: Boolean, default: false } })
 defineEmits(['navigate'])
 const storageKey = `soilmate.assessment.input-review.v1.${props.preview ? 'preview' : props.account?.id || 'guest'}`
 const storageAvailable = ref(true)
@@ -142,7 +142,7 @@ function goPage(target) {
   focusPage()
 }
 function readPageFromUrl(focus = false) {
-  if (!['/assessment', '/assessment/preview'].includes(location.pathname)) return
+  if (!['/assessment', '/assessment/preview', '/research'].includes(location.pathname)) return
   const params = new URLSearchParams(location.search)
   if (['quick', 'deep'].includes(params.get('mode'))) mode.value = params.get('mode')
   const requested = params.get('step') || 'mode'

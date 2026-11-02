@@ -455,7 +455,7 @@ def create_report(payload: ReportIn):
         ds = [dataset(con, rid) for rid in dict.fromkeys(r["dataset_id"] for r in records + reference)]
         actions = many(con, "SELECT run_id,action_code,action_class,status,reason,estimated_cost,preconditions_json,log_json,after_json FROM research_actions WHERE project_id=? ORDER BY created_at", (p["id"],))
         pair = many(con, "SELECT status,review_note FROM sample_pairings WHERE project_id=?", (p["id"],))
-        lines = [f"# 壤脉天玑 · Soilmate V1.1 研究报告 · v{number}", "", f"项目：{p['name']}（{p['id']}）", f"生成时间：{now()}",
+        lines = [f"# 沃壤知行 · V1.1 研究报告 · v{number}", "", f"项目：{p['name']}（{p['id']}）", f"生成时间：{now()}",
                  "", "## 数据来源与版本"]
         for d in ds:
             lines.append(f"- {d['name']}；{d['data_version']}；SHA-256 {d['source_sha256']}；{d['source_uri']}")

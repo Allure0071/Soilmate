@@ -1,11 +1,13 @@
 <template>
-  <section class="research-page" :class="{ 'research-embedded': embedded }" aria-label="Soilmate 研究工作台">
+  <section class="research-page" :class="{ 'research-embedded': embedded }" aria-label="沃壤知行研究工作台">
     <aside class="project-rail" aria-label="项目与数据">
       <label class="field-label">研究项目
         <select v-model="projectId" :disabled="loading"><option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option></select>
       </label>
+      <label class="sample-picker"><span>研究样本</span><select v-model="sampleId" :disabled="loading"><option value="">请选择样本</option><option v-for="s in samples" :key="s.id" :value="s.id">{{ s.external_id }} · {{ s.kind==='soil'?'土壤':'微生物' }}</option></select></label>
+      <label v-if="currentSample?.kind==='microbiome' && (!embedded || stage === 'analysis')" class="module-picker"><span>分析过程</span><select v-model="moduleId"><option value="M00528">硝化 · M00528</option><option value="M00529">反硝化 · M00529</option><option value="M00530">DNRA · M00530</option></select></label>
       <details class="project-tools"><summary>项目与数据管理 <span>{{ datasets.length }} 个数据集</span></summary>
-      <form class="project-create" @submit.prevent="createProject"><input v-model.trim="newProject" aria-label="新项目名称" placeholder="新建项目" minlength="2" maxlength="100" /><button type="submit" :disabled="!newProject||busy" aria-label="创建项目">＋</button></form>
+      <form class="project-create" @submit.prevent="createProject"><input v-model.trim="newProject" aria-label="新项目名称" placeholder="新建项目" minlength="2" maxlength="100" /><button type="submit" :disabled="!newProject||busy" aria-label="创建项目"><WorkspaceIcon name="plus" /></button></form>
       <details class="asset-drawer">
         <summary><b>数据资产</b><span>{{ datasets.length }} 个数据集</span><i aria-hidden="true">＋</i></summary>
         <div class="asset-content"><p v-if="!datasets.length" class="muted">当前项目尚无数据集。</p>
@@ -16,7 +18,7 @@
       </details>
     </aside>
 
-    <main class="research-main">
+    <component :is="embedded ? 'div' : 'main'" class="research-main">
       <header class="workspace-header">
         <div><span class="section-kicker">{{ traceOnly?'证据追溯 / TRACE':'分析中心 / RESEARCH' }}</span><h1>{{ traceOnly?'研究记录':'研究工作台' }}</h1><p class="header-description">{{ traceOnly?'查看分析任务、研究行动与报告版本。':'从当前样本出发，查看已有证据与可执行的下一步。' }}</p></div>
         <button type="button" class="back-link" @click="$emit('back')"><span aria-hidden="true">←</span> 返回地图</button>
@@ -27,18 +29,16 @@
       <p v-if="error" class="error-state" role="alert">{{ error }}</p>
 
       <template v-if="!loading">
-        <section class="subject-bar" aria-label="当前研究对象">
-          <label class="sample-picker"><span>研究样本</span><select v-model="sampleId"><option value="">请选择样本</option><option v-for="s in samples" :key="s.id" :value="s.id">{{ s.external_id }} · {{ s.kind==='soil'?'土壤':'微生物' }}</option></select></label>
-          <div v-if="currentSample" class="subject-meta"><span class="sample-dot" :class="`dot-${currentSample.kind}`"></span><span><b>{{ currentSample.kind==='soil'?'土壤样本':'微生物样本' }}</b><small>{{ currentSample.external_id }} · 数据集 {{ currentSample.dataset_id }}</small></span></div>
-          <label v-if="currentSample?.kind==='microbiome'" class="module-picker"><span>分析过程</span><select v-model="moduleId"><option value="M00528">硝化 · M00528</option><option value="M00529">反硝化 · M00529</option><option value="M00530">DNRA · M00530</option></select></label>
+        <section v-if="!embedded || stage === 'analysis'" class="subject-bar" aria-label="当前研究对象">
+          <div v-if="currentSample" class="subject-meta"><span class="sample-dot" :class="`dot-${currentSample.kind}`"></span><span><b>{{ currentSample.kind==='soil'?'土壤样本':'微生物样本' }}</b><small>{{ currentDataset?.name || '数据集未登记' }}</small></span></div>
           <button type="button" class="primary-action" :disabled="!sampleId||busy" @click="runAnalysis">{{ busy?'正在分析…':currentSample?.kind==='soil'?'运行健康指标审计':'分析通路结构' }}</button>
         </section>
 
-        <div v-if="embedded && stage === 'analysis'" class="embedded-pairing-link"><button type="button" @click="activePanel = activePanel === 'pairing' ? 'overview' : 'pairing'">{{ activePanel === 'pairing' ? '← 返回研究结果' : '检查土壤与微生物样本配对 ↗' }}</button></div>
+        <div v-if="embedded && stage === 'analysis'" class="embedded-pairing-link"><button type="button" @click="activePanel = activePanel === 'pairing' ? 'overview' : 'pairing'">{{ activePanel === 'pairing' ? '返回研究结果' : '检查土壤与微生物样本配对' }}<WorkspaceIcon :name="activePanel === 'pairing' ? 'back' : 'expand'" /></button></div>
         <div v-if="!embedded" class="workspace-tabs" role="group" aria-label="工作台内容">
           <button type="button" :aria-pressed="activePanel==='overview'" @click="activePanel='overview'">研究结果</button>
           <button type="button" :aria-pressed="activePanel==='pairing'" @click="activePanel='pairing'">样本配对审核</button>
-          <button type="button" :aria-pressed="activePanel==='records'" @click="activePanel='records'">任务与报告</button>
+          <button type="button" :aria-pressed="activePanel==='records'" @click="embedded ? $emit('navigate-stage', 'report') : activePanel='records'">任务与报告</button>
         </div>
 
         <ol class="research-stages" aria-label="研究流程与当前状态">
@@ -51,14 +51,14 @@
           <div class="finding-column">
             <template v-if="currentRun">
               <article class="finding-lead" :class="`finding-${currentRun.status}`">
-                <div class="finding-kicker"><span class="status-dot"></span>{{ currentRun.kind==='nshi'?'土壤健康评价':'微生物功能分析' }} <span>·</span> {{ statusLabel(currentRun.status) }}</div>
                 <h2 v-if="currentRun.kind==='nshi'">{{ currentRun.result.nshi_score==null?'现有数据还不能形成综合健康评分':'土壤健康评价已完成' }}</h2>
                 <h2 v-else>{{ currentRun.result.steps_observed>0?`在当前 KO 表中观察到 ${currentRun.result.steps_observed} 个通路步骤组合`:'当前分析未观察到通路步骤组合' }}</h2>
+                <p class="finding-status"><span>{{ currentRun.kind === 'nshi' ? '土壤指标审计' : '微生物功能分析' }}</span><b>{{ statusLabel(currentRun.status) }}</b></p>
                 <p v-if="currentRun.kind==='nshi'">缺少完整的生物转化维度与适用的参照阈值；当前结果用于指标审计和探索性筛选，不能作为已验证的健康等级。</p>
                 <p v-else>KO 组合是通路结构线索。当前测序质控尚未核验，不能据此推断表达、酶活或氮转化速率。</p>
                 <div v-if="currentRun.kind==='mfti'" class="coverage-line"><span>通路步骤覆盖</span><strong>{{ currentRun.result.steps_observed }} / {{ currentRun.result.steps_total }}</strong><div class="coverage-track" role="progressbar" :aria-valuenow="currentRun.result.steps_observed" :aria-valuemin="0" :aria-valuemax="currentRun.result.steps_total" aria-label="有 KO 组合的通路步骤比例"><i :style="{width:`${currentRun.result.steps_total?100*currentRun.result.steps_observed/currentRun.result.steps_total:0}%`}"></i></div><small>仅表示步骤存在 KO 组合，不代表生物活性。</small></div>
                 <div v-else class="soil-summary"><span><small>本次审计指标</small><b>{{ currentRun.result.tds?.length || 0 }} 项</b></span><span><small>探索性维度</small><b>{{ currentRun.result.mds?.length || 0 }} 个</b></span><span><small>综合评分</small><b>未计算</b></span></div>
-                <button v-if="embedded" type="button" class="finding-evidence-link" @click="$emit('navigate-stage', 'evidence')">查看数据依据与运行版本 <span aria-hidden="true">↗</span></button>
+                <button v-if="embedded" type="button" class="finding-evidence-link" @click="$emit('navigate-stage', 'evidence')">查看数据依据与运行版本<WorkspaceIcon name="arrow" /></button>
               </article>
 
               <section class="evidence-section"><h3>已有依据</h3>
@@ -68,22 +68,21 @@
 
               <section class="gap-section"><div><span class="gap-mark" aria-hidden="true">!</span><h3>结论受到什么限制</h3></div><ul><li v-for="g in currentRun.result.gaps" :key="g">{{ typeof g==='string'?g:JSON.stringify(g) }}</li><li v-if="currentRun.kind==='mfti'">该公开微生物样本未与当前土壤样本可靠配对，不能解释本地地块。</li></ul></section>
             </template>
-            <div v-else class="empty-finding"><span class="empty-index">研究起点</span><h2>{{ currentSample?'准备分析当前样本':'先选择一个研究样本' }}</h2><p>{{ currentSample?'运行分析后，这里会显示真实结果、适用范围和仍然缺少的证据。':'选择已有土壤样本开展指标审计，或切换到公开微生物项目查看 KO 通路结构。' }}</p></div>
+            <div v-else class="empty-finding"><WorkspaceIcon name="analysis" /><h2>{{ sampleRuns.length ? '当前样本已有分析记录' : currentSample ? '准备分析当前样本' : '先选择一个研究样本' }}</h2><p>{{ sampleRuns.length ? '打开已有运行查看结果与限制，也可以重新运行一次分析。' : currentSample ? '运行分析后，这里会显示结果、适用范围和仍然缺少的证据。' : '选择已有土壤样本开展指标审计，或切换到公开微生物项目查看 KO 通路结构。' }}</p><button v-if="sampleRuns.length" type="button" class="secondary-action" @click="loadRun(sampleRuns[0].id)">查看最近一次分析<WorkspaceIcon name="arrow" /></button></div>
           </div>
 
           <aside class="action-column" aria-label="下一步研究行动">
-            <p class="action-overline">下一步研究行动</p>
             <template v-if="currentRun">
               <h2>{{ decision?.chosen?.code ? actionLabel(decision.chosen.code) : '根据证据缺口决定下一步' }}</h2>
               <p v-if="!decision">{{ currentRun.kind==='nshi'?'优先补齐指标定义与适用阈值，再判断是否能形成可解释的评价。':'优先核验该 Run 的质控和注释信息；在质控不足时不估计检测概率。' }}</p>
               <p v-else>{{ decision.reason }}</p>
-              <div v-if="decision" class="action-rationale"><span>建议动作 · {{ execution?.status || decision.status }}</span><b>{{ actionLabel(decision.chosen.code) }}</b><small>触发运行 {{ decision.run_id }} · {{ decision.chosen.class }}</small><small>{{ decision.chosen.precondition }}</small><small>收益 {{ decision.chosen.benefit }} / 成本 {{ decision.chosen.cost }} / 风险 {{ decision.chosen.risk }}</small></div>
+              <div v-if="decision" class="action-rationale"><span>研究行动 · {{ actionStatusLabel(execution?.status || decision.status) }}</span><b>{{ actionLabel(decision.chosen.code) }}</b><small>{{ actionClassLabel(decision.chosen.class) }} · {{ decision.chosen.precondition }}</small><details class="research-action-details"><summary>查看建议依据</summary><small>触发运行：{{ decision.run_id }}</small><small>建议排序参数：收益 {{ decision.chosen.benefit }} / 成本 {{ decision.chosen.cost }} / 风险 {{ decision.chosen.risk }}</small></details></div>
               <button v-if="!decision" type="button" class="agent-primary" :disabled="busy" @click="plan">{{ busy?'正在规划…':'生成行动建议' }}</button>
               <button v-else type="button" class="agent-primary" :disabled="busy" @click="execute">{{ busy?'正在更新状态…':executionLabel(decision.chosen.class) }}</button>
               <p v-if="execution" class="execution-state" role="status">{{ execution.status }}：{{ execution.log.join('；') }}</p>
               <p class="action-footnote">需要人工审核或实验室操作的事项会标记为待处理，不会显示成已完成。</p>
             </template>
-            <template v-else><h2>项目进度</h2><div class="project-snapshot" aria-label="项目已登记内容"><span><b>{{ samples.length }}</b><small>样本</small></span><span><b>{{ runs.length }}</b><small>分析运行</small></span><span><b>{{ reports.length }}</b><small>报告</small></span></div><p class="project-progress-note">{{ runs.length ? '已有分析记录，可查看运行与报告。' : '选定样本后运行审计，开始建立可追溯的研究记录。' }}</p><button v-if="runs.length || reports.length" type="button" class="secondary-action" @click="activePanel='records'">查看已有记录</button></template>
+            <template v-else><h2>项目记录</h2><dl class="research-project-facts"><div><dt>已登记样本</dt><dd>{{ samples.length }} 个</dd></div><div><dt>分析运行</dt><dd>{{ runs.length }} 次</dd></div><div><dt>报告版本</dt><dd>{{ reports.length }} 个</dd></div></dl><p class="project-progress-note">{{ runs.length ? '已有分析记录，可查看运行与报告。' : '选定样本后运行审计，开始建立可追溯的研究记录。' }}</p><button v-if="runs.length || reports.length" type="button" class="secondary-action" @click="embedded ? $emit('navigate-stage', 'report') : activePanel='records'">查看已有记录</button></template>
           </aside>
         </section>
 
@@ -96,41 +95,71 @@
         </section>
 
         <section v-else-if="activePanel==='evidence'" class="records-panel research-evidence-panel">
-          <div class="records-heading"><div><span class="section-kicker">RESEARCH LINEAGE</span><h2>依据与版本</h2><p>每项结果应能回到对应数据集、运行和已知限制。</p></div></div>
-          <div v-if="runs.length" class="research-evidence-runs"><span>选择分析运行</span><div><button v-for="run in runs" :key="run.id" type="button" :class="{ active: currentRun?.id === run.id }" :aria-pressed="currentRun?.id === run.id" @click="loadRun(run.id)">{{ run.kind === 'nshi' ? '土壤指标审计' : '微生物功能分析' }} · {{ statusLabel(run.status) }}<small>{{ run.id }}</small></button></div></div>
-          <template v-if="currentRun"><dl class="research-lineage"><div><dt>研究对象</dt><dd>{{ samples.find(sample => sample.id === currentRun.sample_id)?.external_id || currentRun.sample_id || '未登记' }}</dd></div><div><dt>结果状态</dt><dd>{{ statusLabel(currentRun.status) }}</dd></div><div><dt>运行 ID</dt><dd>{{ currentRun.id }}</dd></div><div><dt>算法版本</dt><dd>{{ currentRun.algorithm_version || '未登记' }}</dd></div><div><dt>数据集与版本</dt><dd>{{ currentDataset?.name || currentRun.dataset_id }} · {{ currentDataset?.data_version || '未登记' }}</dd></div><div><dt>来源位置</dt><dd>{{ currentRun.result?.source?.source_uri || '未登记' }}</dd></div><div><dt>来源校验</dt><dd class="hash-value">{{ currentRun.source_sha256 || '未登记' }}</dd></div></dl><details class="research-evidence-detail"><summary>查看指标与方法细节</summary><div v-if="currentRun.kind === 'nshi'"><p><b>已审计指标</b> {{ formatIndicators(currentRun.result?.tds) || '无' }}</p><p v-for="item in currentRun.result?.mds || []" :key="item.domain"><b>{{ domainLabel(item.domain) }}</b> {{ formatIndicators(item.selected_exploratory) || '未筛出' }}</p><p>筛选依据：{{ currentRun.result?.selection_reason || currentRun.result?.algorithm_source || '未登记' }}</p></div><div v-else><p><b>通路模块</b> {{ currentRun.result?.module_id || '未登记' }}</p><p><b>BioSample</b> {{ currentRun.result?.biosample || '未提供' }}</p></div></details><div class="research-evidence-gaps"><h3>当前限制</h3><ul><li v-for="(gap,index) in currentRun.result?.gaps || []" :key="index">{{ typeof gap === 'string' ? gap : JSON.stringify(gap) }}</li><li v-if="!currentRun.result?.gaps?.length">该运行未登记限制条目，仍需按原始来源核查。</li></ul></div></template>
-          <div v-else class="empty-finding"><h2>尚无可追溯的分析运行</h2><p>先在“结果与分析”选择样本并运行审计，再查看数据来源、算法版本和限制。</p></div>
+          <div class="records-heading"><div><h2>依据与版本</h2><p>核对结果使用的数据、方法与版本，明确当前证据的边界。</p></div><button v-if="currentRun && embedded" type="button" class="secondary-action" @click="$emit('navigate-stage', 'analysis')">返回研究结果<WorkspaceIcon name="back" /></button></div>
+          <div v-if="runs.length" class="research-run-picker"><label for="evidence-run">分析运行<select id="evidence-run" :value="currentRun?.id || ''" @change="loadRun($event.target.value)"><option value="" disabled>选择一次运行查看依据</option><option v-for="run in runs" :key="run.id" :value="run.id">{{ run.kind === 'nshi' ? '土壤指标审计' : '微生物功能分析' }} · {{ run.id }}</option></select></label><p>{{ currentRun ? statusLabel(currentRun.status) : `${runs.length} 次运行可查看` }}</p></div>
+          <template v-if="currentRun">
+            <section class="research-evidence-block"><h3>数据与来源</h3><dl class="research-lineage"><div><dt>研究对象</dt><dd>{{ samples.find(sample => sample.id === currentRun.sample_id)?.external_id || currentRun.sample_id || '未登记' }}</dd></div><div><dt>数据集</dt><dd>{{ currentDataset?.name || currentRun.dataset_id }}</dd></div><div><dt>数据版本</dt><dd>{{ currentDataset?.data_version || '未登记' }}</dd></div><div><dt>来源位置</dt><dd>{{ currentRun.result?.source?.source_uri || '未登记' }}</dd></div></dl></section>
+            <section class="research-evidence-block"><h3>运行与方法</h3><dl class="research-lineage"><div><dt>分析类型</dt><dd>{{ currentRun.kind === 'nshi' ? '土壤指标审计' : 'KO 通路结构分析' }}</dd></div><div><dt>结果状态</dt><dd>{{ statusLabel(currentRun.status) }}</dd></div><div><dt>运行 ID</dt><dd>{{ currentRun.id }}</dd></div><div><dt>算法版本</dt><dd>{{ currentRun.algorithm_version || '未登记' }}</dd></div></dl>
+              <details class="research-evidence-detail"><summary>来源校验与方法明细</summary><div><dl class="research-lineage"><div class="research-lineage-wide"><dt>来源 SHA-256</dt><dd>{{ currentRun.source_sha256 || '未登记' }}</dd></div></dl><template v-if="currentRun.kind === 'nshi'"><p><b>已审计指标</b> {{ formatIndicators(currentRun.result?.tds) || '无' }}</p><p v-for="item in currentRun.result?.mds || []" :key="item.domain"><b>{{ domainLabel(item.domain) }}</b> {{ formatIndicators(item.selected_exploratory) || '未筛出' }}</p><p>筛选依据：{{ currentRun.result?.selection_reason || currentRun.result?.algorithm_source || '未登记' }}</p></template><template v-else><p><b>通路模块</b> {{ currentRun.result?.module_id || '未登记' }}</p><p><b>BioSample</b> {{ currentRun.result?.biosample || '未提供' }}</p></template></div></details>
+            </section>
+            <section class="research-evidence-gaps"><h3>当前限制</h3><ul><li v-for="(gap,index) in currentRun.result?.gaps || []" :key="index">{{ typeof gap === 'string' ? gap : JSON.stringify(gap) }}</li><li v-if="!currentRun.result?.gaps?.length">该运行未登记限制条目，仍需按原始来源核查。</li></ul></section>
+          </template>
+          <div v-else class="empty-finding"><WorkspaceIcon name="database" /><h3>{{ runs.length ? '选择一次运行，查看完整依据' : '还没有可追溯的分析运行' }}</h3><p>{{ runs.length ? '上方已列出当前项目的运行记录，选择后可核对来源、方法与版本。' : '先选择样本并运行分析，再查看数据来源、算法版本和限制。' }}</p><button v-if="!runs.length && embedded" type="button" class="secondary-action" @click="$emit('navigate-stage', 'analysis')">前往结果与分析<WorkspaceIcon name="arrow" /></button></div>
         </section>
-        <section v-else class="records-panel">
-          <div class="records-heading"><div><h2>研究记录</h2><p>分析任务、Agent 行动和报告均按项目保存。</p></div><button type="button" class="secondary-action" :disabled="busy||!projectId||!runs.length" @click="makeReport">{{ busy?'正在生成…':'生成报告版本' }}</button></div>
+        <section v-else class="records-panel research-report-panel">
+          <div class="records-heading"><div><h2>报告与记录</h2><p>保存可下载的报告版本，回看本项目的分析与研究行动。</p></div><button type="button" class="primary-action" :disabled="busy||!projectId||!runs.length" @click="makeReport">{{ busy ? '正在生成…' : '生成报告版本' }}</button></div>
+          <p class="research-report-scope">{{ currentRun ? '报告将引用当前选中的分析运行，并保留数据来源与已知限制。' : runs.length ? '未选定运行时，报告引用项目最近两次分析；可从下方记录打开指定结果。' : '先完成一次分析，再生成报告版本。' }}</p>
           <label v-if="projectId==='local-soil-74'" class="public-reference"><input v-model="includePublicReference" type="checkbox" /> 在本地土壤报告中引用独立公开 KO 方法案例，并注明未配对</label><p v-if="reportMessage" class="report-message" role="status">{{ reportMessage }}</p>
-          <div class="record-columns"><section><h3>分析任务</h3><button v-for="r in runs" :key="r.id" type="button" class="record-item" @click="loadRun(r.id);activePanel='overview'"><b>{{ r.kind==='nshi'?'N-SHI':'MFTI' }} · {{ statusLabel(r.status) }}</b><small>{{ r.id }}</small></button><p v-if="!runs.length" class="muted">尚无分析任务。</p></section><section><h3>Agent 行动</h3><div v-for="a in actions" :key="a.id" class="record-item"><b>{{ a.action_code }} · {{ a.status }}</b><small>{{ a.reason }}</small></div><p v-if="!actions.length" class="muted">尚无行动记录。</p></section><section><h3>报告版本</h3><a v-for="r in reports" :key="r.id" class="record-item report-link" :href="`/api/research/reports/${r.id}/download`" :download="`soilmate-report-v${r.version}.md`"><b>版本 {{ r.version }} · {{ r.created_at.slice(0,10) }}</b><small>下载研究报告 ↓</small></a><p v-if="!reports.length" class="muted">尚无报告版本。</p></section></div>
+          <section class="research-report-versions"><div class="research-section-heading"><h3>报告版本</h3><span>{{ reports.length }} 个版本</span></div>
+            <ul v-if="reports.length" class="research-record-list"><li v-for="report in reports" :key="report.id"><a class="record-item report-link" :href="`/api/research/reports/${report.id}/download`" :download="`沃壤知行-研究报告-v${report.version}.md`"><WorkspaceIcon name="analysis" /><span class="research-record-copy"><b>研究报告 v{{ report.version }}</b><small>{{ formatCreated(report.created_at) }}</small></span><span class="research-download-label">下载 Markdown<WorkspaceIcon name="arrow" /></span></a></li></ul>
+            <div v-else class="research-record-empty"><WorkspaceIcon name="analysis" /><div><h4>尚未保存报告版本</h4><p>{{ runs.length ? '点击上方“生成报告版本”，保存本项目的研究记录。' : '完成分析后，可在这里生成并下载报告。' }}</p></div></div>
+          </section>
+          <div class="record-columns">
+            <section><div class="research-section-heading"><h3>分析运行</h3><span>{{ runs.length }} 次</span></div><ul v-if="runs.length" class="research-record-list"><li v-for="run in runs" :key="run.id"><button type="button" class="record-item" @click="loadRunForAnalysis(run.id)"><span class="research-record-copy"><b>{{ run.kind === 'nshi' ? '土壤指标审计' : 'KO 通路结构分析' }}</b><small>{{ statusLabel(run.status) }} · {{ formatCreated(run.created_at) }}</small><small class="research-record-id">{{ run.id }}</small></span><WorkspaceIcon name="arrow" /></button></li></ul><p v-else class="research-record-empty-copy">还没有分析运行。选择一个样本，开始本项目的第一次分析。</p></section>
+            <section><div class="research-section-heading"><h3>研究行动</h3><span>{{ actions.length }} 项</span></div><ul v-if="actions.length" class="research-record-list"><li v-for="action in actions" :key="action.id" class="record-item"><span class="research-record-copy"><b>{{ actionLabel(action.action_code) }}</b><small>{{ actionStatusLabel(action.status) }}</small><small>{{ action.reason }}</small></span></li></ul><p v-else class="research-record-empty-copy">暂无研究行动。在结果页生成行动建议后，相关记录会保存在这里。</p></section>
+          </div>
         </section>
+
       </template>
-    </main>
+    </component>
   </section>
 </template>
 
 <script setup>
 import {computed,nextTick,onMounted,ref,watch} from 'vue'
-const props=defineProps({mapPoint:{type:Object,default:null},traceOnly:{type:Boolean,default:false},embedded:{type:Boolean,default:false},stage:{type:String,default:'analysis'},csrfToken:{type:String,required:true}})
+import WorkspaceIcon from './WorkspaceIcon.vue'
+const props=defineProps({mapPoint:{type:Object,default:null},traceOnly:{type:Boolean,default:false},embedded:{type:Boolean,default:false},stage:{type:String,default:'analysis'},initialContext:{type:Object,default:null},csrfToken:{type:String,required:true}})
 const emit=defineEmits(['back','context-change','navigate-stage'])
+let pendingSelection = props.initialContext ? { ...props.initialContext } : null
 const projects=ref([]),projectId=ref(''),datasets=ref([]),samples=ref([]),soilSamples=ref([]),microbeSamples=ref([]),sampleId=ref(''),moduleId=ref('M00529'),runs=ref([]),reports=ref([]),actions=ref([]),currentRun=ref(null),decision=ref(null),execution=ref(null),pairVerdict=ref(null),soilPairId=ref(''),microbePairId=ref(''),newProject=ref(''),reportMessage=ref(''),includePublicReference=ref(false),loading=ref(true),busy=ref(false),error=ref(''),activePanel=ref(props.stage==='evidence'?'evidence':props.stage==='report'||props.traceOnly?'records':'overview')
 const currentProject=computed(()=>projects.value.find(p=>p.id===projectId.value))
+const sampleRuns = computed(() => runs.value.filter(run => run.sample_id === sampleId.value))
 const currentSample=computed(()=>samples.value.find(s=>s.id===sampleId.value))
 const currentDataset=computed(()=>datasets.value.find(d=>d.id===currentRun.value?.dataset_id)||datasets.value.find(d=>d.id===currentSample.value?.dataset_id))
 watch(() => props.stage, stage => {
   activePanel.value = stage === 'evidence' ? 'evidence' : stage === 'report' ? 'records' : 'overview'
 })
-watch([currentProject,currentSample,currentRun,currentDataset], () => emit('context-change', {
-  project: currentProject.value?.name || '',
-  sample: currentSample.value?.external_id || '',
-  sampleKind: currentSample.value?.kind || '',
-  runId: currentRun.value?.id || '',
-  runStatus: currentRun.value?.status || '',
-  dataset: currentDataset.value?.name || '',
-  dataVersion: currentDataset.value?.data_version || ''
-}), { immediate: true })
+watch([currentProject,currentSample,currentRun,currentDataset,loading], () => {
+  if (loading.value) return
+  emit('context-change', {
+    projectId: projectId.value,
+    project: currentProject.value?.name || '',
+    sampleId: sampleId.value,
+    sample: currentSample.value?.external_id || '',
+    sampleKind: currentSample.value?.kind || '',
+    runId: currentRun.value?.id || '',
+    runStatus: currentRun.value?.status || '',
+    dataset: currentDataset.value?.name || '',
+    dataVersion: currentDataset.value?.data_version || ''
+  })
+})
+watch(sampleId, () => {
+  if (currentRun.value && currentRun.value.sample_id !== sampleId.value) {
+    currentRun.value = null
+    decision.value = null
+    execution.value = null
+  }
+})
 const researchStages=computed(()=>{
   const soilRun=currentRun.value?.kind==='nshi'?currentRun.value:runs.value.find(r=>r.sample_id===sampleId.value&&r.kind==='nshi')
   const microbeRun=currentRun.value?.kind==='mfti'?currentRun.value:runs.value.find(r=>r.sample_id===sampleId.value&&r.kind==='mfti')
@@ -143,17 +172,81 @@ const researchStages=computed(()=>{
   ]
 })
 async function api(path,method='GET',data){const headers=data?{'Content-Type':'application/json'}:{};if(!['GET','HEAD'].includes(method))headers['X-CSRF-Token']=props.csrfToken;const r=await fetch('/api/research'+path,{method,headers,credentials:'same-origin',body:data?JSON.stringify(data):undefined});if(!r.ok){const body=await r.json().catch(()=>({}));throw Error(body.detail||`HTTP ${r.status}`)}return r.json()}
-async function refresh(){if(!projectId.value)return;loading.value=true;error.value='';reportMessage.value='';pairVerdict.value=null;try{const q=encodeURIComponent(projectId.value);[datasets.value,samples.value,runs.value,reports.value,actions.value]=await Promise.all([api('/datasets?project_id='+q),api('/samples?project_id='+q),api('/runs?project_id='+q),api('/reports?project_id='+q),api('/actions?project_id='+q)]);sampleId.value=samples.value[0]?.id||'';currentRun.value=null;decision.value=null;execution.value=null}catch(e){error.value=e.message}finally{loading.value=false;await nextTick();if(props.traceOnly)document.getElementById('research-history')?.scrollIntoView({block:'start'})}}
-onMounted(async()=>{try{const b=await api('/bootstrap');projects.value=b.projects;projectId.value=b.projects[0]?.id||'';const ids=new Set(b.projects.map(p=>p.id));const [soil,microbe]=await Promise.all([ids.has('local-soil-74')?api('/samples?project_id=local-soil-74'):[],ids.has('public-ko-70')?api('/samples?project_id=public-ko-70'):[]]);soilSamples.value=soil;microbeSamples.value=microbe;soilPairId.value=soil[0]?.id||'';microbePairId.value=microbe[0]?.id||'';if(!projectId.value)loading.value=false}catch(e){error.value='项目目录读取失败：'+e.message;loading.value=false}})
+async function refresh() {
+  if (!projectId.value) return
+  const requestedProject = projectId.value
+  const selection = pendingSelection
+  pendingSelection = null
+  loading.value = true; error.value = ''; reportMessage.value = ''; pairVerdict.value = null
+  currentRun.value = null; decision.value = null; execution.value = null
+  try {
+    const q = encodeURIComponent(requestedProject)
+    const result = await Promise.all([api('/datasets?project_id='+q), api('/samples?project_id='+q), api('/runs?project_id='+q), api('/reports?project_id='+q), api('/actions?project_id='+q)])
+    if (requestedProject !== projectId.value) return
+    ;[datasets.value, samples.value, runs.value, reports.value, actions.value] = result
+    sampleId.value = samples.value.find(sample => sample.id === selection?.sampleId || (!selection?.sampleId && sample.external_id === selection?.sample))?.id || samples.value[0]?.id || ''
+    if (selection?.runId) await loadRun(selection.runId)
+  } catch (e) { error.value = e.message }
+  finally {
+    if (requestedProject === projectId.value) loading.value = false
+    await nextTick()
+    if (props.traceOnly) document.getElementById('research-history')?.scrollIntoView({block:'start'})
+  }
+}
+onMounted(async()=>{try{const b=await api('/bootstrap');projects.value=b.projects;projectId.value=b.projects.find(project=>project.id===pendingSelection?.projectId||(!pendingSelection?.projectId&&project.name===pendingSelection?.project))?.id||b.projects[0]?.id||'';const ids=new Set(b.projects.map(p=>p.id));const [soil,microbe]=await Promise.all([ids.has('local-soil-74')?api('/samples?project_id=local-soil-74'):[],ids.has('public-ko-70')?api('/samples?project_id=public-ko-70'):[]]);soilSamples.value=soil;microbeSamples.value=microbe;soilPairId.value=soil[0]?.id||'';microbePairId.value=microbe[0]?.id||'';if(!projectId.value)loading.value=false}catch(e){error.value='项目目录读取失败：'+e.message;loading.value=false}})
 watch(projectId,refresh)
 async function createProject(){busy.value=true;error.value='';try{const p=await api('/projects','POST',{name:newProject.value});projects.value.push(p);newProject.value='';projectId.value=p.id}catch(e){error.value='创建失败：'+e.message}finally{busy.value=false}}
 async function importFile(event){const file=event.target.files?.[0];if(!file)return;busy.value=true;error.value='';try{if(file.size>2_000_000)throw Error('文件超过 2 MB');const text=await file.text();const kind=text.split(/\r?\n/,1)[0].includes('soil_sample_id')?'soil':'microbiome';await api('/datasets/import','POST',{project_id:projectId.value,kind,name:file.name,source_name:file.name,csv_text:text});await refresh()}catch(e){error.value='导入失败：'+e.message}finally{busy.value=false;event.target.value=''}}
-async function runAnalysis(){busy.value=true;error.value='';try{const kind=currentSample.value.kind==='soil'?'nshi':'mfti';currentRun.value=await api('/analyses/'+kind,'POST',{sample_id:sampleId.value,module_id:kind==='mfti'?moduleId.value:null});decision.value=null;execution.value=null;runs.value=await api('/runs?project_id='+encodeURIComponent(projectId.value))}catch(e){error.value='分析失败：'+e.message}finally{busy.value=false}}
-async function loadRun(id){try{currentRun.value=await api('/runs/'+encodeURIComponent(id));if(currentRun.value.sample_id)sampleId.value=currentRun.value.sample_id;decision.value=null;execution.value=null}catch(e){error.value=e.message}}
+async function runAnalysis() {
+  const requestedProject = projectId.value, requestedSample = sampleId.value
+  busy.value = true; error.value = ''
+  try {
+    const kind = currentSample.value.kind === 'soil' ? 'nshi' : 'mfti'
+    const result = await api('/analyses/' + kind, 'POST', { sample_id: requestedSample, module_id: kind === 'mfti' ? moduleId.value : null })
+    if (requestedProject !== projectId.value) return
+    if (requestedSample === sampleId.value) { currentRun.value = result; decision.value = null; execution.value = null }
+    runs.value = await api('/runs?project_id=' + encodeURIComponent(requestedProject))
+  } catch (e) { error.value = '分析失败：' + e.message }
+  finally { busy.value = false }
+}
+async function loadRun(id) {
+  const requestedProject = projectId.value
+  try {
+    const result = await api('/runs/' + encodeURIComponent(id))
+    if (requestedProject !== projectId.value) return
+    if (result.project_id !== requestedProject || !samples.value.some(sample => sample.id === result.sample_id)) throw Error('运行与当前项目不匹配，请重新选择。')
+    currentRun.value = result; sampleId.value = result.sample_id
+    decision.value = null; execution.value = null
+    return true
+  } catch (e) { error.value = e.message; return false }
+}
 async function auditPair(){busy.value=true;error.value='';try{pairVerdict.value=await api('/pairings/audit','POST',{soil_sample_id:soilPairId.value,microbe_sample_id:microbePairId.value})}catch(e){error.value='配对审核失败：'+e.message}finally{busy.value=false}}
-async function plan(){busy.value=true;error.value='';try{decision.value=await api('/actions/plan','POST',{project_id:projectId.value,run_ids:[currentRun.value.id]});execution.value=null}catch(e){error.value='行动规划失败：'+e.message}finally{busy.value=false}}
+async function plan() {
+  const requestedProject = projectId.value, requestedRun = currentRun.value?.id
+  busy.value = true; error.value = ''
+  try {
+    const result = await api('/actions/plan', 'POST', { project_id: requestedProject, run_ids: [requestedRun] })
+    if (projectId.value !== requestedProject || currentRun.value?.id !== requestedRun) return
+    decision.value = result; execution.value = null
+    const records = await api('/actions?project_id=' + encodeURIComponent(requestedProject))
+    if (projectId.value === requestedProject) actions.value = records
+  } catch (e) { error.value = '行动规划失败：' + e.message }
+  finally { busy.value = false }
+}
 async function execute(){busy.value=true;error.value='';try{execution.value=await api('/actions/'+decision.value.id+'/execute','POST');actions.value=await api('/actions?project_id='+encodeURIComponent(projectId.value))}catch(e){error.value='执行失败：'+e.message}finally{busy.value=false}}
 async function makeReport(){busy.value=true;error.value='';reportMessage.value='正在保存版本…';try{let reference_run_ids=[];if(includePublicReference.value&&projectId.value==='local-soil-74'){const publicRuns=await api('/runs?project_id=public-ko-70&limit=1');if(!publicRuns.length)throw Error('尚无公开 KO 运行记录；请先在公开项目执行 MFTI');reference_run_ids=[publicRuns[0].id]}const r=await api('/reports','POST',{project_id:projectId.value,run_ids:currentRun.value?[currentRun.value.id]:[],reference_run_ids});reports.value=await api('/reports?project_id='+encodeURIComponent(projectId.value));reportMessage.value=`v${r.version} 已保存，可从下方下载` }catch(e){reportMessage.value='失败：'+e.message}finally{busy.value=false}}
+async function loadRunForAnalysis(id) {
+  if (!await loadRun(id)) return
+  if (props.embedded) emit('navigate-stage', 'analysis')
+  else activePanel.value = 'overview'
+}
+function formatCreated(value) {
+  if (!value) return '时间未登记'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '时间未登记' : date.toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+}
+function actionStatusLabel(status) { return ({ proposed: '待执行', waiting_for_input: '等待补充输入', waiting_for_researcher: '待人工复核', waiting_for_lab: '待实验验证', completed: '已完成', pending: '待处理' })[status] || status || '状态未登记' }
+function actionClassLabel(value) { return ({ computable: '可计算检查', blocked_input: '补充输入', human_review: '人工复核', laboratory: '实验验证' })[value] || '待核验的研究行动' }
 function statusLabel(status){return ({raw_data:'仅原始数据',exploratory_assessment:'探索性评价',validated_assessment:'经验证评价',insufficient_data:'数据不足，无法判断'})[status]||status}
 function actionLabel(code){return ({CHECK_QC:'核验测序质控',CHECK_PATHWAY:'复核通路关键步骤',VERIFY_PAIRING:'核验样本配对',LAB_VALIDATION:'规划实验室验证',BIO_ASSAY:'补充生物转化指标',VERIFY_UNITS:'核对单位与参照阈值'})[code]||'根据证据缺口规划下一步'}
 function domainLabel(domain){return ({nitrogen_supply:'氮素供给',nitrogen_retention:'氮素保持'})[domain]||domain}
@@ -167,7 +260,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
 </script>
 
 <style scoped>
-.research-page{--ink:#26343b;--muted:#6d7a7e;--line:#e1e5e1;--paper:#fff;--canvas:#f6f7f5;--green:#315c46;--green-soft:#eaf0eb;--amber:#92703a;--amber-soft:#f5f0e5;min-height:calc(100vh - 68px);display:grid;grid-template-columns:238px minmax(0,1fr);background:var(--canvas);color:var(--ink);font-family:Inter,"Aptos","Segoe UI","Microsoft YaHei",sans-serif;font-size:15px}
+.research-page{--ink:#26343b;--muted:#6d7a7e;--line:#e1e5e1;--paper:#fff;--canvas:#f6f7f5;--green:#315c46;--green-soft:#eaf0eb;--amber:#92703a;--amber-soft:#f5f0e5;min-height:calc(100vh - 68px);display:grid;grid-template-columns:238px minmax(0,1fr);background:var(--canvas);color:var(--ink);font-family:var(--font-ui,DengXian,"PingFang SC","Microsoft YaHei UI",sans-serif);font-size:15px}
 .research-page *{box-sizing:border-box}
 .project-rail{min-width:0;background:#f0f2ee;border-right:1px solid var(--line);padding:24px 19px;display:flex;flex-direction:column}
 .brand-lockup{display:flex;align-items:center;gap:11px;margin:0 0 31px}
@@ -183,7 +276,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
 .research-main{width:100%;max-width:1560px;min-width:0;margin:0 auto;padding:34px clamp(28px,4vw,64px) 88px}
 .workspace-header{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:25px}.project-crumb{margin:0 0 8px;color:var(--muted);font-size:12px}.workspace-header h1{margin:0;font-size:32px;line-height:1.15;letter-spacing:-.04em;font-weight:650}.header-description{margin:9px 0 0;color:var(--muted);font-size:14px;line-height:1.6}
 .back-link{flex:none;padding:9px 0;border:0;background:transparent;color:var(--green);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}.back-link span{margin-right:5px}
-.map-context{display:flex;align-items:center;gap:11px;padding:11px 14px;margin:0 0 18px;background:#edf0eb;border-left:2px solid #829682;color:#53635b}.map-pin{font-size:18px}.map-context b,.map-context small{display:block}.map-context b{font-size:12px}.map-context small,.map-caveat{font-size:11px;color:var(--muted)}.map-caveat{margin-left:auto}
+.map-context{display:flex;align-items:center;gap:11px;padding:11px 14px;margin:0 0 18px;background:#edf0eb;border:1px solid #dce5d9;color:#53635b}.map-pin{font-size:18px}.map-context b,.map-context small{display:block}.map-context b{font-size:12px}.map-context small,.map-caveat{font-size:11px;color:var(--muted)}.map-caveat{margin-left:auto}
 .loading-state,.error-state{padding:13px 15px;border-radius:5px}.loading-state{background:#edf1ed;color:#52675a}.error-state{background:#f7e9e5;color:#8b3f33}
 .subject-bar{display:flex;align-items:end;gap:15px;padding:15px 0 18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .sample-picker{width:min(330px,34%)}.module-picker{width:190px}.subject-meta{display:flex;align-items:center;gap:9px;min-width:0;flex:1;padding-bottom:5px}.subject-meta>span:last-child{min-width:0}.subject-meta b,.subject-meta small{display:block}.subject-meta b{font-size:12px}.subject-meta small{margin-top:4px;color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sample-dot{width:9px;height:9px;flex:none;border-radius:50%;background:#728b70}.dot-microbiome{background:#73899a}
@@ -201,7 +294,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
 .gap-section{display:grid;grid-template-columns:205px minmax(0,1fr);gap:20px;padding:17px 0 18px;border-top:1px solid #e5e3dc;border-bottom:1px solid #e5e3dc}.gap-section>div{display:flex;align-items:flex-start;gap:9px}.gap-section h3{margin:1px 0 0}.gap-mark{display:grid;place-items:center;width:19px;height:19px;flex:none;border-radius:50%;background:#eee5d3;color:#806339;font-size:12px;font-weight:700}.gap-section ul{margin:0;padding-left:18px;color:#5d6665;font-size:13px;line-height:1.65}.gap-section li+li{margin-top:4px}
 .empty-finding{min-height:330px;padding:48px 0;border-bottom:1px solid var(--line)}.empty-index{color:#748079;font-size:12px}.empty-finding h2{max-width:560px;margin:20px 0 10px;font-size:34px;line-height:1.2;letter-spacing:-.04em}.empty-finding p{max-width:560px;color:#667378;font-size:15px;line-height:1.7}
 .action-column{position:sticky;top:22px;padding:19px 19px 20px;background:#edf1ed;border-top:2px solid #6e8a73}.action-overline{margin:0 0 15px;color:#5f7564;font-size:11px;font-weight:650}.action-column h2{margin:0 0 10px;font-size:21px;line-height:1.3;letter-spacing:-.025em;font-weight:630}.action-column>p:not(.action-overline):not(.action-footnote){margin:0;color:#5b6963;font-size:13px;line-height:1.7}.agent-primary{width:100%;margin-top:19px}.action-rationale{display:flex;flex-direction:column;gap:7px;margin-top:17px;padding-top:14px;border-top:1px solid #d7dfd7}.action-rationale span,.action-rationale small{color:#65746a;font-size:11px}.action-rationale b{font-size:13px}.action-footnote{margin:13px 0 0;color:#718077;font-size:11px;line-height:1.6}.execution-state{margin:14px 0 0;padding:10px;background:#fff;color:#415b49;font-size:12px;line-height:1.6}.action-hint{display:inline-block;margin-top:16px;padding:5px 8px;background:#fff;color:#596d60;font-size:11px}
-.single-panel,.records-panel{padding:18px 0}.panel-intro{max-width:780px}.panel-intro h2,.records-heading h2{margin:0 0 9px;font-size:25px;letter-spacing:-.03em}.panel-intro p,.records-heading p{margin:0;color:#637075;font-size:14px;line-height:1.7}.pairing-form{display:flex;align-items:end;gap:16px;max-width:880px;margin:29px 0;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.pairing-form label{display:flex;flex:1;flex-direction:column;gap:8px;color:#59676a;font-size:12px;font-weight:600}.pairing-form>span{padding-bottom:12px;color:#7b8980}.secondary-action{min-height:40px;padding:0 14px;border:1px solid #bac8bc;border-radius:5px;background:transparent;color:#315c46;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}.secondary-action:hover{background:#edf1ed}.pairing-empty{max-width:740px;padding:14px 0;border-left:2px solid #ad925e}.pairing-empty b,.pairing-empty p{margin-left:15px}.pairing-empty b{font-size:13px}.pairing-empty p{color:#68746f;font-size:13px}.pair-verdict{max-width:840px;padding:16px 18px;border-left:3px solid #9c7e47;background:var(--amber-soft)}.pair-verdict b{font-size:14px}.pair-verdict p{margin:8px 0;color:#5e665f;font-size:13px;line-height:1.6}.pair-verdict small{color:#7b715d;font-size:11px}.pair-approved{border-color:#53795b;background:#edf2ed}
+.single-panel,.records-panel{padding:18px 0}.panel-intro{max-width:780px}.panel-intro h2,.records-heading h2{margin:0 0 9px;font-size:25px;letter-spacing:-.03em}.panel-intro p,.records-heading p{margin:0;color:#637075;font-size:14px;line-height:1.7}.pairing-form{display:flex;align-items:end;gap:16px;max-width:880px;margin:29px 0;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.pairing-form label{display:flex;flex:1;flex-direction:column;gap:8px;color:#59676a;font-size:12px;font-weight:600}.pairing-form>span{padding-bottom:12px;color:#7b8980}.secondary-action{min-height:40px;padding:0 14px;border:1px solid #bac8bc;border-radius:5px;background:transparent;color:#315c46;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}.secondary-action:hover{background:#edf1ed}.pairing-empty{max-width:740px;padding:18px 20px;border:0;border-radius:10px;background:var(--amber-soft)}.pairing-empty b,.pairing-empty p{margin-left:0}.pairing-empty b{font-size:13px}.pairing-empty p{color:#68746f;font-size:13px}.pair-verdict{max-width:840px;padding:16px 18px;border:0;background:var(--amber-soft)}.pair-verdict b{font-size:14px}.pair-verdict p{margin:8px 0;color:#5e665f;font-size:13px;line-height:1.6}.pair-verdict small{color:#7b715d;font-size:11px}.pair-approved{border-color:#53795b;background:#edf2ed}
 .joint-checks{max-width:840px;margin-top:33px}.joint-checks h3{margin:0 0 12px;font-size:15px}.joint-checks ul{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}.joint-checks li{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(0,1.2fr);gap:15px;padding:12px 0;border-bottom:1px solid var(--line);font-size:12px}.joint-checks li b{font-weight:600}.joint-checks li span{color:var(--muted);line-height:1.55}
 .records-heading{display:flex;justify-content:space-between;align-items:center;gap:22px;padding-bottom:18px;border-bottom:1px solid var(--line)}.public-reference{display:flex;gap:9px;align-items:center;margin:15px 0;color:#596c60;font-size:12px}.public-reference input{width:16px!important;min-height:16px!important}.report-message{color:#53675a;font-size:13px}.record-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:24px}.record-columns h3{margin:0 0 9px;font-size:14px}.record-item{display:block;width:100%;padding:12px 0;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;color:var(--ink);text-decoration:none;cursor:pointer}.record-item b,.record-item small{display:block}.record-item b{font-size:12px;font-weight:600}.record-item small{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.5;overflow-wrap:anywhere}.report-link:hover b{color:var(--green)}
 .research-page button:focus-visible,.research-page a:focus-visible,.research-page select:focus-visible,.research-page input:focus-visible,.research-page summary:focus-visible{outline:3px solid rgba(49,92,70,.27);outline-offset:2px}

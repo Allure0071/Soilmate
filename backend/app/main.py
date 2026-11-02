@@ -10,7 +10,7 @@ import hmac
 from .api import indicators, point, meta, data, preview, zones, soiledge, scientific, research, auth
 from .scientific.research_store import connect, initialize
 
-app = FastAPI(title="壤脉天玑 Scientific Intelligence", version="0.2.0")
+app = FastAPI(title="沃壤知行 Scientific Intelligence", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -88,6 +88,9 @@ def evidence_page():
 
 
 @app.get('/research')
+@app.get('/explore')
+@app.get('/resources')
+@app.get('/tools')
 @app.get('/assistant')
 @app.get('/assessment')
 @app.get('/assessment/preview')

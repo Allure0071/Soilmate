@@ -88,7 +88,7 @@ def execute_action(context, action):
 
 def study_report(soil, context, action=None, execution=None):
     measures=', '.join(f'{k}={soil.get(k) or "缺失"}' for k in ('soil_ph','AN','TN','soil_soc','EC'))
-    return '\n'.join(['# 壤脉天玑｜研究流程报告','',
+    return '\n'.join(['# 沃壤知行｜研究流程报告','',
       '## 1. 土壤健康状态',f"Soilmate 点位/记录 {soil['record_id']}；{measures}。原始单位与采样元数据未完全核验，不作健康等级判断。AN 来源：{soil.get('AN_source','未提供')}。AN 若来自研究预览图层，其单位与采样来源待核，不用于指标诊断。",'',
       '## 2. 研究问题','氮素状态与微生物过程之间是否存在可进一步检验的线索？当前数据能支持到什么程度？','',
       '## 3. 微生物基因与通路',f"公开数据样本 {context['sample_id']}；{context['module_id']} {context['module_name']}。输入表中 {context['observed_stages']}/{context['total_stages']} 个步骤有完整 KO 组合。",f"来源：{context['source_url']}",'',

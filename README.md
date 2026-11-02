@@ -1,4 +1,4 @@
-# Soilmate 土壤健康数据平台
+# 沃壤知行（Soilmate）土壤健康数据平台
 
 本仓库包含 Vue 前端、FastAPI 后端、开发脚本和两份合成测试数据库。`sample-data/` 中的点位和指标数值由固定公式生成，仅供界面及接口开发；它们不是实测数据，也不能作为正式地图或研究结论。
 
@@ -43,3 +43,11 @@ npm run dev
 前端与后端协作的 [接口契约确认稿](docs/assessment-api/README.md) 包含 OpenAPI 定义、前端类型、调用示例及 [后端确认清单](docs/assessment-api/BACKEND-CHECKLIST.md)。
 
 接口契约当前为 `0.1.0-draft`，待后端同学确认。健康评价前端已提供模式选择、地块资料、动态指标录入与录入确认页面，支持本机草稿和分步导航；新分析接口尚未接入，启动方式不变。详见 [前端审核说明](docs/assessment-api/FRONTEND-REVIEW.md)。
+
+## 工具中心
+
+访问 `/tools` 可公开搜索与筛选地图、数据库、Agent 分析和常用工具。顶部保持探索数据、数据资源、健康研究、AI 助手、工具中心五个独立入口；工具条目可打开原有地图与数据库模块，Agent 录入工具登录后继续，均可返回原工具目录。
+
+首批本地计算包括容重与孔隙度、含水率换算、单层有机碳储量、同量纲单位换算、溶液稀释、线性标准曲线与统计速算。每项工具包含输入校验、可主动载入的示例、公式、适用条件、原始参考链接及结果文本下载。计算参数不上传或保存；示例不是实测数据，输出不代表健康等级或标准合规结论。地图测量、仪器资料、盐碱与污染判读等条目仍标记为建设中。
+
+计算定义与参考来源位于 `frontend/src/tools/calculators.js`，目录与接入状态位于 `frontend/src/tools/catalog.js`。在 `frontend/` 下运行 `node --test src/tools/calculators.test.js src/siteNavigation.test.js src/assessment/*.test.js` 可验证公式边界、单位口径、工具路由与现有录入校验。
