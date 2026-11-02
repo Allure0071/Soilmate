@@ -14,7 +14,7 @@
           <button type="button" @click="emit('navigate', 'gold')">数据资源</button>
           <button type="button" @click="emit('navigate', 'assessment')">健康评价</button>
         </nav>
-        <a class="landing-account" :href="account ? '/analysis' : '/account/index.html?next=/analysis'">{{ account ? '分析中心' : '登录 / 注册' }} <span aria-hidden="true">↗</span></a>
+        <a class="landing-account" :href="account ? '/assessment' : '/account/index.html?next=/assessment'">{{ account ? '健康评价' : '登录 / 注册' }} <span aria-hidden="true">↗</span></a>
       </header>
 
       <div class="landing-content">

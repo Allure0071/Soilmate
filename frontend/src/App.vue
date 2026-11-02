@@ -1,8 +1,8 @@
 <template>
   <div class="app-shell">
-    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-map': siteView==='explore'||siteView==='gold', 'site-content-research': siteView==='analysis'||siteView==='trace' }">
+    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-map': siteView==='explore'||siteView==='gold', 'site-content-research': siteView==='analysis'||siteView==='trace'||siteView==='assessment', 'site-content-assessment': siteView==='assessment' }">
     <HomeLanding v-if="siteView==='home'" :account="account" @navigate="navigateFromLanding" />
-    <header v-if="siteView!=='home'" class="topbar" :class="{ 'topbar-research': siteView==='analysis'||siteView==='trace', 'topbar-map': siteView==='explore'||siteView==='gold' }" :inert="soiledgeOpen || scientificOpen">
+    <header v-if="siteView!=='home'" class="topbar" :class="{ 'topbar-research': siteView==='analysis'||siteView==='trace'||siteView==='assessment', 'topbar-map': siteView==='explore'||siteView==='gold' }" :inert="soiledgeOpen || scientificOpen">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M4 20c4-9 10-14 17-14 8 0 14 6 15 14-1 8-7 14-15 14C14 34 8 29 4 20Z"/><path d="M10 20c3-6 7-9 12-9 5 0 9 4 10 9-1 5-5 9-10 9-5 0-9-3-12-9Z"/><path d="M16 20c2-2 4-4 7-4s5 2 6 4c-1 3-3 5-6 5s-5-2-7-5Z"/></svg></div>
         <div class="brand-copy"><strong>壤脉天玑</strong><span>SOILMATE · SCIENTIFIC INTELLIGENCE</span></div>
@@ -11,17 +11,19 @@
         <button type="button" :class="{active:siteView==='home'}" @click="openMainView('home')">首页</button>
         <button type="button" :class="{active:siteView==='explore'}" @click="openMainView('explore')">探索数据</button>
         <button type="button" :class="{active:siteView==='gold'}" @click="openMainView('gold')">数据资源</button>
-        <button type="button" :class="{active:siteView==='analysis'}" @click="openResearch('analysis')">分析中心</button>
-        <button type="button" :class="{active:siteView==='trace'}" @click="openResearch('trace')">证据追溯</button>
+        <button type="button" :class="{active:siteView==='assessment'}" @click="openAssessment">健康评价</button>
+        <button v-if="siteView!=='assessment'" type="button" :class="{active:siteView==='analysis'}" @click="openResearch('analysis')">分析中心</button>
+        <button v-if="siteView!=='assessment'" type="button" :class="{active:siteView==='trace'}" @click="openResearch('trace')">证据追溯</button>
       </nav>
-      <div class="topbar-right">
+      <div v-if="siteView!=='assessment'" class="topbar-right">
         <div class="resolution-switch" role="group" aria-label="数据分辨率"><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div>
         <span class="dataset-count">{{ indicators.length ? `${indicators.length} 已登记 · ${resolution === 5 ? previewLayers.length : 0} 研究预览` : `${resolution} km 网格` }}</span>
         <span class="connection" :class="apiState"><i></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
         <button class="mobile-catalog-toggle" type="button" @click="catalogOpen = !catalogOpen" :aria-expanded="catalogOpen" aria-label="切换图层目录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       </div>
       <div class="account-nav">
-        <a v-if="!account" href="/account/index.html?next=/analysis">登录 / 注册</a>
+        <span v-if="assessmentPreview && siteView==='assessment'" class="assessment-preview-account">审核预览</span>
+        <a v-else-if="!account" :href="accountUrl(siteView==='assessment'?'/assessment':'/analysis')">登录 / 注册</a>
         <template v-else><span :title="account.email">{{ account.email }}</span><button type="button" @click="logout">退出</button></template>
       </div>
     </header>
@@ -113,6 +115,7 @@
         </template>
       </aside>
     </main>
+    <AssessmentWorkspace v-if="siteView==='assessment' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint" @navigate="openMainView" />
     <ResearchWorkspace v-if="account && (siteView==='analysis'||siteView==='trace')" :key="siteView" :trace-only="siteView==='trace'" :map-point="clicked" :csrf-token="csrfToken" @back="openMainView('explore')" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
@@ -148,6 +151,7 @@ import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import ScientificWorkbench from './ScientificWorkbench.vue'
 import ResearchWorkspace from './ResearchWorkspace.vue'
+import AssessmentWorkspace from './assessment/AssessmentWorkspace.vue'
 import L from 'leaflet'
 import { fetchIndicators, fetchMeta, fetchPoint, fetchData, fetchPreviewLayers, fetchPreviewPoint, fetchZ01Boundaries, fetchZ01Point, previewTileUrl, tileUrl } from './api.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'
@@ -187,7 +191,19 @@ const dataBrowserOpen = ref(false)
 const soiledgeOpen = ref(false)
 const scientificOpen = ref(false)
 const scientificTab = ref('health')
-const siteView = ref(window.location.pathname === '/analysis' ? 'analysis' : window.location.pathname === '/evidence' ? 'trace' : 'home')
+function viewFromLocation() {
+  return window.location.pathname === '/assessment' || window.location.pathname === '/assessment/preview' ? 'assessment' : window.location.pathname === '/analysis' ? 'analysis' : window.location.pathname === '/evidence' ? 'trace' : 'home'
+}
+function isAssessmentPreview() { return import.meta.env.DEV && window.location.pathname === '/assessment/preview' }
+const siteView = ref(viewFromLocation())
+const assessmentPreview = ref(isAssessmentPreview())
+const assessmentMapPoint = ref(readAssessmentMapPoint())
+function readAssessmentMapPoint() {
+  try {
+    const point = JSON.parse(sessionStorage.getItem('soilmate.assessment.map-context') || 'null')
+    return point && Number.isFinite(point.lon) && Number.isFinite(point.lat) ? { lon: point.lon, lat: point.lat } : null
+  } catch { return null }
+}
 const homeResearch = ref({ loading: true, error: '', runs: [] })
 const account = ref(null)
 const csrfToken = ref('')
@@ -205,6 +221,7 @@ async function checkAccount() {
     csrfToken.value = ''
     homeResearch.value = { loading: false, error: '', runs: [] }
     if (['/analysis', '/evidence'].includes(window.location.pathname)) window.location.replace(accountUrl(window.location.pathname))
+    else if (siteView.value === 'assessment' && !assessmentPreview.value) window.location.replace(accountUrl('/assessment'))
   }
 }
 async function logout() {
@@ -222,10 +239,11 @@ function restoreMapAfterAnalysis() {
 }
 function openMainView(view) {
   const previousView = siteView.value
-  const leavingAnalysis = previousView === 'analysis' || previousView === 'trace'
+  const leavingAnalysis = previousView === 'analysis' || previousView === 'trace' || previousView === 'assessment'
   if (view === 'home' && previousView !== 'home' && map) rememberedMapView = { center: map.getCenter(), zoom: map.getZoom() }
   if (window.location.pathname !== '/') history.pushState({}, '', '/')
   siteView.value = view
+  assessmentPreview.value = false
   scientificOpen.value = false
   if (view === 'gold') openDataBrowser()
   else dataBrowserOpen.value = false
@@ -242,11 +260,26 @@ function openMainView(view) {
 }
 function navigateFromLanding(destination) {
   if (destination === 'assessment') {
-    openMainView('explore')
-    soiledgeOpen.value = true
+    openAssessment()
     return
   }
   openMainView(destination)
+}
+function openAssessment() {
+  if (siteView.value === 'assessment' && assessmentPreview.value) return
+  if (clicked.value && Number.isFinite(clicked.value.lon) && Number.isFinite(clicked.value.lat)) {
+    assessmentMapPoint.value = { lon: clicked.value.lon, lat: clicked.value.lat }
+    try { sessionStorage.setItem('soilmate.assessment.map-context', JSON.stringify(assessmentMapPoint.value)) } catch { /* Keep position in memory if browser storage is unavailable. */ }
+  }
+  if (!account.value) { window.location.assign(accountUrl('/assessment')); return }
+  if (map) rememberedMapView = { center: map.getCenter(), zoom: map.getZoom() }
+  if (window.location.pathname !== '/assessment') history.pushState({}, '', '/assessment')
+  assessmentPreview.value = false
+  siteView.value = 'assessment'
+  scientificOpen.value = false
+  soiledgeOpen.value = false
+  dataBrowserOpen.value = false
+  catalogOpen.value = false
 }
 function openResearch(view = 'analysis') {
   if (!account.value) { window.location.assign(accountUrl(view === 'trace' ? '/evidence' : '/analysis')); return }
@@ -278,12 +311,14 @@ async function loadHomeResearch() {
   }
 }
 function onRouteChange() {
-  const leavingAnalysis = (siteView.value === 'analysis' || siteView.value === 'trace') && !['/analysis', '/evidence'].includes(window.location.pathname)
-  siteView.value = window.location.pathname === '/analysis' ? 'analysis' : window.location.pathname === '/evidence' ? 'trace' : 'home'
+  const leavingAnalysis = ['analysis', 'trace', 'assessment'].includes(siteView.value) && !['/analysis', '/evidence', '/assessment', '/assessment/preview'].includes(window.location.pathname)
+  siteView.value = viewFromLocation()
+  assessmentPreview.value = isAssessmentPreview()
   scientificOpen.value = false
   dataBrowserOpen.value = false
   if (siteView.value === 'home' && account.value) loadHomeResearch()
   if ((siteView.value === 'analysis' || siteView.value === 'trace') && !account.value) window.location.replace(accountUrl(window.location.pathname))
+  if (siteView.value === 'assessment' && !account.value && !assessmentPreview.value) window.location.replace(accountUrl('/assessment'))
   if (leavingAnalysis) restoreMapAfterAnalysis()
 }
 const browserTab = ref('layers')

@@ -37,3 +37,9 @@ npm run dev
 - `sample-data/`：合成测试数据库。
 
 项目中的合成示例只适用于开发与演示。正式分析需使用经过核查且获准使用的数据。
+
+## 健康评价改造接口
+
+前端与后端协作的 [接口契约确认稿](docs/assessment-api/README.md) 包含 OpenAPI 定义、前端类型、调用示例及 [后端确认清单](docs/assessment-api/BACKEND-CHECKLIST.md)。
+
+接口契约当前为 `0.1.0-draft`，待后端同学确认。健康评价前端已提供模式选择、地块资料、动态指标录入与录入确认页面，支持本机草稿和分步导航；新分析接口尚未接入，启动方式不变。详见 [前端审核说明](docs/assessment-api/FRONTEND-REVIEW.md)。

@@ -22,7 +22,7 @@
     const registerForm=document.getElementById('register-form');
     const apiError=document.getElementById('api-error');
     const nextPath=new URLSearchParams(location.search).get('next');
-    const destination=['/analysis','/evidence'].includes(nextPath)?nextPath:'/analysis';
+    const destination=['/analysis','/evidence','/assessment'].includes(nextPath)?nextPath:'/analysis';
     function view(which){loginForm.hidden=which!=='login';registerForm.hidden=which!=='register';apiError.hidden=true;history.replaceState(null,'',location.pathname+location.search+'#'+which);document.title=(which==='login'?'登录':'注册')+' · 壤脉天玑'}
     document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>view(button.dataset.view)));
     document.querySelectorAll('[data-toggle]').forEach(button=>button.addEventListener('click',()=>{const input=document.getElementById(button.dataset.toggle);input.type=input.type==='password'?'text':'password';button.textContent=input.type==='password'?'显示':'隐藏';button.setAttribute('aria-label',button.textContent+'密码')}));
