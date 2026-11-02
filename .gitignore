@@ -1,0 +1,40 @@
+# Local dependencies, caches, and build output
+node_modules/
+.npm-cache/
+.playwright-cli/
+.python-packages/
+.venv/
+.venv*/
+__pycache__/
+*.py[cod]
+dist/
+frontend/audit/
+*.log
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+
+# Data and software installed in this workspace
+/data/
+/tools/
+/soil_pack_20261009/
+/soil_pack_20261009.tar.gz
+/backend/static/tiles/
+*.sqlite
+*.sqlite3
+*.db
+!/sample-data/*.sqlite
+
+# Research materials to review before any separate publication
+/knowfeat-reproduction/
+/docs/
+/使用指南.md
+
+# Root lockfile has no matching root package.json
+/package-lock.json
+/releases/
