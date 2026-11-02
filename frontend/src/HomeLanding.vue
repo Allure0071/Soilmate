@@ -12,9 +12,10 @@
         <nav class="landing-nav" aria-label="首页导航">
           <button type="button" @click="emit('navigate', 'explore')">空间探索</button>
           <button type="button" @click="emit('navigate', 'gold')">数据资源</button>
-          <button type="button" @click="emit('navigate', 'assessment')">健康评价</button>
+          <button type="button" @click="emit('navigate', 'assessment')">健康研究</button>
+          <button type="button" @click="emit('navigate', 'assistant')">AI 助手</button>
         </nav>
-        <a class="landing-account" :href="account ? '/assessment' : '/account/index.html?next=/assessment'">{{ account ? '健康评价' : '登录 / 注册' }} <span aria-hidden="true">↗</span></a>
+        <a class="landing-account" :href="account ? '/research' : '/account/index.html?next=/research'">{{ account ? '健康研究' : '登录 / 注册' }} <span aria-hidden="true">↗</span></a>
       </header>
 
       <div class="landing-content">

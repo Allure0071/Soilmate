@@ -212,15 +212,6 @@
 .site-content-map .item-copy small { color: #536a59; font-size: 11px; }
 .site-content-map .catalog-search input::placeholder { color: #5f7564; }
 
-.browser-backdrop .browser-head p,
-.browser-backdrop .product-detail-head p,
-.browser-backdrop .product-list-meta,
-.browser-backdrop .product-facts dt,
-.browser-backdrop .product-detail-foot {
-  color: #4d6253;
-  font-size: 12px;
-}
-.browser-backdrop .product-evidence { color: #405947; font-size: 13px; }
 .edge-backdrop .edge-header p,
 .edge-backdrop .edge-result > p,
 .edge-backdrop .edge-field small,
@@ -292,4 +283,12 @@
   .browser-backdrop, .edge-backdrop { padding: 8px; }
   .browser-backdrop .data-browser, .edge-backdrop .edge-workbench { border-radius: 15px; }
   #app .scientific-workbench { inset: 8px; border-radius: 15px; }
+}
+
+@media (max-width: 620px) {
+  .browser-backdrop .data-browser { overflow-y: auto; }
+  .browser-backdrop .data-browser :is(.browser-head, .browser-tabs, .browser-layer-tools, .browser-pagination) { flex: none; }
+  .browser-backdrop .product-catalog { display: block; flex: none; overflow: visible; }
+  .browser-backdrop .product-list { max-height: 200px; }
+  .browser-backdrop .product-detail { min-height: 0; overflow: visible; }
 }

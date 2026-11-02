@@ -85,3 +85,12 @@ def research_page():
 def evidence_page():
     frontend_dist = Path(__file__).absolute().parents[2] / 'frontend' / 'dist' / 'index.html'
     return FileResponse(frontend_dist)
+
+
+@app.get('/research')
+@app.get('/assistant')
+@app.get('/assessment')
+@app.get('/assessment/preview')
+def workspace_page():
+    frontend_dist = Path(__file__).absolute().parents[2] / 'frontend' / 'dist' / 'index.html'
+    return FileResponse(frontend_dist)

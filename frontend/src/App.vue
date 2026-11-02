@@ -1,8 +1,8 @@
 <template>
   <div class="app-shell">
-    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-map': siteView==='explore'||siteView==='gold', 'site-content-research': siteView==='analysis'||siteView==='trace'||siteView==='assessment', 'site-content-assessment': siteView==='assessment' }">
+    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-map': siteView==='explore'||siteView==='gold', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
     <HomeLanding v-if="siteView==='home'" :account="account" @navigate="navigateFromLanding" />
-    <header v-if="siteView!=='home'" class="topbar" :class="{ 'topbar-research': siteView==='analysis'||siteView==='trace'||siteView==='assessment', 'topbar-map': siteView==='explore'||siteView==='gold' }" :inert="soiledgeOpen || scientificOpen">
+    <header v-if="siteView!=='home'" class="topbar" :class="{ 'topbar-research': siteView==='research'||siteView==='assistant', 'topbar-map': siteView==='explore'||siteView==='gold' }" :inert="soiledgeOpen || scientificOpen">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M4 20c4-9 10-14 17-14 8 0 14 6 15 14-1 8-7 14-15 14C14 34 8 29 4 20Z"/><path d="M10 20c3-6 7-9 12-9 5 0 9 4 10 9-1 5-5 9-10 9-5 0-9-3-12-9Z"/><path d="M16 20c2-2 4-4 7-4s5 2 6 4c-1 3-3 5-6 5s-5-2-7-5Z"/></svg></div>
         <div class="brand-copy"><strong>壤脉天玑</strong><span>SOILMATE · SCIENTIFIC INTELLIGENCE</span></div>
@@ -11,19 +11,18 @@
         <button type="button" :class="{active:siteView==='home'}" @click="openMainView('home')">首页</button>
         <button type="button" :class="{active:siteView==='explore'}" @click="openMainView('explore')">探索数据</button>
         <button type="button" :class="{active:siteView==='gold'}" @click="openMainView('gold')">数据资源</button>
-        <button type="button" :class="{active:siteView==='assessment'}" @click="openAssessment">健康评价</button>
-        <button v-if="siteView!=='assessment'" type="button" :class="{active:siteView==='analysis'}" @click="openResearch('analysis')">分析中心</button>
-        <button v-if="siteView!=='assessment'" type="button" :class="{active:siteView==='trace'}" @click="openResearch('trace')">证据追溯</button>
+        <button type="button" :class="{active:siteView==='research'}" @click="openResearch('input')">健康研究</button>
+        <button type="button" :class="{active:siteView==='assistant'}" @click="openAssistant">AI 助手</button>
       </nav>
-      <div v-if="siteView!=='assessment'" class="topbar-right">
+      <div v-if="siteView!=='research' && siteView!=='assistant'" class="topbar-right">
         <div class="resolution-switch" role="group" aria-label="数据分辨率"><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div>
         <span class="dataset-count">{{ indicators.length ? `${indicators.length} 已登记 · ${resolution === 5 ? previewLayers.length : 0} 研究预览` : `${resolution} km 网格` }}</span>
         <span class="connection" :class="apiState"><i></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
         <button class="mobile-catalog-toggle" type="button" @click="catalogOpen = !catalogOpen" :aria-expanded="catalogOpen" aria-label="切换图层目录"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       </div>
       <div class="account-nav">
-        <span v-if="assessmentPreview && siteView==='assessment'" class="assessment-preview-account">审核预览</span>
-        <a v-else-if="!account" :href="accountUrl(siteView==='assessment'?'/assessment':'/analysis')">登录 / 注册</a>
+        <span v-if="assessmentPreview && siteView==='research'" class="assessment-preview-account">审核预览</span>
+        <a v-else-if="!account" :href="accountUrl(siteView==='research'?'/research':'/assistant')">登录 / 注册</a>
         <template v-else><span :title="account.email">{{ account.email }}</span><button type="button" @click="logout">退出</button></template>
       </div>
     </header>
@@ -89,9 +88,9 @@
             <span><b>02</b>核验样本来源</span>
             <span><b>03</b>联合验证线索</span>
           </div>
-          <button type="button" class="home-analysis-link" @click="openResearch('analysis')">进入分析中心 <span aria-hidden="true">→</span></button>
+          <button type="button" class="home-analysis-link" @click="openResearch('analysis')">进入健康研究 <span aria-hidden="true">→</span></button>
           <section class="home-task-list" aria-labelledby="home-tasks-title">
-            <div class="home-task-heading"><h4 id="home-tasks-title">最近研究任务</h4><button type="button" @click="openResearch('trace')">全部记录 <span aria-hidden="true">→</span></button></div>
+            <div class="home-task-heading"><h4 id="home-tasks-title">最近研究任务</h4><button type="button" @click="openResearch('report')">全部记录 <span aria-hidden="true">→</span></button></div>
             <p v-if="!account" class="home-task-state">登录后查看你的研究任务。<a href="/account/index.html?next=/analysis">登录 / 注册</a></p>
             <p v-else-if="homeResearch.loading" class="home-task-state" role="status">正在读取已保存任务…</p>
             <p v-else-if="homeResearch.error" class="home-task-state home-task-error" role="status">任务记录暂不可用：{{ homeResearch.error }}</p>
@@ -115,19 +114,19 @@
         </template>
       </aside>
     </main>
-    <AssessmentWorkspace v-if="siteView==='assessment' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint" @navigate="openMainView" />
-    <ResearchWorkspace v-if="account && (siteView==='analysis'||siteView==='trace')" :key="siteView" :trace-only="siteView==='trace'" :map-point="clicked" :csrf-token="csrfToken" @back="openMainView('explore')" />
+    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="setResearchStage" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="openMainView" @open-assistant="openAssistant" />
+    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(researchStage)" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
     <div v-if="dataBrowserOpen" class="browser-backdrop">
       <section ref="browserRef" class="data-browser" role="dialog" aria-modal="true" aria-labelledby="browser-title" tabindex="-1" @keydown="handleBrowserKeydown">
-        <header class="browser-head"><div><span class="section-kicker">SOILMATE / DATA PRODUCTS</span><h2 id="browser-title">数据资源中心</h2><p>先核对指标、单位与来源，再进入地图或查看原始表。</p></div><button type="button" class="browser-close" aria-label="返回地图" @click="closeDataBrowser">返回地图 ×</button></header>
+        <header class="browser-head"><div class="browser-head-copy"><span class="section-kicker">SOILMATE / DATA PRODUCTS</span><h2 id="browser-title">数据资源中心</h2><p>从指标目录出发，核对每一份数据的字段、单位与来源。</p><span class="browser-head-summary">{{ indicators.length }} 项已登记指标 <i aria-hidden="true"></i> {{ resolution }} km 网格目录</span></div><button type="button" class="browser-close" aria-label="返回地图" @click="closeDataBrowser">返回地图 <span aria-hidden="true">↗</span></button></header>
         <div class="browser-tabs" role="tablist" aria-label="数据资源内容"><button type="button" role="tab" :aria-selected="browserTab === 'layers'" :class="{ active: browserTab === 'layers' }" @click="browserTab = 'layers'">指标目录 <span>{{ indicators.length }}</span></button><button type="button" role="tab" :aria-selected="browserTab === 'database'" :class="{ active: browserTab === 'database' }" @click="browserTab = 'database'">原始表浏览</button></div>
         <template v-if="browserTab === 'layers'">
-          <div class="browser-layer-tools"><label>查找指标<input v-model="browserSearch" type="search" placeholder="名称、字段代码或来源文件" /></label><div class="catalog-filters" role="group" aria-label="指标类别"><button v-for="category in categories" :key="category.id" type="button" :class="{ active: catalogCategory === category.id }" :aria-pressed="catalogCategory === category.id" @click="catalogCategory = category.id">{{ category.label }}</button></div><span>{{ filteredBrowserIndicators.length }} / {{ indicators.length }} 项</span></div>
+          <div class="browser-layer-tools"><label>查找指标<input v-model="browserSearch" type="search" placeholder="搜索中文名、字段代码或来源文件" /></label><div class="browser-filter-group"><span>指标类别</span><div class="catalog-filters" role="group" aria-label="指标类别"><button v-for="category in categories" :key="category.id" type="button" :data-group="category.id" :class="{ active: catalogCategory === category.id }" :aria-pressed="catalogCategory === category.id" @click="catalogCategory = category.id">{{ category.label }}</button></div></div><span class="browser-result-count">显示 <strong>{{ filteredBrowserIndicators.length }}</strong> / {{ indicators.length }} 项</span></div>
           <div class="product-catalog">
-            <div class="product-list" aria-label="指标产品列表"><button v-for="item in filteredBrowserIndicators" :key="item.col_name" type="button" :class="{ active: catalogSelected?.col_name === item.col_name }" :aria-pressed="catalogSelected?.col_name === item.col_name" @click="selectedCatalogKey = item.col_name"><span class="product-list-title">{{ displayName(item.col_name, item.cname || item.name) }}</span><span class="product-list-meta">{{ item.col_name }} · {{ catalogUnit(item) }}</span></button><div v-if="apiState === 'loading'" class="product-list-state">正在读取指标目录…</div><div v-else-if="apiState === 'error'" class="product-list-state">{{ indicatorError }} <button type="button" @click="loadIndicators">重试</button></div><div v-else-if="!filteredBrowserIndicators.length" class="product-list-state">没有匹配的指标，请调整关键词或类别。</div></div>
-            <article v-if="catalogSelected" class="product-detail"><div class="product-detail-head"><div><span class="section-kicker">指标产品 / {{ groupLabel(catalogSelected.col_name) }}</span><h3>{{ displayName(catalogSelected.col_name, catalogSelected.cname || catalogSelected.name) }}</h3><p>{{ catalogSelected.col_name }} · {{ resolution }} km 网格</p></div><button type="button" class="product-map-action" @click="showCatalogLayer(catalogSelected.col_name)">在地图查看 ↗</button></div><div class="product-evidence"><strong>元数据核对状态</strong><span>当前目录记录了栅格字段与文件。采样年份、土层深度和实测/预测属性尚未在接口中登记。</span></div><dl class="product-facts"><div><dt>单位</dt><dd>{{ catalogUnit(catalogSelected) }}</dd></div><div><dt>空间分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ catalogSelected.source_file || '待登记' }}</dd></div><div><dt>波段</dt><dd>{{ catalogSelected.band ?? '待登记' }}</dd></div><div><dt>有效像元</dt><dd>{{ catalogSelected.valid_count == null ? '未统计' : Number(catalogSelected.valid_count).toLocaleString() }}</dd></div><div><dt>数值范围</dt><dd>{{ catalogSelected.min == null || catalogSelected.max == null ? '未统计' : `${fmt(displayValue(catalogSelected.col_name, catalogSelected.min))} – ${fmt(displayValue(catalogSelected.col_name, catalogSelected.max))}` }}</dd></div><div><dt>数据年份</dt><dd>未登记</dd></div><div><dt>土层深度</dt><dd>未登记</dd></div><div><dt>属性类型</dt><dd>待核对</dd></div></dl><p class="product-detail-foot">这是一份现有接口的字段目录。有效像元数不等于独立采样点数，数值范围也不是健康阈值。</p></article>
+            <div class="product-list" aria-label="指标产品列表"><div class="product-list-head"><strong>指标目录</strong><span>{{ filteredBrowserIndicators.length }} 项</span></div><button v-for="item in filteredBrowserIndicators" :key="item.col_name" type="button" :data-group="groupOf(item.col_name)" :class="{ active: catalogSelected?.col_name === item.col_name }" :aria-pressed="catalogSelected?.col_name === item.col_name" @click="selectedCatalogKey = item.col_name"><span class="product-list-top"><span class="product-list-title">{{ displayName(item.col_name, item.cname || item.name) }}</span><span class="product-list-group">{{ groupLabel(item.col_name) }}</span></span><span class="product-list-meta">{{ item.col_name }} · {{ catalogUnit(item) }}</span></button><div v-if="apiState === 'loading'" class="product-list-state">正在读取指标目录…</div><div v-else-if="apiState === 'error'" class="product-list-state">{{ indicatorError }} <button type="button" @click="loadIndicators">重试</button></div><div v-else-if="!filteredBrowserIndicators.length" class="product-list-state">没有匹配的指标，请调整关键词或类别。</div></div>
+            <article v-if="catalogSelected" class="product-detail" :data-group="groupOf(catalogSelected.col_name)"><div class="product-detail-content"><div class="product-detail-head"><div><span class="product-detail-category">{{ groupLabel(catalogSelected.col_name) }}指标</span><h3>{{ displayName(catalogSelected.col_name, catalogSelected.cname || catalogSelected.name) }}</h3><p>{{ catalogSelected.col_name }} <span aria-hidden="true">·</span> {{ resolution }} km 网格</p></div><button type="button" class="product-map-action" @click="showCatalogLayer(catalogSelected.col_name)">在地图查看 <span aria-hidden="true">↗</span></button></div><section class="product-detail-section"><div class="product-section-heading"><span class="product-section-index">01</span><div><h4>已登记的字段信息</h4><p>来自当前指标接口的元数据</p></div></div><dl class="product-facts"><div><dt>单位</dt><dd>{{ catalogUnit(catalogSelected) }}</dd></div><div><dt>空间分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ catalogSelected.source_file || '待登记' }}</dd></div><div><dt>波段</dt><dd>{{ catalogSelected.band ?? '待登记' }}</dd></div><div><dt>有效像元</dt><dd>{{ catalogSelected.valid_count == null ? '未统计' : Number(catalogSelected.valid_count).toLocaleString() }}</dd></div><div><dt>数值范围</dt><dd>{{ catalogSelected.min == null || catalogSelected.max == null ? '未统计' : `${fmt(displayValue(catalogSelected.col_name, catalogSelected.min))} – ${fmt(displayValue(catalogSelected.col_name, catalogSelected.max))}` }}</dd></div></dl></section><section class="product-review"><div class="product-section-heading"><span class="product-section-index">02</span><div><h4>仍需核对的信息</h4><p>当前接口尚未登记，使用前请核对来源</p></div></div><dl class="product-pending-facts"><div><dt>数据年份</dt><dd>未登记</dd></div><div><dt>土层深度</dt><dd>未登记</dd></div><div><dt>属性类型</dt><dd>待核对</dd></div></dl></section><p class="product-detail-foot">有效像元数不等于独立采样点数，数值范围也不是健康阈值。</p></div></article>
             <div v-else class="product-empty">选择左侧指标，查看它的单位、来源文件和当前缺失的元数据。</div>
           </div>
           <footer class="browser-pagination"><span>目录来自 {{ resolution }} km 指标接口 · 仅展示已登记字段，不推断未提供的来源信息。</span></footer>
@@ -150,8 +149,8 @@ import { onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
 import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import ScientificWorkbench from './ScientificWorkbench.vue'
-import ResearchWorkspace from './ResearchWorkspace.vue'
-import AssessmentWorkspace from './assessment/AssessmentWorkspace.vue'
+import HealthResearchHub from './HealthResearchHub.vue'
+import AssistantWorkspace from './AssistantWorkspace.vue'
 import L from 'leaflet'
 import { fetchIndicators, fetchMeta, fetchPoint, fetchData, fetchPreviewLayers, fetchPreviewPoint, fetchZ01Boundaries, fetchZ01Point, previewTileUrl, tileUrl } from './api.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'
@@ -192,10 +191,18 @@ const soiledgeOpen = ref(false)
 const scientificOpen = ref(false)
 const scientificTab = ref('health')
 function viewFromLocation() {
-  return window.location.pathname === '/assessment' || window.location.pathname === '/assessment/preview' ? 'assessment' : window.location.pathname === '/analysis' ? 'analysis' : window.location.pathname === '/evidence' ? 'trace' : 'home'
+  return ['/assessment', '/assessment/preview', '/analysis', '/evidence', '/research'].includes(window.location.pathname) ? 'research' : window.location.pathname === '/assistant' ? 'assistant' : 'home'
+}
+function stageFromLocation() {
+  const legacy = ({ '/analysis': 'analysis', '/evidence': 'evidence' })[window.location.pathname]
+  const stage = new URLSearchParams(window.location.search).get('stage')
+  return legacy || (['input', 'analysis', 'evidence', 'report'].includes(stage) ? stage : 'input')
 }
 function isAssessmentPreview() { return import.meta.env.DEV && window.location.pathname === '/assessment/preview' }
 const siteView = ref(viewFromLocation())
+const researchStage = ref(stageFromLocation())
+const assistantContext = ref(null)
+const assistantDraft = ref('')
 const assessmentPreview = ref(isAssessmentPreview())
 const assessmentMapPoint = ref(readAssessmentMapPoint())
 function readAssessmentMapPoint() {
@@ -220,8 +227,7 @@ async function checkAccount() {
     account.value = null
     csrfToken.value = ''
     homeResearch.value = { loading: false, error: '', runs: [] }
-    if (['/analysis', '/evidence'].includes(window.location.pathname)) window.location.replace(accountUrl(window.location.pathname))
-    else if (siteView.value === 'assessment' && !assessmentPreview.value) window.location.replace(accountUrl('/assessment'))
+    if ((siteView.value === 'research' && !assessmentPreview.value) || siteView.value === 'assistant') window.location.replace(accountUrl(window.location.pathname))
   }
 }
 async function logout() {
@@ -239,7 +245,7 @@ function restoreMapAfterAnalysis() {
 }
 function openMainView(view) {
   const previousView = siteView.value
-  const leavingAnalysis = previousView === 'analysis' || previousView === 'trace' || previousView === 'assessment'
+  const leavingAnalysis = previousView === 'research' || previousView === 'assistant'
   if (view === 'home' && previousView !== 'home' && map) rememberedMapView = { center: map.getCenter(), zoom: map.getZoom() }
   if (window.location.pathname !== '/') history.pushState({}, '', '/')
   siteView.value = view
@@ -263,31 +269,41 @@ function navigateFromLanding(destination) {
     openAssessment()
     return
   }
+  if (destination === 'assistant') { openAssistant(); return }
   openMainView(destination)
 }
 function openAssessment() {
-  if (siteView.value === 'assessment' && assessmentPreview.value) return
+  if (siteView.value === 'research' && assessmentPreview.value) return
   if (clicked.value && Number.isFinite(clicked.value.lon) && Number.isFinite(clicked.value.lat)) {
     assessmentMapPoint.value = { lon: clicked.value.lon, lat: clicked.value.lat }
     try { sessionStorage.setItem('soilmate.assessment.map-context', JSON.stringify(assessmentMapPoint.value)) } catch { /* Keep position in memory if browser storage is unavailable. */ }
   }
-  if (!account.value) { window.location.assign(accountUrl('/assessment')); return }
+  openResearch('input')
+}
+function openResearch(view = 'analysis') {
+  if (!account.value) { window.location.assign(accountUrl('/research')); return }
   if (map) rememberedMapView = { center: map.getCenter(), zoom: map.getZoom() }
-  if (window.location.pathname !== '/assessment') history.pushState({}, '', '/assessment')
+  researchStage.value = view === 'trace' ? 'evidence' : view
+  const path = `/research?stage=${researchStage.value}`
+  if (window.location.pathname + window.location.search !== path) history.pushState({}, '', path)
   assessmentPreview.value = false
-  siteView.value = 'assessment'
+  siteView.value = 'research'
   scientificOpen.value = false
   soiledgeOpen.value = false
   dataBrowserOpen.value = false
   catalogOpen.value = false
 }
-function openResearch(view = 'analysis') {
-  if (!account.value) { window.location.assign(accountUrl(view === 'trace' ? '/evidence' : '/analysis')); return }
-  if (map) rememberedMapView = { center: map.getCenter(), zoom: map.getZoom() }
-  const path = view === 'trace' ? '/evidence' : '/analysis'
-  if (window.location.pathname !== path) history.pushState({}, '', path)
-  siteView.value = view
-  scientificOpen.value = false
+function setResearchStage(stage) {
+  researchStage.value = stage
+  const path = `/research?stage=${stage}`
+  if (window.location.pathname + window.location.search !== path) history.pushState({}, '', path)
+}
+function openAssistant() {
+  if (!account.value) { window.location.assign(accountUrl('/assistant')); return }
+  if (siteView.value === 'research' && researchStage.value === 'input') assistantContext.value = null
+  if (window.location.pathname !== '/assistant') history.pushState({}, '', '/assistant')
+  siteView.value = 'assistant'
+  assessmentPreview.value = false
   dataBrowserOpen.value = false
   catalogOpen.value = false
 }
@@ -311,14 +327,14 @@ async function loadHomeResearch() {
   }
 }
 function onRouteChange() {
-  const leavingAnalysis = ['analysis', 'trace', 'assessment'].includes(siteView.value) && !['/analysis', '/evidence', '/assessment', '/assessment/preview'].includes(window.location.pathname)
+  const leavingAnalysis = ['research', 'assistant'].includes(siteView.value) && !['/analysis', '/evidence', '/assessment', '/assessment/preview', '/research', '/assistant'].includes(window.location.pathname)
   siteView.value = viewFromLocation()
+  researchStage.value = stageFromLocation()
   assessmentPreview.value = isAssessmentPreview()
   scientificOpen.value = false
   dataBrowserOpen.value = false
   if (siteView.value === 'home' && account.value) loadHomeResearch()
-  if ((siteView.value === 'analysis' || siteView.value === 'trace') && !account.value) window.location.replace(accountUrl(window.location.pathname))
-  if (siteView.value === 'assessment' && !account.value && !assessmentPreview.value) window.location.replace(accountUrl('/assessment'))
+  if ((siteView.value === 'assistant' || (siteView.value === 'research' && !assessmentPreview.value)) && !account.value) window.location.replace(accountUrl(window.location.pathname))
   if (leavingAnalysis) restoreMapAfterAnalysis()
 }
 const browserTab = ref('layers')
