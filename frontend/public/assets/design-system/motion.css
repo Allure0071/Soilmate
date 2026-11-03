@@ -1,0 +1,64 @@
+/* Shared by Vue pages and the standalone account page. */
+:root {
+  --motion-standard: cubic-bezier(.2, .65, .3, 1);
+  --motion-enter: cubic-bezier(.16, .85, .24, 1);
+  --motion-pop: cubic-bezier(.2, .9, .24, 1.18);
+  --motion-settle: cubic-bezier(.3, 0, .25, 1);
+  --motion-exit: cubic-bezier(.4, 0, .8, .2);
+  --motion-instant: 150ms;
+  --motion-short: 240ms;
+  --motion-page: 560ms;
+}
+@keyframes surface-arrive {
+  0% { opacity: 0; transform: translate3d(0, 18px, 0) scale(.988); animation-timing-function: cubic-bezier(.16,.85,.24,1); }
+  72% { opacity: 1; transform: translate3d(0, -3px, 0) scale(1.003); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes detail-arrive {
+  0% { opacity: 0; transform: translateY(8px); animation-timing-function: cubic-bezier(.16,.85,.24,1); }
+  72% { opacity: 1; transform: translateY(-1px); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+:where(button, a, input, select, summary) {
+  transition: color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), border-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
+}
+:where(.site-primary-nav a, .site-account a, .site-account button, .landing-actions button) {
+  transition: transform var(--motion-short) var(--motion-pop), color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
+}
+:where(.site-primary-nav a, .site-account a, .site-account button, .landing-actions button):active { transform: scale(.97); }
+.site-content-map > .explorer-workspace,
+.site-content-resources > .resource-workspace,
+.site-content-health > .health-hub,
+.site-content-tools > .tools-workspace,
+.site-content-workspace > .assistant-workspace,
+.edge-workbench, .scientific-workbench {
+  animation: surface-arrive var(--motion-page) cubic-bezier(0, 0, 1, 1) backwards;
+  transform-origin: center top;
+}
+:where(.assistant-inspector, .health-hub-assistant, .calculator-workbench, .tool-context-menu) {
+  animation: surface-arrive var(--motion-page) cubic-bezier(0, 0, 1, 1) backwards;
+  transform-origin: center top;
+}
+details[open] > :not(summary) { animation: detail-arrive 380ms cubic-bezier(0, 0, 1, 1); }
+.font-credit { color: inherit; font-size: var(--text-caption); text-decoration: none; text-underline-offset: 3px; }
+.font-credit:hover { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; translate: none !important; }
+}
+
+/* Drawer geometry is independent from the native map and its controls. */
+#app .catalog { transition: transform 380ms var(--motion-exit), visibility 0s cubic-bezier(0,0,1,1) 380ms; }
+#app .catalog.catalog-open { transition: transform 560ms var(--motion-pop), visibility 0s cubic-bezier(0,0,1,1); }
+/* Legacy tools stay below the same header, like the new upstream workspaces. */
+#app .site-content .edge-backdrop,
+#app .site-content .scientific-workbench {
+  inset: calc(var(--site-frame-top) + var(--site-header-height) + var(--site-frame-gap)) var(--site-frame-inline) var(--site-frame-bottom);
+  padding: 0;
+  box-shadow: 0 12px 36px #12362320;
+}
+.panel { animation: surface-arrive var(--motion-page) cubic-bezier(0,0,1,1); }
+
+.assessment-mode-section .assessment-page-actions { justify-content: flex-end; }
+.repository-footnote summary { color: #346b49; cursor: pointer; }
+.repository-footnote p { margin: 12px 0 0; }

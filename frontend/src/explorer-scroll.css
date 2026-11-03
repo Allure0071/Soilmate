@@ -1,0 +1,71 @@
+/* Keep the map frame stable; point results scroll inside their own grid cell. */
+.site-content-map {
+  --explore-map-height: max(500px, calc(100dvh - 200px));
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #aec3ae #28513b;
+}
+.site-content-map .explorer-workspace {
+  flex: 0 0 auto;
+  overflow: clip;
+  overflow-anchor: none;
+}
+.site-content-map .explorer-workspace > .workspace {
+  flex: none;
+  height: var(--explore-map-height);
+  min-height: var(--explore-map-height);
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+  align-items: stretch;
+}
+.site-content-map .explorer-workspace > .workspace,
+.site-content-map .explorer-workspace > .workspace.has-point { grid-template-columns: 68px minmax(0, 1fr) 340px; }
+.site-content-map .navigation-rail { min-height: var(--explore-map-height); }
+.site-content-map .map-stage {
+  position: relative;
+  inset: auto;
+  height: var(--explore-map-height);
+  align-self: start;
+  min-height: var(--explore-map-height);
+}
+.site-content-map .inspector,
+.site-content-map .workspace.has-point .inspector {
+  position: static;
+  width: auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border-radius: 0;
+  box-shadow: none;
+  transition: none;
+}
+.site-content-map .inspector-head { position: sticky; top: 0; }
+.site-content-map .inspector-empty { min-height: calc(var(--explore-map-height) - 148px); }
+.site-content-map .catalog { bottom: auto; height: calc(var(--explore-map-height) - 20px); }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .site-content-map .explorer-workspace > .workspace,
+  .site-content-map .explorer-workspace > .workspace.has-point { grid-template-columns: 60px minmax(0, 1fr) 320px; }
+}
+@media (max-width: 760px) {
+  .site-content-map { --explore-map-height: clamp(400px, 60dvh, 560px); }
+  .site-content-map .explorer-workspace > .workspace,
+  .site-content-map .explorer-workspace > .workspace.has-point {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    grid-template-rows: var(--explore-map-height) clamp(320px, 50dvh, 480px);
+    height: auto;
+  }
+  .site-content-map .navigation-rail { position: relative; inset: auto; grid-column: 1; grid-row: 1; height: var(--explore-map-height); }
+  .site-content-map .map-stage { position: relative; inset: auto; grid-column: 2; grid-row: 1; }
+  .site-content-map .inspector,
+  .site-content-map .workspace.has-point .inspector { grid-column: 1 / -1; grid-row: 2; min-height: 0; border-top: 1px solid #dfe8dc; }
+  .site-content-map .inspector-empty { min-height: 0; }
+  .site-content-map .sheet-toggle { display: none; }
+  .site-content-map .catalog { height: calc(var(--explore-map-height) - 16px); }
+  .site-content-map .map-stage .map-legend { bottom: 18px; }
+  .site-content-map .leaflet-control-zoom { margin: 0 12px 18px 0 !important; }
+}

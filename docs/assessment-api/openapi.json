@@ -1,0 +1,6452 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "Soilmate 健康评价前后端接口契约",
+    "version": "0.1.0-draft",
+    "description": "DRAFT: frontend proposal awaiting backend confirmation. Only GET /api/auth/me already exists. No new backend implementation or scientific validation is claimed."
+  },
+  "x-contract-status": "draft-awaiting-backend-review",
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "SessionCookie": []
+    }
+  ],
+  "paths": {
+    "/api/auth/me": {
+      "get": {
+        "operationId": "getAccount",
+        "summary": "Reuse current session/user and CSRF token",
+        "tags": [
+          "Existing account"
+        ],
+        "x-implemented": true,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Existing raw response; deliberately not wrapped.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMe"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Existing FastAPI error format.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyAuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/indicators": {
+      "get": {
+        "operationId": "listAssessmentIndicators",
+        "summary": "Read canonical input dictionary",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndicatorListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/sessions": {
+      "post": {
+        "operationId": "createAssessmentSession",
+        "summary": "Create quick/deep session",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/sessions/{session_id}": {
+      "get": {
+        "operationId": "getAssessmentSession",
+        "summary": "Restore session and its related IDs",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/sessions/{session_id}/upgrade": {
+      "post": {
+        "operationId": "upgradeAssessmentSession",
+        "summary": "Upgrade same session to deep without losing quick history",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionUpgrade"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/fields": {
+      "get": {
+        "operationId": "listAssessmentFields",
+        "summary": "List own plots",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAssessmentField",
+        "summary": "Create plot; backend assigns owner",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FieldCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/fields/{field_id}": {
+      "get": {
+        "operationId": "getAssessmentField",
+        "summary": "Read own plot",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateAssessmentField",
+        "summary": "Update plot background",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FieldResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FieldPatch"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/fields/{field_id}/cycles": {
+      "post": {
+        "operationId": "createAssessmentCycle",
+        "summary": "Create crop cycle",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "field_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CycleCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/cycles/{cycle_id}": {
+      "get": {
+        "operationId": "getAssessmentCycle",
+        "summary": "Read crop cycle",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "cycle_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CycleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/measurements": {
+      "post": {
+        "operationId": "createAssessmentMeasurement",
+        "summary": "Save one sample batch with one or more values",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasurementResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeasurementCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/measurements/{measurement_id}": {
+      "get": {
+        "operationId": "getAssessmentMeasurement",
+        "summary": "Restore raw and normalized input",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "measurement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasurementResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/tasks": {
+      "post": {
+        "operationId": "createAssessmentTask",
+        "summary": "Enqueue analysis, initial plan or replan",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAcceptedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/tasks/{task_id}": {
+      "get": {
+        "operationId": "getAssessmentTask",
+        "summary": "Poll task, role states and typed result",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/analyses/{analysis_id}": {
+      "get": {
+        "operationId": "getAssessmentAnalysis",
+        "summary": "Read immutable analysis result for earlier messages/decisions",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/plans/{plan_id}": {
+      "get": {
+        "operationId": "getAssessmentPlan",
+        "summary": "Read a plan version",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/plans/{plan_id}/confirm": {
+      "post": {
+        "operationId": "confirmAssessmentPlan",
+        "summary": "Adopt draft using optimistic version check",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "plan_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanConfirm"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/imports": {
+      "post": {
+        "operationId": "previewAssessmentImport",
+        "summary": "Parse file and preview before saving",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV or XLSX; proposed maximum 12,000,000 bytes, subject to backend confirmation."
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/imports/{import_id}/confirm": {
+      "post": {
+        "operationId": "confirmAssessmentImport",
+        "summary": "Atomically save mapped sample batches",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "import_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportConfirmedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportConfirm"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/sessions/{session_id}/messages": {
+      "get": {
+        "operationId": "listAssessmentMessages",
+        "summary": "Latest message page, ascending sequence; cursor fetches older pages",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "sendAssessmentMessage",
+        "summary": "Save question and enqueue followup in current mode",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageAcceptedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assessment/management-events": {
+      "post": {
+        "operationId": "createManagementEvent",
+        "summary": "Save user-reported actual management",
+        "tags": [
+          "Assessment draft"
+        ],
+        "x-implemented": false,
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Csrf"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success. New assessment payloads always declare real/mock origin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagementEventResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "HTTP 401; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "HTTP 403; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HTTP 409; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "HTTP 422; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "HTTP 429; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "HTTP 500; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "HTTP 503; structured error, no fabricated success.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManagementCreate"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "soilmate_session",
+        "description": "Reuse existing HttpOnly session cookie; frontend does not handle passwords/model keys here."
+      }
+    },
+    "parameters": {
+      "Csrf": {
+        "name": "X-CSRF-Token",
+        "in": "header",
+        "required": true,
+        "description": "From existing GET /api/auth/me; backend must enforce it for new write routes.",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Proposed replay protection: same user + method + path + key + body returns original outcome; changed body with same key returns 409. Retention window needs backend sign-off.",
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "schemas": {
+      "Mode": {
+        "type": "string",
+        "enum": [
+          "quick",
+          "deep"
+        ]
+      },
+      "TaskType": {
+        "type": "string",
+        "enum": [
+          "quick_analysis",
+          "deep_analysis",
+          "plan_generation",
+          "replan",
+          "followup"
+        ]
+      },
+      "TaskStatus": {
+        "type": "string",
+        "enum": [
+          "queued",
+          "running",
+          "completed",
+          "partial",
+          "failed",
+          "interrupted"
+        ]
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "crs": {
+            "const": "EPSG:4326",
+            "type": "string"
+          }
+        },
+        "required": [
+          "longitude",
+          "latitude",
+          "crs"
+        ],
+        "additionalProperties": false
+      },
+      "FieldError": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "JSON Pointer, e.g. /values/0/unit",
+            "minLength": 1
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "path",
+          "code",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION_FAILED",
+              "AUTH_REQUIRED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "CONFLICT",
+              "RATE_LIMITED",
+              "MODEL_UNAVAILABLE",
+              "NX_UNSUPPORTED",
+              "TASK_FAILED",
+              "TASK_INTERRUPTED",
+              "IMPORT_EXPIRED",
+              "INTERNAL_ERROR"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "minItems": 0
+          },
+          "retryable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "fields",
+          "retryable"
+        ],
+        "additionalProperties": false
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "AuthMe": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            },
+            "required": [
+              "id",
+              "email"
+            ],
+            "additionalProperties": false
+          },
+          "csrf_token": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "user",
+          "csrf_token"
+        ],
+        "additionalProperties": false
+      },
+      "LegacyAuthError": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "additionalProperties": false
+      },
+      "Indicator": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "default_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "input_hint": {
+            "type": "string"
+          },
+          "unit_required": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "aliases",
+          "units",
+          "default_unit",
+          "methods",
+          "input_hint",
+          "unit_required"
+        ],
+        "additionalProperties": false
+      },
+      "IndicatorList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Indicator"
+            },
+            "minItems": 0
+          },
+          "dictionary_version": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "items",
+          "dictionary_version"
+        ],
+        "additionalProperties": false
+      },
+      "BackgroundValue": {
+        "type": "object",
+        "properties": {
+          "indicator_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1900
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "depth_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "indicator_code",
+          "value",
+          "unit",
+          "source_label",
+          "year",
+          "depth_label"
+        ],
+        "additionalProperties": false
+      },
+      "MapContext": {
+        "type": "object",
+        "properties": {
+          "source_type": {
+            "const": "map_reference",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "resolution_km": {
+            "type": "integer",
+            "enum": [
+              1,
+              5
+            ]
+          },
+          "region_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "layer_values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackgroundValue"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "source_type",
+          "location",
+          "resolution_km",
+          "region_reference",
+          "layer_values"
+        ],
+        "additionalProperties": false,
+        "description": "Background only; never copied automatically into measured values or verified N+X region identity."
+      },
+      "SessionCreate": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "crop_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "background": {
+            "type": "string"
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "map_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MapContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "additionalProperties": false
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "crop_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "background": {
+            "type": "string"
+          },
+          "map_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MapContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_step": {
+            "type": "string",
+            "enum": [
+              "input",
+              "field_setup",
+              "timeline",
+              "results",
+              "feedback"
+            ]
+          },
+          "current_checkpoint_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "current_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "latest_task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "field_id",
+          "cycle_id",
+          "crop_name",
+          "background",
+          "map_context",
+          "current_step",
+          "current_checkpoint_id",
+          "measurement_ids",
+          "current_plan_id",
+          "latest_task_id",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "SessionUpgrade": {
+        "type": "object",
+        "properties": {
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "attach_measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "field_id",
+          "cycle_id",
+          "attach_measurement_ids"
+        ],
+        "additionalProperties": false,
+        "description": "User-confirmed association only; keep original measurement provenance and previous quick results."
+      },
+      "FieldCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "background": {
+            "type": "string"
+          },
+          "map_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MapContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "location"
+        ],
+        "additionalProperties": false
+      },
+      "FieldPatch": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "background": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "Field": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "background": {
+            "type": "string"
+          },
+          "map_context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MapContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "current_cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "location",
+          "background",
+          "map_context",
+          "current_cycle_id",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "FieldList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "minItems": 0
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "CycleCreate": {
+        "type": "object",
+        "properties": {
+          "crop_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "management_background": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "crop_name"
+        ],
+        "additionalProperties": false
+      },
+      "Cycle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "crop_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "management_background": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "field_id",
+          "crop_name",
+          "start_date",
+          "growth_stage",
+          "management_background",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "ValueInput": {
+        "type": "object",
+        "properties": {
+          "indicator_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_type": {
+            "const": "user_measurement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "indicator_code",
+          "value",
+          "source_type"
+        ],
+        "additionalProperties": false
+      },
+      "MeasurementCreate": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkpoint_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sample_alias": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sampling_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "depth_top_cm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "depth_bottom_cm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueInput"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "session_id",
+          "sample_alias",
+          "values"
+        ],
+        "additionalProperties": false,
+        "description": "At least one measured value; recommended-count coverage never blocks submission. Unit/method issues narrow numerical interpretation instead of fabricating values."
+      },
+      "MeasuredValue": {
+        "type": "object",
+        "properties": {
+          "indicator_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_type": {
+            "const": "user_measurement",
+            "type": "string"
+          },
+          "normalized_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "normalized_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quality_flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "indicator_code",
+          "value",
+          "unit",
+          "method",
+          "source_type",
+          "normalized_value",
+          "normalized_unit",
+          "quality_flags"
+        ],
+        "additionalProperties": false
+      },
+      "Measurement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkpoint_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sample_alias": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sampling_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "depth_top_cm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "depth_bottom_cm": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeasuredValue"
+            },
+            "minItems": 1
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "field_id",
+          "cycle_id",
+          "checkpoint_id",
+          "sample_alias",
+          "sampling_date",
+          "depth_top_cm",
+          "depth_bottom_cm",
+          "values",
+          "warnings",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "EvidenceRef": {
+        "type": "object",
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "measurement",
+              "historical_measurement",
+              "map_reference",
+              "rule",
+              "user_statement"
+            ]
+          },
+          "source_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "indicator_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id",
+          "indicator_code",
+          "label"
+        ],
+        "additionalProperties": false
+      },
+      "Assessment": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "single_indicator",
+              "partial_indicators",
+              "recommended_set"
+            ]
+          },
+          "composite_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "score_explanation": {
+            "type": "string"
+          },
+          "indicator_assessments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "indicator_code": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "needs_attention",
+                    "within_reference",
+                    "uncertain",
+                    "descriptive_only"
+                  ]
+                },
+                "explanation": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EvidenceRef"
+                  },
+                  "minItems": 0
+                }
+              },
+              "required": [
+                "indicator_code",
+                "status",
+                "explanation",
+                "evidence"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "summary",
+          "scope",
+          "composite_score",
+          "score_explanation",
+          "indicator_assessments"
+        ],
+        "additionalProperties": false
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "possible_causes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "undetermined"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "minItems": 0
+          },
+          "verification_needed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "observation",
+          "possible_causes",
+          "priority",
+          "evidence",
+          "verification_needed"
+        ],
+        "additionalProperties": false
+      },
+      "Decision": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "timing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "verification_goal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "reason",
+          "conditions",
+          "timing",
+          "verification_goal",
+          "evidence"
+        ],
+        "additionalProperties": false
+      },
+      "OptionalTest": {
+        "type": "object",
+        "properties": {
+          "indicator_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "intended_question": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "indicator_code",
+          "reason",
+          "intended_question",
+          "timing"
+        ],
+        "additionalProperties": false
+      },
+      "Coverage": {
+        "type": "object",
+        "properties": {
+          "recommended_codes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "measured_codes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "missing_codes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "extra_codes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "recommended_codes",
+          "measured_codes",
+          "missing_codes",
+          "extra_codes"
+        ],
+        "additionalProperties": false,
+        "description": "Count distinct indicator codes, not file rows, sample count or repeated timepoints."
+      },
+      "ModelInfo": {
+        "type": "object",
+        "properties": {
+          "model_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "is_fine_tuned": {
+            "type": "boolean"
+          },
+          "rule_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "model_name",
+          "model_version",
+          "is_fine_tuned",
+          "rule_version"
+        ],
+        "additionalProperties": false
+      },
+      "AnalysisResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "input_snapshot": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceRef"
+            },
+            "minItems": 0
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/Coverage"
+          },
+          "assessment": {
+            "$ref": "#/components/schemas/Assessment"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "minItems": 0
+          },
+          "decisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Decision"
+            },
+            "minItems": 0
+          },
+          "gaps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "optional_tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OptionalTest"
+            },
+            "minItems": 0
+          },
+          "next_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model_info": {
+            "$ref": "#/components/schemas/ModelInfo"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "measurement_ids",
+          "input_snapshot",
+          "coverage",
+          "assessment",
+          "problems",
+          "decisions",
+          "gaps",
+          "optional_tests",
+          "next_plan_id",
+          "model_info",
+          "limitations",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "RecommendedIndicator": {
+        "type": "object",
+        "properties": {
+          "indicator_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "essential",
+              "recommended",
+              "optional"
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "indicator_code",
+          "reason",
+          "priority",
+          "unit",
+          "method"
+        ],
+        "additionalProperties": false
+      },
+      "Checkpoint": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "stage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "planned_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trigger": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommended_indicators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecommendedIndicator"
+            },
+            "minItems": 1
+          },
+          "sampling_guidance": {
+            "type": "string"
+          },
+          "estimated_cost": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "const": "CNY",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "sequence",
+          "stage",
+          "planned_date",
+          "trigger",
+          "purpose",
+          "recommended_indicators",
+          "sampling_guidance",
+          "estimated_cost",
+          "currency"
+        ],
+        "additionalProperties": false,
+        "description": "Suggested, non-binding checklist. Date may be null when stage/trigger determines timing."
+      },
+      "Plan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "base_plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "confirmed",
+              "superseded"
+            ]
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "nx_model",
+                  "verified_configuration",
+                  "manual",
+                  "mock"
+                ]
+              },
+              "version": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "region_code": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "version",
+              "region_code",
+              "applicability"
+            ],
+            "additionalProperties": false
+          },
+          "checkpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Checkpoint"
+            },
+            "minItems": 1
+          },
+          "change_reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "field_id",
+          "cycle_id",
+          "version",
+          "base_plan_id",
+          "status",
+          "source",
+          "checkpoints",
+          "change_reasons",
+          "limitations",
+          "created_at",
+          "confirmed_at"
+        ],
+        "additionalProperties": false
+      },
+      "PlanConfirm": {
+        "type": "object",
+        "properties": {
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "additionalProperties": false
+      },
+      "ManagementCreate": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "analysis_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adoption": {
+            "type": "string",
+            "enum": [
+              "adopted",
+              "partially_adopted",
+              "not_adopted"
+            ]
+          },
+          "performed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_action": {
+            "type": "string"
+          },
+          "amount_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "not_adopted_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "session_id",
+          "field_id",
+          "cycle_id",
+          "analysis_id",
+          "adoption",
+          "actual_action"
+        ],
+        "additionalProperties": false,
+        "description": "Record actual execution independently of suggested action; do not mark a recommendation executed automatically."
+      },
+      "ManagementEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "analysis_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "adoption": {
+            "type": "string",
+            "enum": [
+              "adopted",
+              "partially_adopted",
+              "not_adopted"
+            ]
+          },
+          "performed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual_action": {
+            "type": "string"
+          },
+          "amount_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "type": "string"
+          },
+          "not_adopted_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "field_id",
+          "cycle_id",
+          "analysis_id",
+          "decision_id",
+          "adoption",
+          "performed_at",
+          "actual_action",
+          "amount_text",
+          "notes",
+          "not_adopted_reason",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "QuickTaskCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "quick_analysis",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "management_event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "type",
+          "session_id",
+          "measurement_ids"
+        ],
+        "additionalProperties": false
+      },
+      "DeepTaskCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "deep_analysis",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "management_event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "type",
+          "session_id",
+          "field_id",
+          "cycle_id",
+          "measurement_ids"
+        ],
+        "additionalProperties": false
+      },
+      "PlanTaskCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "plan_generation",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "plan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "management_event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "type",
+          "session_id",
+          "field_id",
+          "cycle_id"
+        ],
+        "additionalProperties": false
+      },
+      "ReplanTaskCreate": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "const": "replan",
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "cycle_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "plan_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "management_event_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "type",
+          "session_id",
+          "field_id",
+          "cycle_id",
+          "plan_id"
+        ],
+        "additionalProperties": false
+      },
+      "TaskCreate": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/QuickTaskCreate"
+          },
+          {
+            "$ref": "#/components/schemas/DeepTaskCreate"
+          },
+          {
+            "$ref": "#/components/schemas/PlanTaskCreate"
+          },
+          {
+            "$ref": "#/components/schemas/ReplanTaskCreate"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "quick_analysis": "#/components/schemas/QuickTaskCreate",
+            "deep_analysis": "#/components/schemas/DeepTaskCreate",
+            "plan_generation": "#/components/schemas/PlanTaskCreate",
+            "replan": "#/components/schemas/ReplanTaskCreate"
+          }
+        }
+      },
+      "AgentTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "manager",
+              "data_check",
+              "diagnosis",
+              "agronomy",
+              "process_testing",
+              "review"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "status",
+          "summary",
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "MessageCreate": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "analysis_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "additionalProperties": false,
+        "description": "New measurements must first be saved; followup references their IDs. Do not treat free-text guessed values as lab records."
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 0,
+            "uniqueItems": true
+          },
+          "analysis_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "session_id",
+          "role",
+          "content",
+          "sequence",
+          "measurement_ids",
+          "analysis_id",
+          "task_id",
+          "created_at"
+        ],
+        "additionalProperties": false
+      },
+      "MessageList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "minItems": 0
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "additionalProperties": false
+      },
+      "MessageAccepted": {
+        "type": "object",
+        "properties": {
+          "message_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "task_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "status": {
+            "const": "queued",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message_id",
+          "task_id",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "TaskAccepted": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "status": {
+            "const": "queued",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "type",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "TaskResult": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "analysis",
+                "type": "string"
+              },
+              "analysis": {
+                "$ref": "#/components/schemas/AnalysisResult"
+              }
+            },
+            "required": [
+              "kind",
+              "analysis"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "plan",
+                "type": "string"
+              },
+              "plan": {
+                "$ref": "#/components/schemas/Plan"
+              }
+            },
+            "required": [
+              "kind",
+              "plan"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "message",
+                "type": "string"
+              },
+              "message": {
+                "$ref": "#/components/schemas/Message"
+              },
+              "analysis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AnalysisResult"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "message",
+              "analysis"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind"
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "type": {
+            "$ref": "#/components/schemas/TaskType"
+          },
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/TaskStatus"
+          },
+          "current_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agent_tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentTask"
+            },
+            "minItems": 0
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaskResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "task_id",
+          "type",
+          "session_id",
+          "status",
+          "current_stage",
+          "agent_tasks",
+          "result",
+          "error",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "queued",
+                    "running"
+                  ]
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "type": "null"
+                },
+                "error": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "completed",
+                    "partial"
+                  ]
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "$ref": "#/components/schemas/TaskResult"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "completed"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "error": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "failed",
+                    "interrupted"
+                  ]
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "type": "null"
+                },
+                "error": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "quick_analysis",
+                    "deep_analysis"
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "completed",
+                    "partial"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "properties": {
+                    "kind": {
+                      "const": "analysis"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "enum": [
+                    "plan_generation",
+                    "replan"
+                  ]
+                },
+                "status": {
+                  "enum": [
+                    "completed",
+                    "partial"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "properties": {
+                    "kind": {
+                      "const": "plan"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "followup"
+                },
+                "status": {
+                  "enum": [
+                    "completed",
+                    "partial"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "result": {
+                  "properties": {
+                    "kind": {
+                      "const": "message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ImportColumn": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "candidate_indicator_codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "candidate_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "candidate_indicator_codes",
+          "candidate_unit"
+        ],
+        "additionalProperties": false
+      },
+      "ImportRow": {
+        "type": "object",
+        "properties": {
+          "row_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minItems": 0
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "row_number",
+          "cells",
+          "issues"
+        ],
+        "additionalProperties": false
+      },
+      "ImportPreview": {
+        "type": "object",
+        "properties": {
+          "import_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportColumn"
+            },
+            "minItems": 0
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportRow"
+            },
+            "minItems": 0
+          },
+          "total_rows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "import_id",
+          "filename",
+          "expires_at",
+          "columns",
+          "rows",
+          "total_rows",
+          "warnings"
+        ],
+        "additionalProperties": false
+      },
+      "ImportMapping": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "sample_alias",
+              "sampling_date",
+              "depth_top_cm",
+              "depth_bottom_cm",
+              "indicator"
+            ]
+          },
+          "indicator_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "column",
+          "target",
+          "indicator_code",
+          "unit",
+          "method"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "target": {
+                  "const": "indicator"
+                }
+              },
+              "required": [
+                "target"
+              ]
+            },
+            "then": {
+              "properties": {
+                "indicator_code": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "indicator_code"
+              ]
+            }
+          }
+        ]
+      },
+      "ImportConfirm": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "field_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cycle_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkpoint_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "Opaque server-generated identifier; do not infer format or owner.",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportMapping"
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "session_id",
+          "mappings"
+        ],
+        "additionalProperties": false
+      },
+      "ImportConfirmed": {
+        "type": "object",
+        "properties": {
+          "import_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "measurement_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "Opaque server-generated identifier; do not infer format or owner.",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          }
+        },
+        "required": [
+          "import_id",
+          "measurement_ids",
+          "warnings"
+        ],
+        "additionalProperties": false,
+        "description": "Atomic commit: validation errors return 422 and persist no imported measurement rows. Distinct samples are returned as separate measurements."
+      },
+      "AuthMeResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AuthMe"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "IndicatorListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/IndicatorList"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Session"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "FieldListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FieldList"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "FieldResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Field"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "CycleResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Cycle"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "MeasurementResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Measurement"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "TaskAcceptedResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/TaskAccepted"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "TaskResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Task"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "AnalysisResultResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AnalysisResult"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "PlanResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Plan"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "ImportPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ImportPreview"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "ImportConfirmedResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ImportConfirmed"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "MessageListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MessageList"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "MessageAcceptedResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/MessageAccepted"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      },
+      "ManagementEventResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ManagementEvent"
+          },
+          "request_id": {
+            "type": "string",
+            "description": "Opaque server-generated identifier; do not infer format or owner.",
+            "minLength": 1
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "real",
+              "mock"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "request_id",
+          "data_origin"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

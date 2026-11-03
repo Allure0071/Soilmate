@@ -1,0 +1,2 @@
+/* Compatibility path; canonical styles use the existing /assets mount. */
+@import url('/assets/design-system/typography.css');

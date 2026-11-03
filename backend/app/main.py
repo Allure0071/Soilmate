@@ -7,10 +7,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 import hmac
 
-from .api import indicators, point, meta, data, preview, zones, soiledge, scientific, research, auth
+from .api import indicators, point, meta, data, preview, zones, soiledge, scientific, research, auth, agent
 from .scientific.research_store import connect, initialize
 
-app = FastAPI(title="壤脉天玑 Scientific Intelligence", version="0.2.0")
+app = FastAPI(title="沃壤知行 Scientific Intelligence", version="0.2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,11 +29,12 @@ app.include_router(soiledge.router)
 app.include_router(scientific.router)
 app.include_router(research.router)
 app.include_router(auth.router)
+app.include_router(agent.router)
 
 
 @app.middleware("http")
-async def protect_research(request, call_next):
-    if not request.url.path.startswith("/api/research/"):
+async def protect_research_and_agent(request, call_next):
+    if not request.url.path.startswith(("/api/research/", "/api/agent/")):
         return await call_next(request)
     initialize()
     with connect() as con:
@@ -83,5 +84,17 @@ def research_page():
 
 @app.get('/evidence')
 def evidence_page():
+    frontend_dist = Path(__file__).absolute().parents[2] / 'frontend' / 'dist' / 'index.html'
+    return FileResponse(frontend_dist)
+
+
+@app.get('/research')
+@app.get('/explore')
+@app.get('/resources')
+@app.get('/tools')
+@app.get('/assistant')
+@app.get('/assessment')
+@app.get('/assessment/preview')
+def workspace_page():
     frontend_dist = Path(__file__).absolute().parents[2] / 'frontend' / 'dist' / 'index.html'
     return FileResponse(frontend_dist)

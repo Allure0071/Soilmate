@@ -1,0 +1,163 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/auth/me",
+    "operationId": "getAccount",
+    "summary": "Reuse current session/user and CSRF token",
+    "priority": "P0"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/indicators",
+    "operationId": "listAssessmentIndicators",
+    "summary": "Read canonical input dictionary",
+    "priority": "P0"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/sessions",
+    "operationId": "createAssessmentSession",
+    "summary": "Create quick/deep session",
+    "priority": "P0"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/sessions/{session_id}",
+    "operationId": "getAssessmentSession",
+    "summary": "Restore session and its related IDs",
+    "priority": "P0"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/sessions/{session_id}/upgrade",
+    "operationId": "upgradeAssessmentSession",
+    "summary": "Upgrade same session to deep without losing quick history",
+    "priority": "P1"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/fields",
+    "operationId": "listAssessmentFields",
+    "summary": "List own plots",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/fields",
+    "operationId": "createAssessmentField",
+    "summary": "Create plot; backend assigns owner",
+    "priority": "P1"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/fields/{field_id}",
+    "operationId": "getAssessmentField",
+    "summary": "Read own plot",
+    "priority": "P1"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/assessment/fields/{field_id}",
+    "operationId": "updateAssessmentField",
+    "summary": "Update plot background",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/fields/{field_id}/cycles",
+    "operationId": "createAssessmentCycle",
+    "summary": "Create crop cycle",
+    "priority": "P1"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/cycles/{cycle_id}",
+    "operationId": "getAssessmentCycle",
+    "summary": "Read crop cycle",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/measurements",
+    "operationId": "createAssessmentMeasurement",
+    "summary": "Save one sample batch with one or more values",
+    "priority": "P0"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/measurements/{measurement_id}",
+    "operationId": "getAssessmentMeasurement",
+    "summary": "Restore raw and normalized input",
+    "priority": "P0"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/tasks",
+    "operationId": "createAssessmentTask",
+    "summary": "Enqueue analysis, initial plan or replan",
+    "priority": "P0"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/tasks/{task_id}",
+    "operationId": "getAssessmentTask",
+    "summary": "Poll task, role states and typed result",
+    "priority": "P0"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/analyses/{analysis_id}",
+    "operationId": "getAssessmentAnalysis",
+    "summary": "Read immutable analysis result for earlier messages/decisions",
+    "priority": "P1"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/plans/{plan_id}",
+    "operationId": "getAssessmentPlan",
+    "summary": "Read a plan version",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/plans/{plan_id}/confirm",
+    "operationId": "confirmAssessmentPlan",
+    "summary": "Adopt draft using optimistic version check",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/imports",
+    "operationId": "previewAssessmentImport",
+    "summary": "Parse file and preview before saving",
+    "priority": "P1"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/imports/{import_id}/confirm",
+    "operationId": "confirmAssessmentImport",
+    "summary": "Atomically save mapped sample batches",
+    "priority": "P1"
+  },
+  {
+    "method": "GET",
+    "path": "/api/assessment/sessions/{session_id}/messages",
+    "operationId": "listAssessmentMessages",
+    "summary": "Latest message page, ascending sequence; cursor fetches older pages",
+    "priority": "P0"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/sessions/{session_id}/messages",
+    "operationId": "sendAssessmentMessage",
+    "summary": "Save question and enqueue followup in current mode",
+    "priority": "P0"
+  },
+  {
+    "method": "POST",
+    "path": "/api/assessment/management-events",
+    "operationId": "createManagementEvent",
+    "summary": "Save user-reported actual management",
+    "priority": "P1"
+  }
+]

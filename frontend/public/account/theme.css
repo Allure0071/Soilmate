@@ -1,8 +1,8 @@
 /* Login and registration share the site's field-green frame. */
-:root { background: #28513b; }
+:root { font-family: var(--font-ui); background: #28513b; }
 body {
   min-height: 100dvh;
-  padding: 16px;
+  padding: 14px 18px 18px;
   background: #28513b;
 }
 .back {
@@ -13,7 +13,7 @@ body {
   border-radius: 999px;
   background: #e8f2e9;
   color: #245e3d;
-  font-size: 12px;
+  font-size: var(--text-caption);
   font-weight: 700;
 }
 .back:hover { background: #dcebdd; text-decoration: none; }
@@ -22,9 +22,9 @@ body {
   grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr);
   overflow: hidden;
   border: 1px solid #dbe6d8;
-  border-radius: 20px;
+  border-radius: 22px;
   background: #f8faf6;
-  box-shadow: 0 12px 36px rgba(8, 30, 17, .12);
+  box-shadow: 0 14px 44px rgba(8, 30, 17, .22);
 }
 .story {
   padding: clamp(38px, 5.2vw, 76px);
@@ -35,18 +35,20 @@ body {
   color: #fff;
 }
 .story::after { opacity: .1; }
-.eyebrow { color: #d4ebd3; font-size: 12px; }
+.eyebrow { color: #d4ebd3; font-size: var(--text-caption); }
 .story h1 {
   max-width: 650px;
   margin-top: 28px;
   color: #fff;
   font-weight: 600;
   line-height: 1.2;
+  letter-spacing: -.025em;
+  font-size: clamp(2.375rem, 4.7vw, 3.875rem);
 }
-.story p { color: #edf5e9; font-size: 15px; line-height: 1.8; }
+.story p { color: #edf5e9; font-size: var(--text-body); line-height: 1.8; }
 .story-bottom { border-top-color: rgba(255, 255, 255, .4); }
 .story-bottom b { color: #fff; }
-.story-bottom p { color: #dcebd9; font-size: 13px; }
+.story-bottom p { color: #dcebd9; font-size: var(--text-label); }
 .form-side {
   padding: clamp(25px, 4vw, 54px);
   background: #f8faf6;
@@ -55,65 +57,57 @@ body {
   width: min(100%, 460px);
   padding: clamp(27px, 3vw, 44px);
   border: 1px solid #dce8dc;
-  border-radius: 16px;
+  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 8px 28px rgba(36, 65, 42, .05);
+  box-shadow: 0 14px 36px rgba(36, 65, 42, .1);
 }
 .panel-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.panel-top .back { flex: none; padding: 0 12px; font-size: 11px; }
-.overline { color: #386d49; font-size: 12px; font-weight: 700; }
-.panel h2 { margin-top: 32px; color: #203d2b; font-size: 34px; }
-.sub { color: #465d4c; font-size: 14px; }
-.field label { color: #344c3a; font-size: 13px; }
+.panel-top .back { flex: none; padding: 0 12px; font-size: var(--text-caption); }
+.overline { color: #386d49; font-size: var(--text-caption); font-weight: 700; }
+.panel h2 { font-family: var(--font-display); line-height: var(--leading-title); font-weight: 600; margin-top: 21px; color: #203d2b; font-size: var(--text-page-title); }
+.sub { color: #465d4c; font-size: var(--text-body); }
+.field label { color: #344c3a; font-size: var(--text-label); }
 .field input {
-  height: 48px;
+  height: auto;
+  min-height: max(48px, 3em);
   border-color: #ccdccc;
   border-radius: 9px;
   background: #fdfefb;
-  font-size: 14px;
+  font-size: var(--text-input);
 }
 .field input::placeholder { color: #627864; }
-.password-wrap button { color: #285f3d; font-size: 12px; }
-.primary { min-height: 48px; border-radius: 9px; background: #286e48; font-size: 14px; }
+.password-wrap button { color: #285f3d; font-size: var(--text-caption); }
+.primary { min-height: 48px; border-radius: 9px; background: #286e48; font-size: var(--text-body); }
 .primary:hover { background: #1e5939; }
 .primary:disabled { opacity: 1; background: #537961; color: #fff; }
-.switch { color: #4d6253; font-size: 13px; }
-.switch button { font-size: 13px; }
-.footnote { color: #526657; font-size: 12px; }
-.error { color: #873d32; font-size: 13px; }
+.switch { color: #4d6253; font-size: var(--text-label); }
+.switch button { font-size: var(--text-label); }
+.footnote { color: #526657; font-size: var(--text-caption); }
+.error { color: #873d32; font-size: var(--text-label); }
 @media (max-width: 850px) {
   .layout { grid-template-columns: 1fr; }
   .story { min-height: 260px; padding: 34px; background-position: center 60%; }
-  .story h1 { max-width: 690px; font-size: clamp(34px, 5vw, 48px); }
+  .story h1 { max-width: 690px; font-size: clamp(2.125rem, 5vw, 3rem); }
   .form-side { padding: 26px; }
 }
 @media (max-width: 480px) {
   body { padding: 8px; }
   .layout { min-height: calc(100dvh - 16px); border-radius: 15px; }
   .story { min-height: 238px; padding: 26px 22px; background-position: 59% center; }
-  .story h1 { margin: 19px 0 12px; font-size: 30px; }
-  .story p { margin: 0; font-size: 13px; line-height: 1.65; }
-  .eyebrow { font-size: 12px; }
+  .story h1 { margin: 19px 0 12px; font-size: 1.875rem; }
+  .story p { margin: 0; font-size: var(--text-label); line-height: 1.65; }
+  .eyebrow { font-size: var(--text-caption); }
   .form-side { align-items: flex-start; padding: 18px 14px 28px; }
   .panel { padding: 24px 19px; border-radius: 15px; }
   .panel-top { gap: 8px; }
-  .panel-top .back { padding: 0 10px; font-size: 12px; }
-  .panel h2 { margin-top: 17px; font-size: 29px; }
+  .panel-top .back { padding: 0 9px; font-size: var(--text-caption); }
+  .panel h2 { font-family: var(--font-display); line-height: var(--leading-title); font-weight: 600; margin-top: 17px; font-size: var(--text-page-title); }
   .sub { margin-bottom: 21px; }
 }
 
-/* Keep the form on one reading axis; secondary help opens on demand. */
-.story { justify-content: center; }
-.story h1 { margin: 28px 0 24px; font-size: clamp(40px,4.3vw,66px); }
-.story p { max-width: 380px; }
-.panel .overline { font-size: 13px; }
-.panel-top .back { font-size: 12px; }
-.field { margin-bottom: 22px; }
-.field label { margin-bottom: 10px; }
-.field-hint:empty { display: none; }
-.footnote { margin: 24px 0 0; line-height: 1.8; }
-.footnote summary { cursor: pointer; color: #286747; }
-.footnote p { margin: 12px 0 0; }
-:where(button,a,input,summary):focus-visible { outline: 3px solid #9ac3a4; outline-offset: 3px; }
-@media(max-width:850px) { .story h1 { font-size: 38px; margin: 22px 0 18px; } }
-@media(max-width:480px) { .story { min-height: 220px; padding: 28px 24px; } .story h1 { font-size: 32px; } .panel { padding: 28px 22px; } }
+/* Shared type family; help stays secondary to the form. */
+.story{justify-content:center}
+.story-bottom{display:none}
+.field-hint:empty{display:none}
+.footnote summary{cursor:pointer;color:#286747}
+.footnote p{margin:10px 0 0}

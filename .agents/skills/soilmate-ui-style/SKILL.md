@@ -22,8 +22,8 @@ For full-page or cross-page UI work, read `product/04-Soilmate全站UI参考库�
 
 ## Typography
 
-- Body and controls: `DengXian`, then `PingFang SC`, then `Microsoft YaHei UI`, then generic sans-serif. Use comfortable line height and avoid tiny type in new UI.
-- Main titles: `Georgia`, `STSong`, `Songti SC`, `Noto Serif CJK SC`, `SimSun`, then generic serif. Limit this serif voice to headings; data tables, labels, forms, and numbers stay in the body face.
+- All interface text, headings, controls and numerals use the locally bundled `HarmonyOS Sans SC` family via `--font-ui`. `--font-display` aliases the same family. Keep true code/sequence fields monospace. Use `frontend/public/assets/design-system/typography.css`; preserve the upstream type scale.
+- Use medium weight for titles and spacing/scale for hierarchy. Do not reintroduce per-page serif or hardcoded system font overrides.
 - Avoid the generic all-sans, extra-wide-tracking look. Do not add remote font dependencies solely for this style.
 - Keep workspace descriptions around 13–14 px and compact step/field labels at least 11–12 px. Use dark botanical secondary text (`#4D6253` range) on light panels; do not fade disabled buttons to illegible opacity.
 
@@ -34,3 +34,13 @@ For full-page or cross-page UI work, read `product/04-Soilmate全站UI参考库�
 - Use softly rounded cards and buttons, subtle shadows, visible focus states, and responsive layouts. Avoid generic gradients, decorative glass effects throughout the product, and repeated photo heroes on data pages.
 
 Before changing UI, inspect the relevant existing component and shared CSS. Reuse current patterns and semantic variables where possible, then verify the build and the affected viewport. The user's latest instruction takes precedence over this style guide.
+
+## Shared navigation, motion and copy
+
+- Preserve the upstream `SiteHeader.vue`, navigation entries, routes and shared frame. Home, data, research, assistant and tools use that same component. A workspace or legacy tool must not cover or disable the primary navigation; keep module-specific tools inside their work surface.
+- Use `frontend/public/assets/design-system/motion.css` for explicit Bezier tokens, page arrival and UI feedback, and `frontend/src/design-system/motion.js` for scroll reveal and the small scroll response. Pages enter with one gentle overshoot and settle exactly. Drawers use the shared pop/exit curves.
+- Keep native scrolling. Scroll-linked movement is a bounded visual offset on the marked content, with one damped settle; do not intercept wheel/touch, accumulate scrolling, move the navigation or animate data tables on every scroll.
+- Support `prefers-reduced-motion`, stop RAF when settled/hidden/unmounted, and preserve real content/focus in the static state. Inspect actual intermediate frames, final geometry, fast repeated opening and native scrolling; source/build checks alone do not establish visible motion.
+- Remove duplicate overlines, instruction lists and filler copy. Retain units, missing-data states, source/quality constraints and required notices. Longer reference material belongs in labeled details.
+- The local iGEM Wiki motion/art references supply behavioral principles only. Do not copy their artwork, palette, water/glass scenes or project assets into Soilmate.
+- Desktop is the primary review target under the user's current scope.

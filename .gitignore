@@ -32,7 +32,8 @@ frontend/audit/
 
 # Research materials to review before any separate publication
 /knowfeat-reproduction/
-/docs/
+/docs/*
+!/docs/assessment-api/
 /使用指南.md
 
 # Root lockfile has no matching root package.json
