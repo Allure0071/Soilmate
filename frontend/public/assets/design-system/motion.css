@@ -1,0 +1,87 @@
+/* Shared by Vue pages and the standalone account page. */
+:root {
+  --motion-standard: cubic-bezier(.2, .65, .3, 1);
+  --motion-enter: cubic-bezier(.16, .85, .24, 1);
+  --motion-pop: cubic-bezier(.2, .9, .24, 1.18);
+  --motion-settle: cubic-bezier(.3, 0, .25, 1);
+  --motion-exit: cubic-bezier(.4, 0, .8, .2);
+  --motion-instant: 150ms;
+  --motion-short: 240ms;
+  --motion-page: 280ms;
+}
+/* Route snapshots blend without moving the workspace or shared navigation. */
+@keyframes page-blend { from { opacity: 0; } to { opacity: 1; } }
+@keyframes panel-arrive {
+  0% { opacity: 0; transform: scale(.985); animation-timing-function: cubic-bezier(.16,.85,.24,1); }
+  72% { opacity: 1; transform: scale(1.003); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+#app .site-header {
+  position: sticky;
+  top: var(--site-frame-top);
+  view-transition-name: site-navigation;
+}
+#app .site-content-workspace > .site-header { top: 0; }
+::view-transition { pointer-events: none; }
+::view-transition-group(root),
+::view-transition-group(site-navigation) { animation: none; }
+::view-transition-image-pair(root) { isolation: isolate; }
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; opacity: 1; }
+::view-transition-new(root) { animation: page-blend 280ms var(--motion-standard) both; mix-blend-mode: normal; }
+::view-transition-old(site-navigation) { display: none; }
+::view-transition-new(site-navigation) { animation: none; }
+::view-transition-group(site-nav-selection) { animation-duration: 360ms; animation-timing-function: cubic-bezier(.2,.75,.25,1); }
+::view-transition-old(site-nav-selection) { display: none; }
+::view-transition-new(site-nav-selection) { animation: none; }
+/* Named snapshots leave the DOM stacking context. Keep navigation labels above
+   the moving plate in the transition tree as well as in the live header. */
+::view-transition-group(site-navigation) { z-index: 1; }
+::view-transition-group(site-nav-selection) { z-index: 2; }
+::view-transition-group(site-nav-label-explore),
+::view-transition-group(site-nav-label-gold),
+::view-transition-group(site-nav-label-research),
+::view-transition-group(site-nav-label-assistant),
+::view-transition-group(site-nav-label-tools) { z-index: 3; animation: none; }
+::view-transition-old(site-nav-label-explore),
+::view-transition-old(site-nav-label-gold),
+::view-transition-old(site-nav-label-research),
+::view-transition-old(site-nav-label-assistant),
+::view-transition-old(site-nav-label-tools) { display: none; }
+::view-transition-new(site-nav-label-explore),
+::view-transition-new(site-nav-label-gold),
+::view-transition-new(site-nav-label-research),
+::view-transition-new(site-nav-label-assistant),
+::view-transition-new(site-nav-label-tools) { animation: none; }
+:where(button, a, input, select, summary) {
+  transition: color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), border-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
+}
+:where(.site-primary-nav a, .site-account a, .site-account button, .landing-actions button) {
+  transition: transform var(--motion-short) var(--motion-pop), color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
+}
+:where(.site-primary-nav a, .site-account a, .site-account button, .landing-actions button):active { transform: scale(.97); }
+:where(.calculator-workbench, .tool-context-menu, .panel) {
+  animation: panel-arrive 420ms cubic-bezier(0, 0, 1, 1) backwards;
+  transform-origin: center;
+}
+details[open] > :not(summary) { animation: page-blend var(--motion-short) var(--motion-standard); }
+.font-credit { color: inherit; font-size: var(--text-caption); text-decoration: none; text-underline-offset: 3px; }
+.font-credit:hover { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; translate: none !important; }
+}
+
+/* Drawer geometry is independent from the native map and its controls. */
+#app .catalog { transition: transform 380ms var(--motion-exit), visibility 0s cubic-bezier(0,0,1,1) 380ms; }
+#app .catalog.catalog-open { transition: transform 560ms var(--motion-pop), visibility 0s cubic-bezier(0,0,1,1); }
+/* Legacy tools stay below the same header, like the new upstream workspaces. */
+#app .site-content .edge-backdrop,
+#app .site-content .scientific-workbench {
+  inset: calc(var(--site-frame-top) + var(--site-header-height) + var(--site-frame-gap)) var(--site-frame-inline) var(--site-frame-bottom);
+  padding: 0;
+  box-shadow: 0 12px 36px #12362320;
+}
+
+.assessment-mode-section .assessment-page-actions { justify-content: flex-end; }
+.repository-footnote summary { color: #346b49; cursor: pointer; }
+.repository-footnote p { margin: 12px 0 0; }

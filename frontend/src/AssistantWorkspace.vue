@@ -2,21 +2,21 @@
   <main class="assistant-workspace" aria-label="沃壤知行 AI 助手">
     <button v-if="sidebarOpen" type="button" class="assistant-mobile-shade" aria-label="关闭会话列表" @click="sidebarOpen = false"></button>
     <aside class="assistant-sidebar" :class="{ 'assistant-sidebar-open': sidebarOpen }" :inert="(compact && !sidebarOpen) || (inspectorOverlay && inspectorOpen)" :role="compact && sidebarOpen ? 'dialog' : undefined" :aria-modal="compact && sidebarOpen ? true : undefined" aria-label="对话草稿" @keydown.esc="sidebarOpen = false" @keydown.tab="trapWorkspaceFocus($event, compact)">
-      <div class="assistant-sidebar-head"><strong>AI 助手</strong><button type="button" class="assistant-sidebar-close" aria-label="关闭会话列表" @click="sidebarOpen = false"><WorkspaceIcon name="close" /></button></div>
-      <button type="button" class="assistant-new-chat" @click="newThread"><WorkspaceIcon name="plus" />新建对话</button>
-      <div class="assistant-thread-group"><span>本机草稿</span><div v-for="thread in threads" :key="thread.id" class="assistant-thread-row" :class="{ active: thread.id === activeId }" :data-thread-id="thread.id"><button type="button" class="assistant-thread-select" :aria-current="thread.id === activeId ? 'page' : undefined" @click="selectThread(thread.id)"><strong>{{ thread.title }}</strong><small>{{ thread.context?.sample ? thread.context.sample : '独立问答' }}</small></button><button type="button" class="assistant-thread-delete" :aria-label="`删除对话：${thread.title}`" title="删除对话" @click="deleteThread(thread.id)"><WorkspaceIcon name="trash" /></button></div></div>
-      <div class="assistant-sidebar-foot"><WorkspaceIcon name="panel" /><p>草稿保留在当前浏览器<br>最多保存最近 20 个对话</p></div>
+      <div class="assistant-sidebar-head"><strong>对话</strong><button type="button" class="assistant-sidebar-close" aria-label="关闭会话列表" @click="sidebarOpen = false"><WorkspaceIcon name="close" /></button></div>
+      <button type="button" class="assistant-new-chat" aria-label="新建对话" @click="transitionTo(newThread)"><WorkspaceIcon name="plus" />新对话</button>
+      <div class="assistant-thread-group"><span>草稿</span><div v-for="thread in threads" :key="thread.id" class="assistant-thread-row" :class="{ active: thread.id === activeId }" :data-thread-id="thread.id"><button type="button" class="assistant-thread-select" :aria-current="thread.id === activeId ? 'page' : undefined" @click="transitionTo(selectThread, thread.id)"><strong>{{ thread.title }}</strong><small v-if="thread.context?.sample">{{ thread.context.sample }}</small></button><button type="button" class="assistant-thread-delete" :aria-label="`删除对话：${thread.title}`" title="删除对话" @click="transitionTo(deleteThread, thread.id)"><WorkspaceIcon name="trash" /></button></div></div>
+      <div class="assistant-sidebar-foot"><details><summary>草稿说明</summary><p>本机保存，最多 20 个。</p></details></div>
     </aside>
 
     <section class="assistant-main" aria-label="当前对话" :inert="(compact && sidebarOpen) || (inspectorOverlay && inspectorOpen)">
-      <header class="assistant-toolbar"><button type="button" class="assistant-menu-button" aria-label="打开会话列表" :aria-expanded="sidebarOpen" @click="sidebarOpen = true"><WorkspaceIcon name="menu" /></button><div><span>{{ activeThread?.context?.sample ? '已关联健康研究' : '独立专业问答' }}</span><strong :title="activeThread?.title">{{ activeThread?.title || '新对话' }}</strong></div><button type="button" class="assistant-context-button" :aria-expanded="inspectorOpen" @click="inspectorOpen = !inspectorOpen"><WorkspaceIcon name="panel" />研究上下文</button></header>
+      <header class="assistant-toolbar"><button type="button" class="assistant-menu-button" aria-label="打开会话列表" :aria-expanded="sidebarOpen" @click="sidebarOpen = true"><WorkspaceIcon name="menu" /></button><div><strong :title="activeThread?.title">{{ activeThread?.title || '新对话' }}</strong></div><button type="button" class="assistant-context-button" :aria-expanded="inspectorOpen" @click="changeInspector(!inspectorOpen)"><WorkspaceIcon name="panel" />研究资料</button></header>
       <ExpertConversation mode="full" :show-context="false" :context="activeThread?.context || null" :draft="activeThread?.draft || ''" :storage-available="storageAvailable" :csrf-token="csrfToken" @update:draft="updateDraft" />
     </section>
 
-    <aside v-if="inspectorOpen" class="assistant-inspector" :role="inspectorOverlay ? 'dialog' : undefined" :aria-modal="inspectorOverlay ? true : undefined" aria-label="研究上下文与依据" @keydown.esc="inspectorOpen = false" @keydown.tab="trapWorkspaceFocus($event, inspectorOverlay)"><header><h2>研究上下文</h2><button type="button" aria-label="关闭研究上下文" @click="inspectorOpen = false"><WorkspaceIcon name="close" /></button></header>
+    <aside v-if="inspectorOpen" class="assistant-inspector" :role="inspectorOverlay ? 'dialog' : undefined" :aria-modal="inspectorOverlay ? true : undefined" aria-label="研究上下文与依据" @keydown.esc="changeInspector(false)" @keydown.tab="trapWorkspaceFocus($event, inspectorOverlay)"><header><h2>研究资料</h2><button type="button" aria-label="关闭研究上下文" @click="changeInspector(false)"><WorkspaceIcon name="close" /></button></header>
       <template v-if="activeThread?.context?.sample"><div class="assistant-context-status"><span></span>{{ runLabel }}</div><h3>{{ activeThread.context.project || '当前项目' }}</h3><p class="assistant-context-sample">{{ activeThread.context.sample }}</p><dl><div><dt>数据版本</dt><dd>{{ activeThread.context.dataVersion || '未登记' }}</dd></div><div><dt>分析运行</dt><dd>{{ activeThread.context.runId || '尚未生成' }}</dd></div><div><dt>数据集</dt><dd>{{ activeThread.context.dataset || '未登记' }}</dd></div></dl><button type="button" class="assistant-open-research" @click="$emit('navigate-research')">打开健康研究<WorkspaceIcon name="arrow" /></button><button type="button" class="assistant-unlink" @click="unlinkContext">解除任务关联</button></template>
-      <div v-else class="assistant-context-empty"><WorkspaceIcon name="panel" /><h3>未关联研究</h3><p>从健康研究打开 AI 助手时，会带入当前样本和运行版本。</p><button type="button" @click="$emit('navigate-research')">前往健康研究<WorkspaceIcon name="arrow" /></button></div>
-      <p class="assistant-inspector-note">正式对话接入后，这里会列出本轮使用的字段、运行记录和文献来源。</p>
+      <div v-else class="assistant-context-empty"><WorkspaceIcon name="panel" /><h3>未关联研究</h3><p>从健康研究带入样本与版本。</p><button type="button" @click="$emit('navigate-research')">前往健康研究<WorkspaceIcon name="arrow" /></button></div>
+
     </aside>
   </main>
 </template>
@@ -26,6 +26,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ExpertConversation from './ExpertConversation.vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
 import { trapWorkspaceFocus } from './workspaceFocus.js'
+import { transitionPage } from './design-system/motion.js'
 
 const props = defineProps({ accountId: { type: String, default: 'local' }, context: { type: Object, default: null }, draft: { type: String, default: '' }, csrfToken: { type: String, default: '' } })
 const emit = defineEmits(['update:context', 'update:draft', 'navigate-research'])
@@ -66,6 +67,8 @@ watch(sidebarOpen, async open => { if (!compact.value) return; await nextTick();
 watch(inspectorOpen, async open => { if (!inspectorOverlay.value) return; await nextTick(); document.querySelector(open ? '.assistant-inspector header button' : '.assistant-context-button')?.focus() })
 const runLabel = computed(() => ({ raw_data: '仅有原始数据', exploratory_assessment: '探索性结果', validated_assessment: '经验证结果', insufficient_data: '数据不足' })[activeThread.value?.context?.runStatus] || '尚无评价结果')
 
+function transitionTo(action, ...args) { return transitionPage(() => action(...args), nextTick) }
+function changeInspector(open) { transitionTo(() => { inspectorOpen.value = open }) }
 function syncActive() { emit('update:context', activeThread.value?.context || null); emit('update:draft', activeThread.value?.draft || '') }
 function selectThread(id) { activeId.value = id; sidebarOpen.value = false; inspectorOpen.value = Boolean(activeThread.value?.context?.sample) && window.matchMedia('(min-width: 1180px)').matches; syncActive() }
 function newThread() { const thread = makeThread(); threads.value.unshift(thread); activeId.value = thread.id; sidebarOpen.value = false; inspectorOpen.value = false; syncActive() }

@@ -264,7 +264,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
 .research-page *{box-sizing:border-box}
 .project-rail{min-width:0;background:#f0f2ee;border-right:1px solid var(--line);padding:24px 19px;display:flex;flex-direction:column}
 .brand-lockup{display:flex;align-items:center;gap:11px;margin:0 0 31px}
-.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:#315c46;color:#fff;font-family:Georgia,serif;font-size:22px}
+.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:#315c46;color:#fff;font-family:var(--font-ui);font-size:22px}
 .brand-lockup b,.brand-lockup small{display:block}.brand-lockup b{font-size:var(--text-body);letter-spacing:-.02em}.brand-lockup small{margin-top:3px;color:var(--muted);font-size:var(--text-caption)}
 .field-label,.sample-picker,.module-picker{display:flex;flex-direction:column;gap:8px;font-size:var(--text-caption);font-weight:600;color:#59676a}
 .research-page select,.research-page input:not([type=file]){width:100%;min-width:0;min-height:42px;padding:9px 11px;border:1px solid #d5dbd5;border-radius:6px;background:#fff;color:var(--ink);font:inherit}
@@ -305,7 +305,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
 @media(max-width:560px){.research-stages{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 9px}.stage-copy b{font-size:var(--text-caption)}.stage-copy small{font-size:var(--text-caption)}.quality-row{grid-template-columns:minmax(94px,1.1fr) repeat(2,minmax(62px,.8fr));gap:6px;font-size:var(--text-caption)}.quality-row>:last-child{grid-column:2/-1;color:var(--muted)}.quality-heading>:last-child{grid-column:2/-1}.capability-note{grid-template-columns:1fr;gap:4px}.capability-note p{margin-bottom:9px}.joint-checks li{grid-template-columns:1fr;gap:4px}}
 .asset-drawer{margin-top:20px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.asset-drawer>summary{display:flex;align-items:center;gap:9px;padding:13px 0;cursor:pointer;list-style:none}.asset-drawer>summary::-webkit-details-marker{display:none}.asset-drawer>summary b{font-size:var(--text-label)}.asset-drawer>summary span{margin-left:auto;color:var(--muted);font-size:var(--text-caption)}.asset-drawer>summary i{font-style:normal;color:var(--muted);font-size:var(--text-body)}.asset-drawer[open]>summary i{transform:rotate(45deg)}.asset-content{padding:0 0 14px}.asset-content>.muted{margin:0 0 10px}.rail-footnote{margin:12px 0 0;padding:0;font-size:var(--text-caption)}
 @media(max-width:850px){.project-rail{padding:12px 20px}.brand-lockup{margin:0 0 11px}.field-label{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:12px}.project-create{margin-top:7px}.asset-drawer{margin-top:11px}.asset-drawer>summary{padding:10px 0}.rail-footnote{margin-top:8px}}
-@media(prefers-reduced-motion:reduce){.research-page *{scroll-behavior:auto!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.research-page *{scroll-behavior:auto!important;transition:none!important var(--motion-standard)}}
 
 /* Soilmate research product system. One action hierarchy, quiet data surfaces. */
 .research-page {
@@ -404,7 +404,7 @@ function executionLabel(actionClass){return ({computable:'执行这项检查',bl
   color: #fff;
   font-size: var(--text-caption);
   font-weight:600;
-  transition: background-color .16s ease, transform .16s ease;
+  transition:background-color .16s var(--motion-standard), transform .16s var(--motion-standard);
 }
 .primary-action:hover:not(:disabled), .agent-primary:hover:not(:disabled) { background: #1b5637; box-shadow: none; }
 .primary-action:active:not(:disabled), .agent-primary:active:not(:disabled) { transform: scale(.985); }

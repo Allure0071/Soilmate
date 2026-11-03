@@ -362,5 +362,83 @@
   .expert-compose textarea { font-size: var(--text-input); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .health-hub *, .assistant-workspace * { scroll-behavior: auto !important; transition: none !important; }
+  .health-hub *, .assistant-workspace * { scroll-behavior: auto !important; transition:none !important var(--motion-standard); }
+}
+
+/* Shared Apple-style research surfaces; data and long answers stay opaque. */
+#app .assistant-workspace { background: #f9fbf8; }
+#app .assistant-sidebar { width: 220px; padding: 24px 14px 18px; background: #eff4ee; border-right-color: #dfe7dd; }
+#app .assistant-sidebar-head { padding: 0 10px 22px; }
+#app .assistant-sidebar-head strong { font-size: var(--text-subheading); font-weight: 500; }
+#app .assistant-new-chat, #app .assistant-context-button,
+#app .assistant-open-research, #app .assistant-context-empty button,
+#app .health-ai-reopen { border-radius: var(--radius-control); border-color: #d4e1d0; background: #fbfdf9; box-shadow: inset 0 1px 0 #fff, 0 3px 10px #213e2810; }
+#app .assistant-thread-group > span { color: #718272; font-size: var(--text-caption); }
+#app .assistant-thread-row, #app .assistant-thread-select { border-radius: 15px; }
+#app .assistant-thread-row.active { background: #e1eade; box-shadow: inset 0 1px 0 #ffffff85; }
+#app .assistant-thread-select { min-height: 52px; padding: 13px; }
+#app .assistant-thread-delete { opacity: .55; }
+#app .assistant-thread-row:is(:hover, :focus-within) .assistant-thread-delete { opacity: 1; }
+#app .assistant-sidebar-foot { margin-top: auto; border-top: 0; padding-inline: 12px; }
+#app .assistant-sidebar-foot summary { color: #687b6a; font-size: var(--text-caption); cursor: pointer; }
+#app .assistant-sidebar-foot p { margin: 8px 0 0; font-size: var(--text-caption); }
+#app .assistant-main, #app .assistant-main > .expert-conversation { background: #fbfcfa; }
+#app .assistant-toolbar { min-height: 68px; padding: 14px 28px; border-bottom-color: #e6ece3; }
+#app .assistant-toolbar strong { margin: 0; font-size: var(--text-body); font-weight: 500; }
+#app .assistant-main .expert-body { padding: 32px clamp(24px, 4vw, 56px); }
+#app .assistant-main .expert-intro h1 { font-size: clamp(28px, 3vw, 38px); line-height: 1.3; letter-spacing: -.035em; font-weight: 500; }
+#app .assistant-main .expert-prompts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 26px; border: 0; }
+#app .expert-prompts button { gap: 14px; padding: 16px; border: 1px solid #e0e8dc; border-radius: 18px; background: #fff; box-shadow: inset 0 1px 0 #fff, 0 4px 16px #213e2805; }
+#app .expert-prompts button:hover { border-color: #b5ceb6; background: #f3f8f0; }
+#app .assistant-main .expert-prompts button { min-height: 80px; font-size: var(--text-label); line-height: 1.6; }
+#app .assistant-main .expert-compose { align-self: center; width: calc(100% - 56px); max-width: 760px; margin: 0 28px 24px; padding: 16px 18px; border: 1px solid #e0e8dc; border-radius: 24px; background: #fff; box-shadow: 0 10px 30px #183a2310, inset 0 1px 0 #fff; }
+#app .assistant-main .expert-compose textarea { min-height: 72px; border: 0; border-radius: 12px; background: transparent; padding: 8px 4px; }
+#app .expert-compose button { border-radius: 13px; }
+#app .expert-compose-resizer { height: 16px; border-top: 0; background: transparent; }
+#app .expert-compose-resizer:hover, #app .expert-compose-resizer:focus-visible { background: #edf3e780; }
+#app .assistant-inspector { background: #f3f7ef; padding: 22px; }
+#app .assistant-inspector header h2 { font-size: var(--text-subheading); font-weight: 500; }
+#app .assistant-inspector header button { border: 0; border-radius: 10px; background: transparent; color: var(--health-green); cursor: pointer; }
+#app .health-hub-header { padding-bottom: 16px; }
+#app .health-stages { gap: 8px; padding-bottom: 8px; }
+#app .health-stages button { min-height: 42px; padding: 9px 14px; border-radius: 14px; }
+#app .health-stages button.active { background: #e6eedf; box-shadow: inset 0 1px 0 #ffffffb0; }
+#app .health-stages button::after { display: none; }
+#app .health-hub-assistant { background: #f3f7ef; }
+#app .health-hub-assistant .expert-head { padding: 20px; }
+#app .health-hub-assistant .expert-head h2 { font-size: var(--text-subheading); font-weight: 500; }
+#app .health-hub-assistant .expert-body { min-height: 160px; padding: 22px 20px; }
+#app .health-hub-assistant .expert-intro h3 { font-size: var(--text-panel-title); font-weight: 500; }
+#app .health-hub-assistant .expert-prompts { gap: 10px; border: 0; margin-top: 22px; }
+#app .health-hub-assistant .expert-prompts button { min-height: 62px; padding: 12px; border-radius: 14px; }
+#app .health-hub-assistant .expert-compose { padding: 18px 20px; background: #ffffffa0; }
+#app .health-hub-assistant .expert-compose textarea { border-radius: 16px; background: #fff; }
+#app .health-hub-content .assessment-mode-options > label { min-height: 190px; padding: 22px; border-radius: 22px; border-color: #dce5d6; background: #fbfdf9; box-shadow: 0 5px 20px #203c2705, inset 0 1px 0 #fff; transition: background-color 240ms var(--motion-standard), border-color 240ms var(--motion-standard), box-shadow 240ms var(--motion-standard); }
+#app .health-hub-content .assessment-mode-options > label.selected { background: #eaf2e4; border-color: #82a986; box-shadow: inset 0 1px 0 #ffffffc0, 0 5px 18px #28583e08; }
+#app .health-hub-content .assessment-mode-options > label b { margin-top: 18px; font-weight: 500; }
+#app .health-hub :is(.assessment-primary-button, .assessment-secondary-button, .assessment-map-link),
+#app .health-hub-content .assessment-context-form :is(input, textarea, select) { border-radius: var(--radius-control); }
+#app .assessment-footer { font-size: var(--text-caption); }
+#app .assessment-footer summary { color: #667b67; cursor: pointer; }
+#app .assessment-footer p { margin: 8px 0 0; color: #667b67; line-height: 1.7; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #app .assistant-context-button, #app .assistant-new-chat,
+  #app .assistant-main .expert-compose, #app .health-ai-reopen {
+    background: linear-gradient(145deg, #ffffff70, transparent 65%), var(--glass-tint);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+    border-color: var(--glass-edge);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  #app .assistant-context-button, #app .assistant-new-chat,
+  #app .assistant-main .expert-compose, #app .health-ai-reopen { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (max-width: 1100px) {
+  #app .assistant-main .expert-prompts { grid-template-columns: 1fr; }
+  #app .assistant-main .expert-prompts button { min-height: 58px; }
+}
+@media (max-width: 850px) {
+  #app .assistant-sidebar { width: min(280px, 86vw); }
+  #app .assistant-main .expert-compose { width: calc(100% - 32px); margin-inline: 16px; }
 }

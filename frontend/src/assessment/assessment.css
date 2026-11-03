@@ -68,7 +68,7 @@
 .assessment-context-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .assessment-context-grid label, .assessment-background-field { display: block; min-width: 0; font-size: var(--text-body); font-weight: 600; color: #35543d; }
 .assessment-context-grid label > span { margin-left: 5px; font-size: var(--text-caption); color: #586e52; }
-.assessment-workspace :is(input, select, textarea) { width: 100%; min-width: 0; border: 1px solid var(--assessment-control-line); border-radius: 8px; background: #fff; color: var(--assessment-ink); font: inherit; font-size: var(--text-input); font-weight: 400; transition: border-color .16s ease, background-color .16s ease; }
+.assessment-workspace :is(input, select, textarea) { width: 100%; min-width: 0; border: 1px solid var(--assessment-control-line); border-radius: 8px; background: #fff; color: var(--assessment-ink); font: inherit; font-size: var(--text-input); font-weight: 400; transition:border-color .16s var(--motion-standard), background-color .16s var(--motion-standard); }
 .assessment-workspace :is(input, select, textarea):hover:not(:disabled) { border-color: #456e3d; }
 .assessment-workspace :is(input, select) { min-height: 48px; padding: 10px 12px; }
 .assessment-workspace textarea { resize: vertical; padding: 12px; }
@@ -177,4 +177,4 @@
   .assessment-confirm-banner h2 { font-size: var(--text-panel-title); }
   .assessment-footer { align-items: start; margin-top: 32px; font-size: var(--text-caption); }
 }
-@media (prefers-reduced-motion: reduce) { .assessment-workspace * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .assessment-workspace * { transition:none !important var(--motion-standard); } }

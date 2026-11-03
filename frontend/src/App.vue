@@ -1,16 +1,17 @@
 <template>
   <div class="app-shell">
     <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-tools': siteView==='tools', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
-    <HomeLanding v-if="siteView==='home'" :account="account" @navigate="navigateFromLanding" @logout="logout" />
-    <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" :inert="soiledgeOpen || scientificOpen" @navigate="navigateFromHeader" @logout="logout" />
+    <HomeLanding v-if="siteView==='home'" :account="account" @navigate="destination => transitionTo(navigateFromLanding, destination)" @logout="logout" />
+    <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" @navigate="destination => transitionTo(navigateFromHeader, destination)" @logout="logout" />
 
-    <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="returnToTools"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
-    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="openTool" />
+    <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="transitionTo(returnToTools)"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
+    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="tool => transitionTo(openTool, tool)" />
 
     <section v-show="siteView==='explore'" class="explorer-workspace" :inert="soiledgeOpen || scientificOpen">
       <div class="map-workspace-toolbar">
         <h1 tabindex="-1">探索数据</h1>
         <div class="map-data-controls">
+          <div class="map-basemap-control" role="group" aria-label="地图底图"><span>底图</span><div><button v-for="option in basemapOptions" :key="option.id" type="button" :class="{ active: basemapMode === option.id }" :aria-pressed="basemapMode === option.id" :disabled="!basemapEnabled" :title="!basemapEnabled ? `${basemapProviderLabel}底图待启用` : option.label" @click="changeBasemap(option.id)">{{ option.label }}</button></div></div>
           <div class="module-resolution" role="group" aria-label="地图数据分辨率"><span>数据分辨率</span><div><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div></div>
           <span class="map-dataset-count">{{ indicators.length ? `${indicators.length} 项已登记指标` : '正在读取目录' }}</span>
           <span class="map-data-connection" :class="apiState"><i aria-hidden="true"></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
@@ -26,7 +27,7 @@
       <div v-if="catalogOpen" class="drawer-scrim" aria-hidden="true" @click="catalogOpen = false"></div>
       <aside id="layer-drawer" ref="catalogRef" class="catalog" :class="{ 'catalog-open': catalogOpen }" role="dialog" aria-modal="true" aria-label="图层目录" tabindex="-1" :inert="!catalogOpen" @keydown="handleDrawerKeydown" @touchstart.passive="onDrawerTouchStart" @touchend.passive="onDrawerTouchEnd">
         <button class="drawer-close" type="button" aria-label="关闭图层目录" @click="catalogOpen = false">×</button>
-        <div class="catalog-intro"><div class="section-kicker">数据图层</div><h1>探索图层</h1><p>查看土壤、气候与农业相关指标。</p></div>
+        <div class="catalog-intro"><h1>探索图层</h1></div>
         <div class="catalog-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg><input v-model="search" type="search" placeholder="搜索指标或代码" aria-label="搜索指标或代码" /></div>
         <div class="category-tabs" role="tablist" aria-label="图层分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeCategory === category.id" :class="{ active: activeCategory === category.id }" @click="activeCategory = category.id">{{ category.label }}</button></div>
         <div class="list-meta"><span>{{ activeCategory === 'all' ? '全部图层' : categories.find(c => c.id === activeCategory)?.label }}</span><span>{{ filteredIndicators.length }} 已登记 · {{ filteredPreviewLayers.length }} 预览</span></div>
@@ -37,22 +38,24 @@
             <button v-if="previewAdditionalLayers.length" type="button" class="preview-more" :aria-expanded="showMorePreviews || !!search.trim()" @click="showMorePreviews = !showMorePreviews">{{ showMorePreviews || search.trim() ? '收起' : '查看' }}更多年份与土层（{{ previewAdditionalLayers.length }}）</button>
             <template v-if="showMorePreviews || search.trim()"><button v-for="layer in previewAdditionalLayers" :key="layer.id" type="button" class="indicator-item preview-item" :class="{ active: selectedPreviewId === layer.id }" @click="choosePreview(layer.id)"><span class="item-symbol" aria-hidden="true"><span></span></span><span class="item-copy"><strong>{{ layer.name }}</strong><small>{{ layer.unit }} · 5 km 对齐</small></span></button></template>
           </div>
-          <div v-if="apiState === 'loading'" class="catalog-state"><span class="state-spinner"></span><strong>正在读取图层</strong><small>请稍候，正在连接数据服务</small></div>
+          <div v-if="apiState === 'loading'" class="catalog-state"><span class="state-spinner"></span><strong>正在读取图层</strong></div>
           <div v-else-if="apiState === 'error'" class="catalog-state"><span class="state-icon">!</span><strong>数据服务暂不可用</strong><small>{{ indicatorError }}</small><button type="button" @click="loadIndicators">重新连接</button></div>
           <div v-else-if="!filteredIndicators.length" class="catalog-state"><span class="state-icon">∅</span><strong>没有找到匹配图层</strong><small>试试其他关键词或分类</small></div>
           <button v-for="ind in filteredIndicators" :key="ind.col_name" type="button" class="indicator-item" :class="{ active: selectedKey === ind.col_name }" @click="chooseIndicator(ind.col_name)">
-            <span class="item-symbol" aria-hidden="true"><span></span></span><span class="item-copy"><strong>{{ displayName(ind.col_name, ind.cname || ind.name) }}</strong><small>{{ ind.col_name }}</small></span>
+            <span class="item-symbol" aria-hidden="true"><span></span></span><span class="item-copy"><strong>{{ displayName(ind.col_name, ind.cname || ind.name) }}</strong></span>
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg>
           </button>
         </div>
         <div class="catalog-foot"><span class="foot-orbit" aria-hidden="true"></span><span>{{ resolution }} km 网格数据 · 全国范围</span></div>
       </aside>
 
-      <section class="map-stage" aria-label="土壤指标地图">
+      <section class="map-stage" :class="{ 'map-stage-amap': usingAmap }" aria-label="土壤指标地图">
+        <div v-if="usingAmap" id="amap-basemap" ref="amapContainerRef" class="amap-basemap" aria-hidden="true"></div>
         <div id="map"></div>
+        <div v-if="basemapState !== 'ready'" class="basemap-status" :class="{ 'basemap-status-loading': basemapState === 'loading' }" role="status"><span>{{ basemapState === 'unconfigured' ? `${basemapProviderLabel}底图待启用` : basemapState === 'loading' ? `正在加载${basemapProviderLabel}` : `${basemapProviderLabel}底图暂不可用` }}</span><button v-if="basemapState === 'error'" type="button" @click="changeBasemap(basemapMode)">重试</button></div>
         <div class="map-tools"><span class="map-tools-title">{{ selectedPreview?.name || (selected ? displayName(selected.col_name, selected.cname || selected.name) : '中国土壤空间分布') }}</span><button type="button" @click="catalogOpen = true">切换图层 <span aria-hidden="true">↗</span></button><button type="button" :aria-pressed="zonesVisible" :disabled="zonesLoading" @click="toggleReferenceZones">{{ zonesLoading ? '加载分区…' : zonesVisible ? '隐藏参考分区' : '参考分区' }}</button></div>
         <div v-if="zoneError" class="map-tile-note map-zone-error" role="status">{{ zoneError }}</div>
-        <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">当前指标的地图瓦片尚未发布。可以点选位置查看已有网格数据。</div>
+        <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">专题图层暂未提供 · 可点选查询</div>
         <div class="map-coordinate">{{ cursorCoords || '移动鼠标查看坐标' }}</div>
         <div v-if="selected && legend && tileAvailability !== false" class="map-legend">
           <div class="legend-title"><span>{{ displayName(selected.col_name, selected.cname || selected.name) }}</span><strong>{{ displayUnit(selected.col_name, selected.unit) || (/(^|_)soil_ph$/.test(selected.col_name) ? '无量纲' : '单位待核实') }}</strong></div>
@@ -87,7 +90,7 @@
             <ul v-else><li v-for="run in homeResearch.runs" :key="run.id"><span><b>{{ run.kind==='nshi'?'土壤指标筛选':'KO 通路结构分析' }}</b><small>{{ run.project_name }} · {{ run.dataset_id }}</small></span><em :class="`task-${run.status}`">{{ researchStatusLabel(run.status) }}</em></li></ul>
           </section>
         </section>
-        <div v-else-if="!clicked" class="inspector-empty"><div class="empty-target" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 27s9-7.6 9-15a9 9 0 1 0-18 0c0 7.4 9 15 9 15Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg></div><strong>选取地图位置</strong><p>点击地图上的任意位置，查看对应的土壤与环境数据。</p><div class="analysis-route"><span class="section-kicker">ANALYSIS ROUTE / 分析路径</span><div><b>01</b><span>确认位置与栅格</span></div><div><b>02</b><span>阅读六项核心指标</span></div><div><b>03</b><span>查看区域障碍背景</span></div><div><b>04</b><span>检查评分与科学依据</span></div></div></div>
+        <div v-else-if="!clicked" class="inspector-empty"><div class="empty-target" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 27s9-7.6 9-15a9 9 0 1 0-18 0c0 7.4 9 15 9 15Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg></div><strong>选取地图位置</strong><p>点击地图，查看该位置的土壤指标。</p></div>
         <template v-else>
           <div class="point-summary"><div class="point-label"><span class="point-signal"></span>{{ loading ? '正在解析位置' : pointError ? '查询暂不可用' : clicked.found ? '已定位数据点' : '该位置暂无数据' }}</div><div class="point-coords"><strong>{{ clicked.lat.toFixed(4) }}° N</strong><strong>{{ clicked.lon.toFixed(4) }}° E</strong></div><div v-if="clicked.gridId" class="point-grid-id">栅格 ID · {{ clicked.gridId }}</div><div class="point-separator"></div><div class="point-stats"><div><b>{{ loading ? '···' : validEntries.length }}</b><span>有效指标</span></div><div><b>{{ loading ? '···' : nullCount }}</b><span>无数据</span></div></div></div>
           <div v-if="pointError" class="result-error"><span>{{ pointError }}</span><button type="button" @click="retryPoint">重试</button></div>
@@ -104,8 +107,8 @@
       </aside>
     </main>
     </section>
-    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="setResearchStage" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="openMainView" @open-assistant="openAssistant" />
-    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
+    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="stage => transitionTo(setResearchStage, stage)" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="destination => transitionTo(openMainView, destination)" @open-assistant="transitionTo(openAssistant)" />
+    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="transitionTo(openResearch, assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
     <main v-show="siteView==='gold'" class="data-browser resource-workspace" aria-labelledby="browser-title">
@@ -130,6 +133,12 @@ import { onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
 import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import SiteHeader from './SiteHeader.vue'
+import { transitionPage } from './design-system/motion.js'
+import { createTiandituBasemap } from './map/tianditu.js'
+import { createAmapBasemap } from './map/amap.js'
+import { createGcj02Crs } from './map/coordinates.js'
+import { createScientificTileLayer } from './map/scientificTiles.js'
+import mapConfig from './map/config.json'
 import ToolsCenter from './tools/ToolsCenter.vue'
 import RepositoryWorkspace from './RepositoryWorkspace.vue'
 import { getTool, toolTarget } from './tools/catalog.js'
@@ -272,6 +281,7 @@ function openMainView(view) {
   if (view === 'tools' && previousView === 'tools') toolsCenterRef.value?.readLocation()
   assessmentPreview.value = false
   scientificOpen.value = false
+  soiledgeOpen.value = false
   catalogOpen.value = false
   if (view === 'home' && account.value) loadHomeResearch()
   if (view === 'home') nextTick(() => siteContentRef.value?.scrollTo(0, 0))
@@ -284,7 +294,18 @@ function openMainView(view) {
     }
   })
 }
+function transitionTo(action, ...args) {
+  return transitionPage(() => action(...args), nextTick)
+}
+function onHistoryNavigation() {
+  transitionTo(() => {
+    onRouteChange()
+    window.dispatchEvent(new Event('soilmate:history-commit'))
+  })
+}
 function navigateFromHeader(destination) {
+  soiledgeOpen.value = false
+  scientificOpen.value = false
   toolOrigin.value = false
   if (destination === 'research') {
     if (researchStage.value === 'input') openAssessment()
@@ -449,6 +470,17 @@ const categoryLegendCss = 'linear-gradient(90deg, #440154 0% 16%, #3b528b 16% 33
 const isCategorical = computed(() => selectedKey.value === 'soil_texcls')
 const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 let map = null, tileLayer = null, marker = null, highlightLayer = null, zoneLayer = null, queryId = 0, lastPoint = null, indicatorId = 0, dataId = 0
+const usingAmap = (import.meta.env.VITE_MAP_PROVIDER || mapConfig.provider) === 'amap'
+const amapKey = (import.meta.env.VITE_AMAP_KEY || mapConfig.amapKey || '').trim()
+const tiandituKey = (import.meta.env.VITE_TIANDITU_KEY || '').trim()
+const basemapEnabled = usingAmap ? Boolean(amapKey) : Boolean(tiandituKey)
+const basemapProviderLabel = usingAmap ? '高德地图' : '天地图'
+const amapContainerRef = ref(null)
+const basemapOptions = [{ id: 'vector', label: '标准地图' }, { id: 'satellite', label: '卫星影像' }]
+const basemapMode = ref('vector'), basemapState = ref('unconfigured')
+let basemap = null
+function changeBasemap(mode) { basemapMode.value = mode; basemap?.switchTo(mode) }
+function scientificTileLayer(url, options) { return usingAmap ? createScientificTileLayer(L, url, options) : L.tileLayer(url, options) }
 let mapResizeObserver = null, mapViewportObserver = null
 let drawerTouchStart = null
 function fitMapToViewport() {
@@ -492,8 +524,8 @@ function chooseIndicator(key) {
   if (tileLayer) map.removeLayer(tileLayer)
   if (!key) { tileLayer = null; return }
   if (tileAvailability.value === false) { tileLayer = null; return }
-  tileLayer = L.tileLayer(tileUrl(key, resolution.value), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: resolution.value === 1 ? 8 : 7, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
-  tileLayer.on('tileload', event => { if (selectedKey.value === key && !event.tile.src.startsWith('data:')) tileAvailability.value = true })
+  tileLayer = scientificTileLayer(tileUrl(key, resolution.value), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: resolution.value === 1 ? 8 : 7, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
+  tileLayer.on('tileload', event => { if (selectedKey.value === key && !event.tile.src?.startsWith('data:')) tileAvailability.value = true })
   tileLayer.setZIndex(50)
 }
 function choosePreview(id) {
@@ -502,7 +534,7 @@ function choosePreview(id) {
   catalogOpen.value = false
   if (!map) return
   if (tileLayer) map.removeLayer(tileLayer)
-  tileLayer = L.tileLayer(previewTileUrl(id), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: 8, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
+  tileLayer = scientificTileLayer(previewTileUrl(id), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: 8, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
   tileLayer.setZIndex(50)
 }
 function openLayerSearch() { catalogOpen.value = true; requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.catalog-search input')?.focus())) }
@@ -683,16 +715,20 @@ function goToPage(page) { dataPage.value = page; loadData() }
 function formatDbCell(value) { if (value == null) return 'NULL'; if (typeof value === 'object') return JSON.stringify(value); return String(value) }
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('popstate', onRouteChange)
+  window.addEventListener('popstate', onHistoryNavigation)
   fitMapToViewport()
-  map = L.map('map', { center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
+  map = L.map('map', { crs: usingAmap ? createGcj02Crs(L) : L.CRS.EPSG3857, zoomAnimation: !usingAmap, center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
   mapResizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false, debounceMoveend: true }))
   mapResizeObserver.observe(document.getElementById('map'))
   mapViewportObserver = new ResizeObserver(fitMapToViewport)
   for (const element of [siteContentRef.value, siteContentRef.value?.querySelector('.site-header'), document.querySelector('.map-workspace-toolbar')]) {
     if (element) mapViewportObserver.observe(element)
   }
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19, className: 'soil-basemap-tiles' }).addTo(map)
+  const onBasemapState = state => { basemapState.value = state }
+  basemap = usingAmap
+    ? createAmapBasemap(map, amapContainerRef.value, amapKey, onBasemapState, import.meta.env.VITE_AMAP_SERVICE_HOST || '')
+    : createTiandituBasemap(L, map, tiandituKey, onBasemapState)
+  basemap.switchTo(basemapMode.value)
   L.control.zoom({ position: 'bottomright' }).addTo(map)
   map.on('mousemove', e => { cursorCoords.value = `${e.latlng.lat.toFixed(3)}° N  /  ${e.latlng.lng.toFixed(3)}° E` })
   map.on('mouseout', () => { cursorCoords.value = '' })
@@ -702,6 +738,6 @@ onMounted(() => {
   loadPreviewLayers()
   checkAccount()
 })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onRouteChange); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); if (map) { map.remove(); map = null } })
+onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (map) { map.remove(); map = null } })
 </script>
 

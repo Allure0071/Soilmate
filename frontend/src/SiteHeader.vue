@@ -4,8 +4,9 @@
       <span class="site-brand-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M4 20c4-9 10-14 17-14 8 0 14 6 15 14-1 8-7 14-15 14C14 34 8 29 4 20Z"/><path d="M10 20c3-6 7-9 12-9 5 0 9 4 10 9-1 5-5 9-10 9-5 0-9-3-12-9Z"/><path d="M16 20c2-2 4-4 7-4s5 2 6 4c-1 3-3 5-6 5s-5-2-7-5Z"/></svg></span>
       <span class="site-brand-copy"><strong>沃壤知行</strong></span>
     </a>
-    <nav class="site-primary-nav" aria-label="主站导航">
-      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)">{{ link.label }}</a>
+    <nav ref="navigation" class="site-primary-nav" aria-label="主站导航">
+      <span v-show="selection.visible" class="site-nav-selection" aria-hidden="true" :style="{ width: `${selection.width}px`, height: `${selection.height}px`, transform: `translate(${selection.x}px, ${selection.y}px)`, transition: nativeTransitions ? 'none' : undefined }"></span>
+      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)"><span :style="{ viewTransitionName: `site-nav-label-${link.id}` }">{{ link.label }}</span></a>
     </nav>
     <div class="site-account">
       <span v-if="preview" class="site-preview">审核预览</span>
@@ -16,9 +17,26 @@
 </template>
 
 <script setup>
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { primaryLinks } from './siteNavigation.js'
-defineProps({ active: { type: String, default: 'home' }, home: { type: Boolean, default: false }, account: { type: Object, default: null }, preview: { type: Boolean, default: false }, loginHref: { type: String, default: '/account/index.html?next=%2Fresearch' } })
+const props = defineProps({ active: { type: String, default: 'home' }, home: { type: Boolean, default: false }, account: { type: Object, default: null }, preview: { type: Boolean, default: false }, loginHref: { type: String, default: '/account/index.html?next=%2Fresearch' } })
 const emit = defineEmits(['navigate', 'logout'])
+const navigation = ref(null)
+const selection = ref({ visible: false, x: 0, y: 0, width: 0, height: 0 })
+const nativeTransitions = Boolean(document.startViewTransition)
+let resizeObserver
+function alignSelection() {
+  const active = navigation.value?.querySelector('a[aria-current="page"]')
+  selection.value = active ? { visible: true, x: active.offsetLeft, y: active.offsetTop, width: active.offsetWidth, height: active.offsetHeight } : { ...selection.value, visible: false }
+}
+watch(() => props.active, alignSelection, { flush: 'post' })
+onMounted(() => {
+  alignSelection()
+  resizeObserver = new ResizeObserver(alignSelection)
+  resizeObserver.observe(navigation.value)
+  document.fonts.ready.then(() => nextTick(alignSelection))
+})
+onBeforeUnmount(() => resizeObserver?.disconnect())
 function navigate(event, view) {
   if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return
   event.preventDefault()

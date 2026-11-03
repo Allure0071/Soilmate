@@ -104,3 +104,10 @@ body {
   .panel h2 { font-family: var(--font-display); line-height: var(--leading-title); font-weight: 600; margin-top: 17px; font-size: var(--text-page-title); }
   .sub { margin-bottom: 21px; }
 }
+
+/* Shared type family; help stays secondary to the form. */
+.story{justify-content:center}
+.story-bottom{display:none}
+.field-hint:empty{display:none}
+.footnote summary{cursor:pointer;color:#286747}
+.footnote p{margin:10px 0 0}

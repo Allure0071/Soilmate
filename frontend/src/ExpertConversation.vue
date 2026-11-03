@@ -1,7 +1,7 @@
 <template>
   <section ref="conversation" class="expert-conversation" :class="[`expert-${mode}`, { 'expert-resizing': drag }]" aria-label="沃壤知行土壤健康专家">
     <header class="expert-head">
-      <div class="expert-ident"><span class="expert-symbol"><WorkspaceIcon name="chat" /></span><h2>土壤健康专家</h2></div>
+      <div class="expert-ident"><span class="expert-symbol"><WorkspaceIcon name="chat" /></span><h2>研究助手</h2></div>
       <div v-if="mode === 'side'" class="expert-head-actions"><button type="button" @click="$emit('expand')" aria-label="打开完整 AI 助手" title="打开完整 AI 助手"><WorkspaceIcon name="expand" /></button><button type="button" @click="$emit('collapse')" aria-label="收起 AI 讨论栏" title="收起讨论栏"><WorkspaceIcon name="close" /></button></div>
     </header>
 
@@ -10,22 +10,22 @@
       <strong>{{ context.project || '当前项目' }}<template v-if="context.sample"> · {{ context.sample }}</template></strong>
       <p>{{ context.runId ? `${runLabel} · ${context.dataVersion || '版本待确认'}` : '分析结果尚未生成' }}</p>
     </div>
-    <div v-else-if="showContext" class="expert-context expert-context-unbound"><div class="expert-context-heading"><span class="expert-context-dot"></span><b>{{ mode === 'side' ? '录入草稿' : '独立问答' }}</b></div><p>{{ mode === 'side' ? '数据尚未提交，暂不关联评价结果。' : '未关联研究任务。' }}</p></div>
+
 
     <div class="expert-body" :role="mode === 'full' ? 'region' : undefined" :tabindex="mode === 'full' ? 0 : undefined" :aria-label="mode === 'full' ? 'AI 回答内容' : undefined">
       <div v-if="answer" class="expert-answer" :data-answer-type="answer.answer_type" role="status">
         <span class="expert-answer-label">{{ answerLabel }}</span>
         <p>{{ answer.answer }}</p>
-        <small v-if="answer.evidence_refs?.length">依据 {{ answer.evidence_refs.length }} 个 Artifact · {{ answer.uncertainty }}</small>
+        <small v-if="answer.evidence_refs?.length">依据 {{ answer.evidence_refs.length }} 条研究记录 · {{ answer.uncertainty }}</small>
       </div>
-      <div class="expert-intro"><component :is="mode === 'full' ? 'h1' : 'h3'">{{ context?.sample ? '关于这次研究，\n你想知道什么？' : '从一个问题开始。' }}</component><p>土壤科学、指标选择与评价方法。</p></div>
-      <div class="expert-prompts" role="group" aria-label="问题示例">
+      <div v-if="!answer" class="expert-intro"><component :is="mode === 'full' ? 'h1' : 'h3'">{{ context?.sample ? '关于这次研究，\n你想了解什么？' : '想了解什么？' }}</component></div>
+      <div v-if="!answer" class="expert-prompts" role="group" aria-label="问题示例">
         <button v-for="question in prompts" :key="question" type="button" @click="$emit('update:draft', question)">{{ question }} <WorkspaceIcon name="arrow" /></button>
       </div>
     </div>
 
     <div v-if="mode === 'full'" ref="resizeHandle" class="expert-compose-resizer" role="separator" tabindex="0" aria-label="调整输入面板高度" aria-orientation="horizontal" :aria-controls="`expert-compose-${mode}`" :aria-valuemin="resizeBounds.min" :aria-valuemax="resizeBounds.max" :aria-valuenow="measuredHeight" :aria-valuetext="`输入面板高度 ${measuredHeight} 像素`" title="按住上下拖动调整高度，双击恢复；也可使用上下方向键" @pointerdown="startResize" @pointermove="moveResize" @pointerup="stopResize" @pointercancel="stopResize" @lostpointercapture="drag = null" @keydown="resizeWithKeyboard" @dblclick="composeHeight = null"></div>
-    <div :id="`expert-compose-${mode}`" ref="composer" class="expert-compose" :class="{ 'expert-compose-resizable': mode === 'full' }" :style="composeHeight == null ? undefined : { height: `${composeHeight}px` }"><label :for="`expert-question-${mode}`">{{ mode === 'full' ? '向土壤健康专家提问' : '记下研究问题' }}</label><textarea :id="`expert-question-${mode}`" :value="draft" rows="3" maxlength="4000" placeholder="写下你关注的指标、方法或证据…" @input="$emit('update:draft', $event.target.value)"></textarea><div><span role="status">{{ loading ? '正在读取任务证据…' : sendError || (mode === 'full' && !storageAvailable ? '无法保存，请复制保留草稿' : taskId ? '回答将引用当前任务 Artifact' : '独立知识问答') }}</span><button type="button" :disabled="loading || !draft.trim()" @click="send">{{ loading ? '读取中…' : '发送' }}<WorkspaceIcon name="send" /></button></div></div>
+    <div :id="`expert-compose-${mode}`" ref="composer" class="expert-compose" :class="{ 'expert-compose-resizable': mode === 'full' }" :style="composeHeight == null ? undefined : { height: `${composeHeight}px` }"><label class="visually-hidden" :for="`expert-question-${mode}`">{{ mode === 'full' ? '向土壤健康专家提问' : '记下研究问题' }}</label><textarea :id="`expert-question-${mode}`" :value="draft" rows="3" maxlength="4000" placeholder="输入问题…" @input="$emit('update:draft', $event.target.value)"></textarea><div><span role="status">{{ loading ? '正在读取任务证据…' : sendError || (mode === 'full' && !storageAvailable ? '无法保存，请复制保留草稿' : taskId ? '回答将引用当前研究记录' : '独立问答') }}</span><button type="button" :disabled="loading || !draft.trim()" @click="send">{{ loading ? '读取中…' : '发送' }}<WorkspaceIcon name="send" /></button></div></div>
   </section>
 </template>
 

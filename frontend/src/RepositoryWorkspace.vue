@@ -2,9 +2,9 @@
   <div class="repository">
     <header class="repository-header">
       <div>
-        <p class="repository-eyebrow">SOILMATE · SCIENTIFIC DATA REPOSITORY</p>
+
         <h1 id="browser-title" tabindex="-1">数据资源库</h1>
-        <p class="repository-description">检索土壤与环境变量，核对元数据和质量信息，再进入空间地图查看网格。</p>
+        <p class="repository-description">查找土壤与环境数据。</p>
       </div>
       <button class="repository-raw-link" type="button" @click="$emit('open-database')">浏览原始数据表 <span aria-hidden="true">↗</span></button>
     </header>
@@ -12,7 +12,7 @@
     <section class="repository-overview" aria-label="数据目录概览">
       <div class="repository-overview-head">
         <div><h2>目录概览</h2><span class="repository-overview-status"><i aria-hidden="true"></i>{{ overviewStatus }}</span></div>
-        <button type="button" :disabled="overviewLoading" @click="refreshOverview">{{ overviewLoading ? '同步中…' : '刷新目录统计' }}</button>
+        <button type="button" :disabled="overviewLoading" @click="refreshOverview">{{ overviewLoading ? '同步中…' : '刷新统计' }}</button>
       </div>
       <div class="repository-overview-body">
         <div class="repository-chart" role="img" :aria-label="chartDescription">
@@ -29,14 +29,14 @@
           <div><strong class="repository-fact-pending">待核验</strong><span>农业分区覆盖统计</span></div>
         </div>
       </div>
-      <p class="repository-overview-note">图中为当前接口登记指标的类别构成；类别根据变量代码暂归类，并非时间趋势或空间覆盖率。</p>
+      <p class="repository-overview-note">类别按变量代码归类，不代表空间覆盖率。</p>
     </section>
 
     <template v-if="view === 'catalog'">
       <div class="repository-catalog-layout">
         <button v-if="filtersOpen" class="repository-filter-backdrop" type="button" aria-label="关闭筛选面板" @click="closeFilters"></button>
         <aside class="repository-filter-panel" :class="{ 'is-open': filtersOpen }" :role="filtersOpen ? 'dialog' : undefined" :aria-modal="filtersOpen ? 'true' : undefined" aria-label="筛选数据目录" @keydown="handleFilterKeydown">
-          <div class="repository-filter-head"><div><h2>筛选目录</h2><span>按登记字段缩小范围</span></div><button class="repository-filter-close" type="button" aria-label="关闭筛选面板" @click="closeFilters">×</button></div>
+          <div class="repository-filter-head"><div><h2>筛选目录</h2></div><button class="repository-filter-close" type="button" aria-label="关闭筛选面板" @click="closeFilters">×</button></div>
           <div class="repository-filter-group"><h3>网格分辨率</h3><button v-for="value in [5, 1]" :key="value" type="button" :aria-pressed="resolution === value" :class="{ active: resolution === value }" @click="$emit('resolution-change', value)"><span>{{ value }} km</span><span>{{ countFor(value) }}</span></button></div>
           <div class="repository-filter-group"><h3>数据类型</h3><button v-for="item in categories" :key="item.id" type="button" :aria-pressed="category === item.id" :class="{ active: category === item.id }" @click="category = item.id"><span>{{ item.label }}</span><span>{{ categoryCount(item.id) }}</span></button></div>
           <div class="repository-filter-group"><h3>来源登记</h3><button v-for="item in sourceOptions" :key="item.id" type="button" :aria-pressed="sourceStatus === item.id" :class="{ active: sourceStatus === item.id }" @click="sourceStatus = item.id"><span>{{ item.label }}</span><span>{{ sourceCount(item.id) }}</span></button></div>
@@ -53,7 +53,7 @@
         <footer v-if="filtered.length" class="repository-pagination"><span>第 {{ page }} / {{ pageCount }} 页 · 每页 {{ pageSize }} 项</span><div><button type="button" :disabled="page <= 1" @click="page--">上一页</button><button type="button" :disabled="page >= pageCount" @click="page++">下一页</button></div></footer>
         </section>
       </div>
-      <p class="repository-footnote">类别按变量代码暂归类，使用前请核对。登记指标不等于实测样本；网格值、来源文件与质量审计应分别查看。</p>
+      <details class="repository-footnote"><summary>数据使用说明</summary><p>登记指标不等于实测样本；网格、来源与质量信息需分别核对。</p></details>
     </template>
 
     <template v-else>
@@ -64,7 +64,7 @@
           <section class="repository-detail-section"><header><span>01 / 元数据</span><h3>已登记字段</h3></header><dl><div><dt>单位</dt><dd>{{ unitOf(selected) }}</dd></div><div><dt>空间分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>原始来源文件</dt><dd>{{ selected.source_file || '未登记' }}</dd></div><div><dt>波段</dt><dd>{{ selected.band ?? '未登记' }}</dd></div><div><dt>数值范围</dt><dd>{{ rangeOf(selected) }}</dd></div><div><dt>平均值</dt><dd>{{ metricOf(selected, selected.mean) }}</dd></div></dl></section>
           <section class="repository-detail-section"><header><span>02 / 质量审计</span><h3>当前可核对的质量信息</h3></header><dl><div><dt>有效像元</dt><dd>{{ selected.valid_count == null ? '未统计' : Number(selected.valid_count).toLocaleString() }}</dd></div><div><dt>缺失率</dt><dd class="repository-pending">未统计</dd></div><div><dt>异常值比例</dt><dd class="repository-pending">未统计</dd></div><div><dt>空间覆盖率</dt><dd class="repository-pending">未统计</dd></div></dl><p class="repository-detail-note">有效像元数不能直接换算为独立样本数；当前目录没有足够信息计算缺失率或覆盖率。</p></section>
           <section class="repository-detail-section repository-provenance"><header><span>03 / 来源与使用条件</span><h3>待补齐的溯源信息</h3></header><dl><div><dt>数据年份</dt><dd class="repository-pending">未登记</dd></div><div><dt>土层深度</dt><dd class="repository-pending">未登记</dd></div><div><dt>论文 DOI / 原始下载地址</dt><dd class="repository-pending">未登记</dd></div><div><dt>处理版本</dt><dd class="repository-pending">未登记</dd></div><div><dt>许可协议</dt><dd class="repository-pending">未登记</dd></div><div><dt>九大农业区覆盖</dt><dd class="repository-pending">尚未核验映射</dd></div></dl></section>
-          <section class="repository-detail-section repository-spatial"><header><span>04 / 空间数据</span><h3>地图与网格预览</h3></header><p>在地图工作台查看该变量的空间位置和网格查询结果。{{ tilesAvailable === false ? '当前专题瓦片未发布，仍可查询可用网格值。' : '图层是否可显示取决于当前瓦片服务。' }}</p><button type="button" @click="$emit('map-preview', selected.col_name)">进入地图工作台 <span aria-hidden="true">↗</span></button></section>
+          <section class="repository-detail-section repository-spatial"><header><span>04 / 空间数据</span><h3>地图与网格预览</h3></header><p>{{ tilesAvailable === false ? '当前专题瓦片未发布，仍可查询可用网格值。' : '图层是否可显示取决于当前瓦片服务。' }}</p><button type="button" @click="$emit('map-preview', selected.col_name)">在地图查看 <span aria-hidden="true">↗</span></button></section>
         </div>
       </div>
       <div v-else class="repository-state">当前分辨率下找不到该指标。<button type="button" @click="backToCatalog">返回数据目录</button></div>
