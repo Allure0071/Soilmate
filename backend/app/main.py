@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 import hmac
 
-from .api import indicators, point, meta, data, preview, zones, soiledge, scientific, research, auth
+from .api import indicators, point, meta, data, preview, zones, soiledge, scientific, research, auth, agent
 from .scientific.research_store import connect, initialize
 
 app = FastAPI(title="沃壤知行 Scientific Intelligence", version="0.2.0")
@@ -29,11 +29,12 @@ app.include_router(soiledge.router)
 app.include_router(scientific.router)
 app.include_router(research.router)
 app.include_router(auth.router)
+app.include_router(agent.router)
 
 
 @app.middleware("http")
-async def protect_research(request, call_next):
-    if not request.url.path.startswith("/api/research/"):
+async def protect_research_and_agent(request, call_next):
+    if not request.url.path.startswith(("/api/research/", "/api/agent/")):
         return await call_next(request)
     initialize()
     with connect() as con:

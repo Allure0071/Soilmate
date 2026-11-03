@@ -6,5 +6,6 @@ import './workspace-frame.css'
 import './health-research.css'
 import './site-shell.css'
 import './explorer-scroll.css'
+import './repository.css'
 
 createApp(App).mount('#app')

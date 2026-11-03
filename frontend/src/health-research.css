@@ -241,6 +241,10 @@
 .assistant-context-button:hover, .assistant-context-button[aria-expanded='true'] { background: #edf4e7; border-color: #bdcfb8; }
 .assistant-menu-button { display: none; }
 .assistant-main > .expert-conversation { flex: 1; min-height: 0; height: auto; background: #fff; }
+.expert-answer { max-width: 620px; margin: 0 auto 22px; padding: 15px 17px; border: 1px solid #cfe0d0; border-radius: 10px; background: #f6faf4; color: #294b34; }
+.expert-answer-label { display: block; margin-bottom: 7px; color: #3f7950; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+.expert-answer p { margin: 0; line-height: 1.65; white-space: pre-wrap; }
+.expert-answer small { display: block; margin-top: 10px; color: #718173; line-height: 1.5; }
 .assistant-main .expert-head { display: none; }
 .assistant-main .expert-body { display: flex; flex-direction: column; justify-content: center; min-height: 0; overflow: auto; padding: 40px clamp(28px, 5vw, 76px); }
 .assistant-main .expert-intro, .assistant-main .expert-prompts { width: 100%; max-width: 620px; margin-inline: auto; }

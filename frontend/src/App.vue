@@ -105,28 +105,15 @@
     </main>
     </section>
     <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="setResearchStage" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="openMainView" @open-assistant="openAssistant" />
-    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
+    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
     <main v-show="siteView==='gold'" class="data-browser resource-workspace" aria-labelledby="browser-title">
 
-        <header class="browser-head"><div class="browser-head-copy"><h1 id="browser-title" tabindex="-1">数据资源中心</h1><p>从指标目录出发，核对每一份数据的字段、单位与来源。</p><span class="browser-head-summary">{{ indicators.length }} 项已登记指标 <i aria-hidden="true"></i> {{ resolution }} km 网格目录</span></div><div v-if="browserTab === 'layers'" class="module-resolution resource-resolution" role="group" aria-label="指标目录分辨率"><span>数据分辨率</span><div><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div></div></header>
-        <div class="browser-tabs" role="tablist" aria-label="数据资源内容"><button type="button" role="tab" :aria-selected="browserTab === 'layers'" :class="{ active: browserTab === 'layers' }" @click="browserTab = 'layers'">指标目录 <span>{{ indicators.length }}</span></button><button type="button" role="tab" :aria-selected="browserTab === 'database'" :class="{ active: browserTab === 'database' }" @click="browserTab = 'database'">原始表浏览</button></div>
-        <template v-if="browserTab === 'layers'">
-          <div class="product-catalog">
-            <aside class="product-sidebar" aria-label="筛选与指标目录">
-              <div class="catalog-sidebar-tools">
-                <label class="catalog-sidebar-search">查找指标<input v-model="browserSearch" type="search" placeholder="搜索名称、代码或来源" /></label>
-                <div class="browser-filter-group"><span>指标类别</span><div class="catalog-filters" role="group" aria-label="指标类别"><button v-for="category in categories" :key="category.id" type="button" :data-group="category.id" :class="{ active: catalogCategory === category.id }" :aria-pressed="catalogCategory === category.id" @click="catalogCategory = category.id">{{ category.label }}</button></div></div>
-              </div>
-            <div class="product-list" role="group" aria-label="指标产品列表"><div class="product-list-head"><strong>指标目录</strong><span role="status">{{ filteredBrowserIndicators.length }} / {{ indicators.length }} 项</span></div><button v-for="item in filteredBrowserIndicators" :key="item.col_name" type="button" :data-group="groupOf(item.col_name)" :class="{ active: catalogSelected?.col_name === item.col_name }" :aria-pressed="catalogSelected?.col_name === item.col_name" @click="selectedCatalogKey = item.col_name"><span class="product-list-top"><span class="product-list-title">{{ displayName(item.col_name, item.cname || item.name) }}</span><span class="product-list-group">{{ groupLabel(item.col_name) }}</span></span><span class="product-list-meta">{{ item.col_name }} · {{ catalogUnit(item) }}</span></button><div v-if="apiState === 'loading'" class="product-list-state">正在读取指标目录…</div><div v-else-if="apiState === 'error'" class="product-list-state">{{ indicatorError }} <button type="button" @click="loadIndicators">重试</button></div><div v-else-if="!filteredBrowserIndicators.length" class="product-list-state">没有匹配的指标，请调整关键词或类别。</div></div>
-            </aside>
-            <article v-if="catalogSelected" class="product-detail" :data-group="groupOf(catalogSelected.col_name)"><div class="product-detail-content"><div class="product-detail-head"><div><h2>{{ displayName(catalogSelected.col_name, catalogSelected.cname || catalogSelected.name) }}</h2><p><span class="product-detail-category">{{ groupLabel(catalogSelected.col_name) }}</span>{{ catalogSelected.col_name }} <span aria-hidden="true">·</span> {{ resolution }} km 网格</p></div><button type="button" class="product-map-action" @click="showCatalogLayer(catalogSelected.col_name)">在地图查看 <WorkspaceIcon name="expand" /></button></div><section class="product-detail-section"><div class="product-section-heading"><div><h3>已登记的字段信息</h3><p>来自当前指标接口的元数据</p></div></div><dl class="product-facts"><div><dt>单位</dt><dd>{{ catalogUnit(catalogSelected) }}</dd></div><div><dt>空间分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ catalogSelected.source_file || '待登记' }}</dd></div><div><dt>波段</dt><dd>{{ catalogSelected.band ?? '待登记' }}</dd></div><div><dt>有效像元</dt><dd>{{ catalogSelected.valid_count == null ? '未统计' : Number(catalogSelected.valid_count).toLocaleString() }}</dd></div><div><dt>数值范围</dt><dd>{{ catalogSelected.min == null || catalogSelected.max == null ? '未统计' : `${fmt(displayValue(catalogSelected.col_name, catalogSelected.min))} – ${fmt(displayValue(catalogSelected.col_name, catalogSelected.max))}` }}</dd></div></dl></section><section class="product-review"><div class="product-section-heading"><div><h3>仍需核对的信息</h3><p>当前接口尚未登记，使用前请核对来源</p></div></div><dl class="product-pending-facts"><div><dt>数据年份</dt><dd>未登记</dd></div><div><dt>土层深度</dt><dd>未登记</dd></div><div><dt>属性类型</dt><dd>待核对</dd></div></dl></section><p class="product-detail-foot">有效像元数不等于独立采样点数，数值范围也不是健康阈值。</p></div></article>
-            <div v-else class="product-empty">选择左侧指标，查看它的单位、来源文件和当前缺失的元数据。</div>
-          </div>
-          <footer class="browser-pagination"><span>目录来自 {{ resolution }} km 指标接口 · 仅展示已登记字段，不推断未提供的来源信息。</span></footer>
-        </template>
+        <RepositoryWorkspace v-if="browserTab === 'layers'" :key="repositoryVisitKey" :indicators="indicators" :resolution="resolution" :api-state="apiState" :error="indicatorError" :tiles-available="tileAvailability" @resolution-change="changeResolution" @map-preview="showCatalogLayer" @open-database="openRawDatabase" @retry="loadIndicators" />
         <template v-else>
+          <header class="browser-head"><div class="browser-head-copy"><h1 id="browser-title" tabindex="-1">原始数据表</h1><p>按数据库与数据表分页检查字段和记录。</p></div><button type="button" class="browser-close" @click="openResourceCatalog">返回数据目录</button></header>
+
           <div class="db-switch" role="group" aria-label="选择数据库"><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: dbResolution === value }" :aria-pressed="dbResolution === value" @click="selectDatabase(value)">{{ value }} km 数据库</button><span>只读浏览 · 每页 50 行</span></div>
           <div class="db-workspace">
             <aside class="db-sidebar" aria-label="数据表"><label>查找数据表<input v-model="tableSearch" type="search" placeholder="输入表名" /></label><div class="db-table-list"><button v-for="table in filteredDbTables" :key="table.name" type="button" :class="{ active: selectedTable === table.name }" @click="selectDbTable(table.name)"><strong>{{ table.name }}</strong></button><p v-if="!filteredDbTables.length">没有匹配的数据表。</p></div></aside>
@@ -144,6 +131,7 @@ import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import SiteHeader from './SiteHeader.vue'
 import ToolsCenter from './tools/ToolsCenter.vue'
+import RepositoryWorkspace from './RepositoryWorkspace.vue'
 import { getTool, toolTarget } from './tools/catalog.js'
 import { siteLinks, viewFromPath } from './siteNavigation.js'
 import ScientificWorkbench from './ScientificWorkbench.vue'
@@ -280,6 +268,7 @@ function openMainView(view) {
   const path = withToolsOrigin(siteLinks.find(link => link.id === view)?.href || '/')
   if (window.location.pathname + window.location.search !== path) history.pushState({}, '', path)
   siteView.value = view
+  if (view === 'gold') repositoryVisitKey.value++
   if (view === 'tools' && previousView === 'tools') toolsCenterRef.value?.readLocation()
   assessmentPreview.value = false
   scientificOpen.value = false
@@ -393,9 +382,7 @@ watch(siteView, async view => {
   if (target) { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }) }
 })
 const browserTab = ref(new URLSearchParams(location.search).get('tab') === 'database' ? 'database' : 'layers')
-const browserSearch = ref('')
-const catalogCategory = ref('all')
-const selectedCatalogKey = ref('soil_ph')
+const repositoryVisitKey = ref(0)
 const dbResolution = ref(5)
 const dbTables = [{ name: 'points' }, { name: 'indicators' }, { name: 'meta' }]
 const tableSearch = ref('')
@@ -408,9 +395,6 @@ const dataResult = ref({ columns: [], rows: [], total: 0 })
 const dataPage = ref(1)
 const totalPages = computed(() => Math.max(1, Math.ceil((dataResult.value.total || 0) / 50)))
 const categories = [{ id: 'all', label: '全部' }, { id: 'soil', label: '土壤' }, { id: 'env', label: '环境' }, { id: 'crop', label: '农业' }, { id: 'water', label: '水域' }]
-const featuredCatalogKeys = ['soil_ph', 'soil_an', 'soil_cec', 'soil_bd', 'soil_btsnd', 'ece']
-const filteredBrowserIndicators = computed(() => { const query = browserSearch.value.trim().toLowerCase(); return indicators.value.filter(item => (catalogCategory.value === 'all' || groupOf(item.col_name) === catalogCategory.value) && (!query || `${item.col_name} ${item.cname || item.name || ''} ${item.source_file || ''}`.toLowerCase().includes(query))).sort((a, b) => { const ai = featuredCatalogKeys.indexOf(a.col_name); const bi = featuredCatalogKeys.indexOf(b.col_name); return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi) }) })
-const catalogSelected = computed(() => filteredBrowserIndicators.value.find(item => item.col_name === selectedCatalogKey.value) || filteredBrowserIndicators.value[0] || null)
 const filteredDbTables = computed(() => dbTables.filter(table => table.name.toLowerCase().includes(tableSearch.value.trim().toLowerCase())))
 
 function groupOf(key) {
@@ -420,7 +404,6 @@ function groupOf(key) {
   return 'env'
 }
 function groupLabel(key) { return categories.find(item => item.id === groupOf(key))?.label || '环境' }
-function catalogUnit(item) { return displayUnit(item.col_name, item.unit) || (item.col_name === 'soil_ph' ? '无量纲' : '单位待核对') }
 const filteredIndicators = computed(() => {
   const query = search.value.trim().toLowerCase()
   return indicators.value.filter(ind => (activeCategory.value === 'all' || groupOf(ind.col_name) === activeCategory.value) && (!query || `${ind.col_name} ${displayName(ind.col_name, ind.cname || ind.name)}`.toLowerCase().includes(query)))
@@ -669,6 +652,8 @@ function changeResolution(value) {
   loadIndicators().then(() => { if (point && queryId === pendingQuery) queryPoint(point.lng, point.lat) })
 }
 function showCatalogLayer(key) { chooseIndicator(key); openMainView('explore') }
+function openRawDatabase() { browserTab.value = 'database'; history.pushState({}, '', '/resources?tab=database') }
+function openResourceCatalog() { browserTab.value = 'layers'; history.pushState({}, '', '/resources') }
 function selectDatabase(value) { if (dbResolution.value === value) return; ++dataId; dbResolution.value = value; selectedTable.value = ''; dataResult.value = { columns: [], rows: [], total: 0 }; dataPage.value = 1; dataLoading.value = false; dataError.value = '' }
 function selectDbTable(name) { selectedTable.value = name; dataPage.value = 1; loadData() }
 async function loadData() {

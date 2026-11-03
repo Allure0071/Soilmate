@@ -10,7 +10,7 @@
 
     <section class="assistant-main" aria-label="当前对话" :inert="(compact && sidebarOpen) || (inspectorOverlay && inspectorOpen)">
       <header class="assistant-toolbar"><button type="button" class="assistant-menu-button" aria-label="打开会话列表" :aria-expanded="sidebarOpen" @click="sidebarOpen = true"><WorkspaceIcon name="menu" /></button><div><span>{{ activeThread?.context?.sample ? '已关联健康研究' : '独立专业问答' }}</span><strong :title="activeThread?.title">{{ activeThread?.title || '新对话' }}</strong></div><button type="button" class="assistant-context-button" :aria-expanded="inspectorOpen" @click="inspectorOpen = !inspectorOpen"><WorkspaceIcon name="panel" />研究上下文</button></header>
-      <ExpertConversation mode="full" :show-context="false" :context="activeThread?.context || null" :draft="activeThread?.draft || ''" :storage-available="storageAvailable" @update:draft="updateDraft" />
+      <ExpertConversation mode="full" :show-context="false" :context="activeThread?.context || null" :draft="activeThread?.draft || ''" :storage-available="storageAvailable" :csrf-token="csrfToken" @update:draft="updateDraft" />
     </section>
 
     <aside v-if="inspectorOpen" class="assistant-inspector" :role="inspectorOverlay ? 'dialog' : undefined" :aria-modal="inspectorOverlay ? true : undefined" aria-label="研究上下文与依据" @keydown.esc="inspectorOpen = false" @keydown.tab="trapWorkspaceFocus($event, inspectorOverlay)"><header><h2>研究上下文</h2><button type="button" aria-label="关闭研究上下文" @click="inspectorOpen = false"><WorkspaceIcon name="close" /></button></header>
@@ -27,7 +27,7 @@ import ExpertConversation from './ExpertConversation.vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
 import { trapWorkspaceFocus } from './workspaceFocus.js'
 
-const props = defineProps({ accountId: { type: String, default: 'local' }, context: { type: Object, default: null }, draft: { type: String, default: '' } })
+const props = defineProps({ accountId: { type: String, default: 'local' }, context: { type: Object, default: null }, draft: { type: String, default: '' }, csrfToken: { type: String, default: '' } })
 const emit = defineEmits(['update:context', 'update:draft', 'navigate-research'])
 const storageKey = `soilmate.assistant.drafts.v1.${props.accountId}`
 const storageAvailable = ref(true)

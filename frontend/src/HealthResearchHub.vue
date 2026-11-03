@@ -8,7 +8,7 @@
         <ResearchWorkspace v-if="account" v-show="stage !== 'input'" embedded :stage="stage" :initial-context="context" :map-point="mapPoint" :csrf-token="csrfToken" @context-change="$emit('context-change', $event)" @navigate-stage="$emit('update:stage', $event)" @back="$emit('navigate', 'explore')" />
         <section v-else-if="stage !== 'input'" class="research-preview-empty"><h2>登录后继续研究</h2><p>当前为录入预览。分析运行、来源记录和报告需要登录后查看。</p><a :href="`/account/index.html?next=${encodeURIComponent('/research?stage=' + stage)}`">登录并继续 <WorkspaceIcon name="arrow" /></a></section>
       </div>
-      <aside v-if="assistantOpen" class="health-hub-assistant" :role="compact ? 'dialog' : undefined" :aria-modal="compact ? true : undefined" aria-label="研究讨论" @keydown.esc="assistantOpen = false" @keydown.tab="trapWorkspaceFocus($event, compact)"><ExpertConversation mode="side" :context="stage === 'input' ? null : context" :draft="draft" @update:draft="$emit('update:draft', $event)" @expand="$emit('open-assistant')" @collapse="assistantOpen = false" /></aside>
+      <aside v-if="assistantOpen" class="health-hub-assistant" :role="compact ? 'dialog' : undefined" :aria-modal="compact ? true : undefined" aria-label="研究讨论" @keydown.esc="assistantOpen = false" @keydown.tab="trapWorkspaceFocus($event, compact)"><ExpertConversation mode="side" :context="stage === 'input' ? null : context" :draft="draft" :csrf-token="csrfToken" @update:draft="$emit('update:draft', $event)" @expand="$emit('open-assistant')" @collapse="assistantOpen = false" /></aside>
       <button v-else type="button" class="health-ai-reopen" @click="assistantOpen = true"><WorkspaceIcon name="chat" />研究讨论</button>
     </div>
   </main>
