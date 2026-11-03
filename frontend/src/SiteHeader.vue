@@ -6,7 +6,7 @@
     </a>
     <nav ref="navigation" class="site-primary-nav" aria-label="主站导航">
       <span v-show="selection.visible" class="site-nav-selection" aria-hidden="true" :style="{ width: `${selection.width}px`, height: `${selection.height}px`, transform: `translate(${selection.x}px, ${selection.y}px)`, transition: nativeTransitions ? 'none' : undefined }"></span>
-      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)">{{ link.label }}</a>
+      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)"><span :style="{ viewTransitionName: `site-nav-label-${link.id}` }">{{ link.label }}</span></a>
     </nav>
     <div class="site-account">
       <span v-if="preview" class="site-preview">审核预览</span>
