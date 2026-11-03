@@ -11,25 +11,25 @@
       <div class="map-workspace-toolbar">
         <h1 tabindex="-1">探索数据</h1>
         <div class="map-data-controls">
-          <div class="map-basemap-control" role="group" aria-label="地图底图"><span>底图</span><div><button v-for="option in basemapOptions" :key="option.id" type="button" :class="{ active: basemapMode === option.id }" :aria-pressed="basemapMode === option.id" :disabled="!basemapEnabled" :title="!basemapEnabled ? `${basemapProviderLabel}底图待启用` : option.label" @click="changeBasemap(option.id)">{{ option.label }}</button></div></div>
-          <div class="module-resolution" role="group" aria-label="地图数据分辨率"><span>数据分辨率</span><div><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div></div>
+          <div class="map-basemap-control" role="group" aria-label="地图底图"><span>底图</span><HoverSwitch><button v-for="option in basemapOptions" :key="option.id" type="button" :class="{ active: basemapMode === option.id }" :aria-pressed="basemapMode === option.id" :disabled="!basemapEnabled" :title="!basemapEnabled ? `${basemapProviderLabel}底图待启用` : option.label" @click="changeBasemap(option.id)">{{ option.label }}</button></HoverSwitch></div>
+          <div class="module-resolution" role="group" aria-label="地图数据分辨率"><span>数据分辨率</span><HoverSwitch><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></HoverSwitch></div>
           <span class="map-dataset-count">{{ indicators.length ? `${indicators.length} 项已登记指标` : '正在读取目录' }}</span>
           <span class="map-data-connection" :class="apiState"><i aria-hidden="true"></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
         </div>
       </div>
     <main class="workspace" :class="{ 'has-point': !!clicked }">
       <nav class="navigation-rail" aria-label="工作区工具">
-        <button ref="layerTrigger" type="button" :class="{ active: catalogOpen }" :aria-expanded="catalogOpen" aria-controls="layer-drawer" title="探索图层" aria-label="探索图层" @click="catalogOpen = !catalogOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v6H4zM13 14h7v6h-7z"/></svg></button>
-        <button type="button" title="搜索指标" aria-label="搜索指标" @click="openLayerSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg></button>
-        <button type="button" title="重置地图范围" aria-label="重置地图范围" @click="resetMapView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+        <button ref="layerTrigger" type="button" :class="{ active: catalogOpen }" :aria-expanded="catalogOpen" aria-controls="layer-drawer" title="探索图层" aria-label="探索图层" @click="catalogOpen = !catalogOpen"><WorkspaceIcon name="layers" /></button>
+        <button type="button" title="搜索指标" aria-label="搜索指标" @click="openLayerSearch"><WorkspaceIcon name="search" /></button>
+        <button type="button" title="重置地图范围" aria-label="重置地图范围" @click="resetMapView"><WorkspaceIcon name="locate" /></button>
         <span class="rail-spacer"></span><span class="rail-resolution">{{ resolution }} km</span>
       </nav>
       <div v-if="catalogOpen" class="drawer-scrim" aria-hidden="true" @click="catalogOpen = false"></div>
       <aside id="layer-drawer" ref="catalogRef" class="catalog" :class="{ 'catalog-open': catalogOpen }" role="dialog" aria-modal="true" aria-label="图层目录" tabindex="-1" :inert="!catalogOpen" @keydown="handleDrawerKeydown" @touchstart.passive="onDrawerTouchStart" @touchend.passive="onDrawerTouchEnd">
         <button class="drawer-close" type="button" aria-label="关闭图层目录" @click="catalogOpen = false">×</button>
         <div class="catalog-intro"><h1>探索图层</h1></div>
-        <div class="catalog-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.2 4.2"/></svg><input v-model="search" type="search" placeholder="搜索指标或代码" aria-label="搜索指标或代码" /></div>
-        <div class="category-tabs" role="tablist" aria-label="图层分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeCategory === category.id" :class="{ active: activeCategory === category.id }" @click="activeCategory = category.id">{{ category.label }}</button></div>
+        <div class="catalog-search"><WorkspaceIcon name="search" /><input v-model="search" type="search" placeholder="搜索指标或代码" aria-label="搜索指标或代码" /></div>
+        <HoverSwitch class="category-tabs" role="tablist" aria-label="图层分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeCategory === category.id" :class="{ active: activeCategory === category.id }" @click="activeCategory = category.id">{{ category.label }}</button></HoverSwitch>
         <div class="list-meta"><span>{{ activeCategory === 'all' ? '全部图层' : categories.find(c => c.id === activeCategory)?.label }}</span><span>{{ filteredIndicators.length }} 已登记 · {{ filteredPreviewLayers.length }} 预览</span></div>
         <div class="indicator-list">
           <div v-if="filteredPreviewLayers.length" class="preview-list">
@@ -90,7 +90,7 @@
             <ul v-else><li v-for="run in homeResearch.runs" :key="run.id"><span><b>{{ run.kind==='nshi'?'土壤指标筛选':'KO 通路结构分析' }}</b><small>{{ run.project_name }} · {{ run.dataset_id }}</small></span><em :class="`task-${run.status}`">{{ researchStatusLabel(run.status) }}</em></li></ul>
           </section>
         </section>
-        <div v-else-if="!clicked" class="inspector-empty"><div class="empty-target" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M16 27s9-7.6 9-15a9 9 0 1 0-18 0c0 7.4 9 15 9 15Z" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg></div><strong>选取地图位置</strong><p>点击地图，查看该位置的土壤指标。</p></div>
+        <div v-else-if="!clicked" class="inspector-empty"><div class="empty-target" aria-hidden="true"><WorkspaceIcon name="location" /></div><strong>选取地图位置</strong><p>点击地图，查看该位置的土壤指标。</p></div>
         <template v-else>
           <div class="point-summary"><div class="point-label"><span class="point-signal"></span>{{ loading ? '正在解析位置' : pointError ? '查询暂不可用' : clicked.found ? '已定位数据点' : '该位置暂无数据' }}</div><div class="point-coords"><strong>{{ clicked.lat.toFixed(4) }}° N</strong><strong>{{ clicked.lon.toFixed(4) }}° E</strong></div><div v-if="clicked.gridId" class="point-grid-id">栅格 ID · {{ clicked.gridId }}</div><div class="point-separator"></div><div class="point-stats"><div><b>{{ loading ? '···' : validEntries.length }}</b><span>有效指标</span></div><div><b>{{ loading ? '···' : nullCount }}</b><span>无数据</span></div></div></div>
           <div v-if="pointError" class="result-error"><span>{{ pointError }}</span><button type="button" @click="retryPoint">重试</button></div>
@@ -98,9 +98,9 @@
           <template v-if="clicked.found">
             <div v-if="selected && selectedPointValue != null" class="featured-value"><span>当前图层 · {{ displayName(selected.col_name, selected.cname || selected.name) }}</span><div><strong>{{ fmt(selectedPointValue) }}</strong><small>{{ displayUnit(selected.col_name, selected.unit) }}</small></div></div>
             <section class="assessment-section"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>六项核心土壤指标</h3><div class="core-grid"><button v-for="item in coreIndicators" :key="item.id" type="button" class="core-metric" :aria-expanded="expandedMetric === item.id" @click="expandedMetric = expandedMetric === item.id ? '' : item.id"><span>{{ item.label }}</span><strong>{{ item.value == null ? '—' : fmt(item.value) }} <small>{{ item.unit }}</small></strong><em>{{ item.status }} · {{ expandedMetric === item.id ? '收起' : '详情' }}</em><span v-if="expandedMetric === item.id" class="metric-detail">来源：{{ item.source || '待确认' }}<br>年份：{{ item.year || '待确认' }}<br>土层：{{ item.depth || '待确认' }}</span></button></div></section>
-            <details :key="`${clicked.lat}:${clicked.lon}:${resolution}`" class="other-indicators"><summary><span><b>其他指标</b><small>保留当前点位的全部非核心指标</small></span><span class="other-count">{{ otherEntries.length + otherNullEntries.length }} 项 <i aria-hidden="true">⌄</i></span></summary><div class="other-content"><div class="result-tabs" role="tablist" aria-label="其他指标分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeResultCategory === category.id" :class="{ active: activeResultCategory === category.id }" @click="activeResultCategory = category.id">{{ category.label }}</button></div><div class="result-list"><div v-for="[key, item] in filteredEntries" :key="key" class="result-row"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>{{ fmt(displayValue(key, item.value)) }}<small>{{ displayUnit(key, item.unit) }}</small></strong></div><p v-if="!filteredEntries.length" class="results-empty">此分类在该位置没有有效值。</p><button v-if="otherNullEntries.length" type="button" class="missing-toggle" :aria-expanded="showNulls" @click="showNulls = !showNulls">{{ showNulls ? '收起' : '查看' }} {{ otherNullEntries.length }} 项无数据指标 <span>{{ showNulls ? '↑' : '↓' }}</span></button><template v-if="showNulls"><div v-for="[key, item] in otherNullEntries" :key="key" class="result-row missing"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>—</strong></div></template></div></div></details>
+            <details :key="`${clicked.lat}:${clicked.lon}:${resolution}`" class="other-indicators"><summary><span><b>其他指标</b><small>保留当前点位的全部非核心指标</small></span><span class="other-count">{{ otherEntries.length + otherNullEntries.length }} 项 <i aria-hidden="true">⌄</i></span></summary><div class="other-content"><HoverSwitch class="result-tabs" role="tablist" aria-label="其他指标分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeResultCategory === category.id" :class="{ active: activeResultCategory === category.id }" @click="activeResultCategory = category.id">{{ category.label }}</button></HoverSwitch><div class="result-list"><div v-for="[key, item] in filteredEntries" :key="key" class="result-row"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>{{ fmt(displayValue(key, item.value)) }}<small>{{ displayUnit(key, item.unit) }}</small></strong></div><p v-if="!filteredEntries.length" class="results-empty">此分类在该位置没有有效值。</p><button v-if="otherNullEntries.length" type="button" class="missing-toggle" :aria-expanded="showNulls" @click="showNulls = !showNulls">{{ showNulls ? '收起' : '查看' }} {{ otherNullEntries.length }} 项无数据指标 <span>{{ showNulls ? '↑' : '↓' }}</span></button><template v-if="showNulls"><div v-for="[key, item] in otherNullEntries" :key="key" class="result-row missing"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>—</strong></div></template></div></div></details>
             <section class="assessment-section"><span class="section-kicker">REGIONAL CONTEXT</span><h3>区域指标</h3><p v-if="clicked.z01" class="region-name">Z01 参考区划 · {{ clicked.z01.source_name }}<small> · {{ clicked.z01.code }}</small></p><p v-if="clicked.z01" class="regional-caveat">来源区划按 1 km 网格定位，边界附近可能有偏差；与模型九大区的映射尚未核验，不参与 N + X 评分。</p><p v-if="clicked.regionName" class="region-name">模型农业区 · {{ clicked.regionName }}<small v-if="clicked.regionId"> · {{ clicked.regionId }}</small></p><p v-if="!clicked.regionName" class="assessment-note">当前尚无可核验的模型农业区映射；区域扩展指标待接入。</p><p v-else-if="!regionalIndicators.length" class="assessment-note">该农业区尚无已核对的 X 指标配置。</p><div v-else class="regional-list"><div v-for="item in regionalIndicators" :key="item.label" class="regional-row"><span>{{ item.label }}</span><strong>{{ item.value == null ? '待接入' : `${fmt(item.value)} ${item.unit}` }}</strong></div></div><p v-if="regionalIndicators.length" class="regional-caveat">区域归属来自点位接口；X 清单来自项目指标审计。仅展示对应字段的返回值，其余不参与评分。</p></section>
-            <section class="assessment-section"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><h3>土壤健康评价</h3><div class="assessment-modes" role="group" aria-label="评价模式"><button type="button" :class="{ active: assessmentMode === 'base' }" @click="assessmentMode = 'base'">Base-SHI</button><button type="button" :class="{ active: assessmentMode === 'regional' }" @click="assessmentMode = 'regional'">N + X</button></div><div class="score-pending"><strong>—</strong><div><b>评分规则待核验</b><p>{{ assessmentMode === 'base' ? '尚未接入经过核验的基础评分规则与结果。' : '区域映射与扩展指标未完整接入，暂不能计算 N + X。' }}</p></div></div></section>
+            <section class="assessment-section"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><h3>土壤健康评价</h3><HoverSwitch class="assessment-modes" role="group" aria-label="评价模式"><button type="button" :class="{ active: assessmentMode === 'base' }" @click="assessmentMode = 'base'">Base-SHI</button><button type="button" :class="{ active: assessmentMode === 'regional' }" @click="assessmentMode = 'regional'">N + X</button></HoverSwitch><div class="score-pending"><strong>—</strong><div><b>评分规则待核验</b><p>{{ assessmentMode === 'base' ? '尚未接入经过核验的基础评分规则与结果。' : '区域映射与扩展指标未完整接入，暂不能计算 N + X。' }}</p></div></div></section>
           </template>
           <div v-else-if="!loading" class="unavailable-analysis"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>数据尚未返回</h3><p>位置已经在地图上标记。服务恢复后，可在此查看六项核心土壤指标与区域评价。</p><div class="pending-metrics"><span v-for="item in coreDefinitions" :key="item.id">{{ item.label }}<b>—</b></span></div><div class="pending-score"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><strong>评分待评估</strong><small>没有真实指标和核验规则时，不生成分数。</small></div></div>
         </template>
@@ -117,9 +117,9 @@
         <template v-else>
           <header class="browser-head"><div class="browser-head-copy"><h1 id="browser-title" tabindex="-1">原始数据表</h1><p>按数据库与数据表分页检查字段和记录。</p></div><button type="button" class="browser-close" @click="openResourceCatalog">返回数据目录</button></header>
 
-          <div class="db-switch" role="group" aria-label="选择数据库"><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: dbResolution === value }" :aria-pressed="dbResolution === value" @click="selectDatabase(value)">{{ value }} km 数据库</button><span>只读浏览 · 每页 50 行</span></div>
+          <HoverSwitch class="db-switch" role="group" aria-label="选择数据库"><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: dbResolution === value }" :aria-pressed="dbResolution === value" @click="selectDatabase(value)">{{ value }} km 数据库</button><span>只读浏览 · 每页 50 行</span></HoverSwitch>
           <div class="db-workspace">
-            <aside class="db-sidebar" aria-label="数据表"><label>查找数据表<input v-model="tableSearch" type="search" placeholder="输入表名" /></label><div class="db-table-list"><button v-for="table in filteredDbTables" :key="table.name" type="button" :class="{ active: selectedTable === table.name }" @click="selectDbTable(table.name)"><strong>{{ table.name }}</strong></button><p v-if="!filteredDbTables.length">没有匹配的数据表。</p></div></aside>
+            <aside class="db-sidebar" aria-label="数据表"><label>查找数据表<input v-model="tableSearch" type="search" placeholder="输入表名" /></label><HoverSwitch class="db-table-list"><button v-for="table in filteredDbTables" :key="table.name" type="button" :class="{ active: selectedTable === table.name }" @click="selectDbTable(table.name)"><strong>{{ table.name }}</strong></button><p v-if="!filteredDbTables.length">没有匹配的数据表。</p></HoverSwitch></aside>
             <div class="db-main"><div class="browser-meta"><strong>{{ selectedTable || '选择左侧数据表' }}</strong><span>{{ selectedTable ? `${Number(dataResult.total || 0).toLocaleString()} 行 · ${dataResult.columns.length} 列 · 第 ${dataPage} / ${totalPages} 页` : '选择数据表后查看所有字段' }}</span></div><div v-if="dataError" class="browser-error">{{ dataError }} <button type="button" @click="loadData">重试</button></div><div ref="dataTableRef" class="data-table-scroll" :aria-busy="dataLoading" :style="dataLoading && dataTableLoadingHeight ? { minHeight: dataTableLoadingHeight + 'px' } : undefined"><table v-if="selectedTable && dataResult.columns.length"><thead><tr><th v-for="column in dataResult.columns" :key="column.col" scope="col">{{ column.cname || column.col }}<small v-if="column.cname && column.cname !== column.col">{{ column.col }}</small></th></tr></thead><tbody><tr v-for="(row, index) in dataResult.rows" :key="`${dataPage}-${index}`"><td v-for="(value, colIndex) in row" :key="colIndex">{{ formatDbCell(value) }}</td></tr></tbody></table><div v-if="dataLoading" class="table-state"><span class="state-spinner"></span>正在读取数据…</div><div v-else-if="dataError" class="table-state">当前数据表暂无法读取。</div><div v-else-if="!selectedTable" class="table-state">选择左侧数据表，查看完整字段和分页记录。</div><div v-else-if="!dataResult.rows.length" class="table-state">此表没有记录。</div></div><footer class="browser-pagination"><button type="button" :disabled="!selectedTable || dataPage <= 1 || dataLoading" @click="goToPage(dataPage - 1)">上一页</button><span>{{ dataPage }} / {{ totalPages }}</span><button type="button" :disabled="!selectedTable || dataPage >= totalPages || dataLoading" @click="goToPage(dataPage + 1)">下一页</button></footer></div>
           </div>
         </template>
@@ -129,6 +129,7 @@
 </template>
 
 <script setup>
+import HoverSwitch from './design-system/HoverSwitch.vue'
 import { onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
 import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
@@ -294,8 +295,18 @@ function openMainView(view) {
     }
   })
 }
+let navigationFade = null
+let navigationFadeVersion = 0
 function transitionTo(action, ...args) {
-  return transitionPage(() => action(...args), nextTick)
+  const version = ++navigationFadeVersion
+  navigationFade?.cancel()
+  return transitionPage(() => action(...args), async () => {
+    await nextTick()
+    if (version !== navigationFadeVersion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const selector = { home: '.landing-hero', explore: '.explorer-workspace', gold: '.resource-workspace', research: '.health-hub', assistant: '.assistant-workspace', tools: '.tools-workspace' }[siteView.value]
+    const content = selector && siteContentRef.value?.querySelector(selector)
+    if (content) navigationFade = content.animate([{ opacity: .8 }, { opacity: 1 }], { duration: 150, easing: 'cubic-bezier(.22,1,.36,1)' })
+  }, { snapshot: false })
 }
 function onHistoryNavigation() {
   transitionTo(() => {
@@ -738,6 +749,6 @@ onMounted(() => {
   loadPreviewLayers()
   checkAccount()
 })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (map) { map.remove(); map = null } })
+onBeforeUnmount(() => { navigationFade?.cancel(); window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (map) { map.remove(); map = null } })
 </script>
 

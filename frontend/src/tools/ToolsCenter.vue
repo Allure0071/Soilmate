@@ -17,11 +17,11 @@
       <div class="tools-layout">
         <aside class="tools-sidebar">
           <h2>工具分类</h2>
-          <nav class="tools-categories" aria-label="工具分类">
+          <HoverSwitch as="nav" class="tools-categories" aria-label="工具分类">
             <button v-for="category in toolCategories" :key="category.id" type="button" :class="{ active: category.id === selectedCategory }" :aria-pressed="category.id === selectedCategory" @click="selectedCategory = category.id">
               {{ category.label }}<span>{{ filterTools('', category.id).filter(tool => tool.status !== 'planned').length }}</span>
             </button>
-          </nav>
+          </HoverSwitch>
           <p class="tools-sidebar-note">本地计算 · 无需登录</p>
         </aside>
         <div class="tools-directory">
@@ -57,6 +57,7 @@
 </template>
 
 <script setup>
+import HoverSwitch from '../design-system/HoverSwitch.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import WorkspaceIcon from '../WorkspaceIcon.vue'
 import ToolIcon from './ToolIcon.vue'

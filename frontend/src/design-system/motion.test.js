@@ -135,3 +135,19 @@ test('rapid navigation skips old snapshots and only the newest destination commi
   env.media.dispatchEvent(new Event('change'))
   assert.equal(transitions[1].skipped, 1, 'completed transitions must release their listener')
 })
+
+
+test('live navigation commits immediately and supersedes a pending snapshot', async () => {
+  const env = environment()
+  let pendingUpdate
+  const calls = []
+  env.document.startViewTransition = update => {
+    pendingUpdate = update
+    return { skipTransition() {}, ready: Promise.resolve(), finished: Promise.resolve(), updateCallbackDone: Promise.resolve() }
+  }
+  transitionPage(() => calls.push('stale'))
+  await transitionPage(() => calls.push('live'), () => calls.push('rendered'), { snapshot: false })
+  assert.deepEqual(calls, ['live', 'rendered'])
+  await pendingUpdate()
+  assert.deepEqual(calls, ['live', 'rendered'], 'a delayed snapshot must not restore an earlier destination')
+})

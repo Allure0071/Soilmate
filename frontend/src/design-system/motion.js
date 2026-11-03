@@ -6,11 +6,12 @@ let navigationVersion = 0
 
 // Snapshot the previous view, let Vue commit the destination, then blend in place.
 // A skipped transition still runs its callback, so only the latest may commit.
-export function transitionPage(update, afterRender = () => {}) {
+// Live navigation opts out of capture so the header can animate uninterrupted.
+export function transitionPage(update, afterRender = () => {}, { snapshot = true } = {}) {
   const version = ++navigationVersion
   activeTransition?.skipTransition()
   const media = reducedMotion()
-  if (media.matches || !document.startViewTransition) {
+  if (!snapshot || media.matches || !document.startViewTransition) {
     update()
     return Promise.resolve(afterRender())
   }

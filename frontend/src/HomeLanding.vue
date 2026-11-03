@@ -21,9 +21,9 @@
     <section class="landing-modules" aria-labelledby="modules-title">
       <div class="landing-section-head" data-reveal><h2 id="modules-title">从数据到研究</h2></div>
       <div class="landing-card-grid">
-        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'explore')"><span class="landing-card-icon" aria-hidden="true">◎</span><strong>空间探索</strong><span class="landing-card-copy">查看指标与空间分布。</span><span class="landing-card-link">进入空间探索 <b aria-hidden="true">↗</b></span></button>
-        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'gold')"><span class="landing-card-icon" aria-hidden="true">▦</span><strong>数据资源</strong><span class="landing-card-copy">查找指标，核对来源。</span><span class="landing-card-link">浏览现有数据 <b aria-hidden="true">↗</b></span></button>
-        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'assessment')"><span class="landing-card-icon" aria-hidden="true">◌</span><strong>健康研究</strong><span class="landing-card-copy">录入检测数据，开展研究。</span><span class="landing-card-link">开始检测评估 <b aria-hidden="true">↗</b></span></button>
+        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'explore')"><span class="landing-card-icon" aria-hidden="true"><WorkspaceIcon name="map" /></span><strong>空间探索</strong><span class="landing-card-copy">查看指标与空间分布。</span><span class="landing-card-link">进入空间探索 <WorkspaceIcon name="arrow" /></span></button>
+        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'gold')"><span class="landing-card-icon" aria-hidden="true"><WorkspaceIcon name="database" /></span><strong>数据资源</strong><span class="landing-card-copy">查找指标，核对来源。</span><span class="landing-card-link">浏览现有数据 <WorkspaceIcon name="arrow" /></span></button>
+        <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'assessment')"><span class="landing-card-icon" aria-hidden="true"><WorkspaceIcon name="flask" /></span><strong>健康研究</strong><span class="landing-card-copy">录入检测数据，开展研究。</span><span class="landing-card-link">开始检测评估 <WorkspaceIcon name="arrow" /></span></button>
         <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'tools')"><span class="landing-card-icon" aria-hidden="true"><WorkspaceIcon name="calculator" /></span><strong>工具中心</strong><span class="landing-card-copy">土壤计算与常用工具。</span><span class="landing-card-link">查找与使用工具<WorkspaceIcon name="arrow" /></span></button>
       </div>
     </section>
@@ -90,4 +90,6 @@ onBeforeUnmount(() => { stopReveal?.(); stopScroll?.() })
 .landing-card{transition:transform 420ms var(--motion-pop),box-shadow 240ms var(--motion-standard),border-color 240ms var(--motion-standard)}
 .landing-actions button{transition:transform 300ms var(--motion-pop),background 200ms var(--motion-standard)}
 .landing-footer .font-credit{font-size:var(--text-caption)}
+.landing-card-icon .workspace-icon{width:27px;height:27px}
+.landing-card-link .workspace-icon{width:18px;height:18px}
 </style>

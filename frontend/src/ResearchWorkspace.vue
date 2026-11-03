@@ -35,11 +35,11 @@
         </section>
 
         <div v-if="embedded && stage === 'analysis'" class="embedded-pairing-link"><button type="button" @click="activePanel = activePanel === 'pairing' ? 'overview' : 'pairing'">{{ activePanel === 'pairing' ? '返回研究结果' : '检查土壤与微生物样本配对' }}<WorkspaceIcon :name="activePanel === 'pairing' ? 'back' : 'expand'" /></button></div>
-        <div v-if="!embedded" class="workspace-tabs" role="group" aria-label="工作台内容">
+        <HoverSwitch v-if="!embedded" class="workspace-tabs" role="group" aria-label="工作台内容">
           <button type="button" :aria-pressed="activePanel==='overview'" @click="activePanel='overview'">研究结果</button>
           <button type="button" :aria-pressed="activePanel==='pairing'" @click="activePanel='pairing'">样本配对审核</button>
           <button type="button" :aria-pressed="activePanel==='records'" @click="embedded ? $emit('navigate-stage', 'report') : activePanel='records'">任务与报告</button>
-        </div>
+        </HoverSwitch>
 
         <ol class="research-stages" aria-label="研究流程与当前状态">
           <li v-for="stage in researchStages" :key="stage.id" :class="`stage-${stage.state}`">
@@ -126,6 +126,7 @@
 </template>
 
 <script setup>
+import HoverSwitch from './design-system/HoverSwitch.vue'
 import {computed,nextTick,onMounted,ref,watch} from 'vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
 const props=defineProps({mapPoint:{type:Object,default:null},traceOnly:{type:Boolean,default:false},embedded:{type:Boolean,default:false},stage:{type:String,default:'analysis'},initialContext:{type:Object,default:null},csrfToken:{type:String,required:true}})

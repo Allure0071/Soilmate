@@ -5,8 +5,8 @@
       <span class="site-brand-copy"><strong>沃壤知行</strong></span>
     </a>
     <nav ref="navigation" class="site-primary-nav" aria-label="主站导航">
-      <span v-show="selection.visible" class="site-nav-selection" aria-hidden="true" :style="{ width: `${selection.width}px`, height: `${selection.height}px`, transform: `translate(${selection.x}px, ${selection.y}px)`, transition: nativeTransitions ? 'none' : undefined }"></span>
-      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)"><span :style="{ viewTransitionName: `site-nav-label-${link.id}` }">{{ link.label }}</span></a>
+      <span v-show="selection.visible" class="site-nav-selection" aria-hidden="true" :style="selectionStyle"></span>
+      <a v-for="link in primaryLinks" :key="link.id" :href="link.href" :class="{ active: link.views.includes(active) }" :aria-current="link.views.includes(active) ? 'page' : undefined" @click="navigate($event, link.id)">{{ link.label }}</a>
     </nav>
     <div class="site-account">
       <span v-if="preview" class="site-preview">审核预览</span>
@@ -17,26 +17,13 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useHoverSelection } from './design-system/useHoverSelection.js'
 import { primaryLinks } from './siteNavigation.js'
 const props = defineProps({ active: { type: String, default: 'home' }, home: { type: Boolean, default: false }, account: { type: Object, default: null }, preview: { type: Boolean, default: false }, loginHref: { type: String, default: '/account/index.html?next=%2Fresearch' } })
 const emit = defineEmits(['navigate', 'logout'])
 const navigation = ref(null)
-const selection = ref({ visible: false, x: 0, y: 0, width: 0, height: 0 })
-const nativeTransitions = Boolean(document.startViewTransition)
-let resizeObserver
-function alignSelection() {
-  const active = navigation.value?.querySelector('a[aria-current="page"]')
-  selection.value = active ? { visible: true, x: active.offsetLeft, y: active.offsetTop, width: active.offsetWidth, height: active.offsetHeight } : { ...selection.value, visible: false }
-}
-watch(() => props.active, alignSelection, { flush: 'post' })
-onMounted(() => {
-  alignSelection()
-  resizeObserver = new ResizeObserver(alignSelection)
-  resizeObserver.observe(navigation.value)
-  document.fonts.ready.then(() => nextTick(alignSelection))
-})
-onBeforeUnmount(() => resizeObserver?.disconnect())
+const { selection, selectionStyle } = useHoverSelection(navigation)
 function navigate(event, view) {
   if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return
   event.preventDefault()
@@ -55,7 +42,7 @@ function navigate(event, view) {
 .site-primary-nav { display: flex; align-items: center; gap: 6px; flex: none; min-width: 0; }
 .site-primary-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 18px; border-radius: 8px; color: #354f3e; text-decoration: none; font-size: var(--text-body); font-weight: 600; white-space: nowrap; }
 .site-primary-nav a:hover { background: #dfead8; color: #245d3b; }
-.site-primary-nav a.active { background: #285b3e; color: #fff; font-weight: 700; }
+.site-primary-nav a.active { background: #285b3e; color: #fff; font-weight: 600; }
 .site-primary-nav a.active:hover { background: #204c33; }
 .site-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; max-width: 100%; margin-left: auto; font-size: var(--text-label); }
 .site-account-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4d6755; font-size: var(--text-caption); }

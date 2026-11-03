@@ -37,9 +37,9 @@
         <button v-if="filtersOpen" class="repository-filter-backdrop" type="button" aria-label="关闭筛选面板" @click="closeFilters"></button>
         <aside class="repository-filter-panel" :class="{ 'is-open': filtersOpen }" :role="filtersOpen ? 'dialog' : undefined" :aria-modal="filtersOpen ? 'true' : undefined" aria-label="筛选数据目录" @keydown="handleFilterKeydown">
           <div class="repository-filter-head"><div><h2>筛选目录</h2></div><button class="repository-filter-close" type="button" aria-label="关闭筛选面板" @click="closeFilters">×</button></div>
-          <div class="repository-filter-group"><h3>网格分辨率</h3><button v-for="value in [5, 1]" :key="value" type="button" :aria-pressed="resolution === value" :class="{ active: resolution === value }" @click="$emit('resolution-change', value)"><span>{{ value }} km</span><span>{{ countFor(value) }}</span></button></div>
-          <div class="repository-filter-group"><h3>数据类型</h3><button v-for="item in categories" :key="item.id" type="button" :aria-pressed="category === item.id" :class="{ active: category === item.id }" @click="category = item.id"><span>{{ item.label }}</span><span>{{ categoryCount(item.id) }}</span></button></div>
-          <div class="repository-filter-group"><h3>来源登记</h3><button v-for="item in sourceOptions" :key="item.id" type="button" :aria-pressed="sourceStatus === item.id" :class="{ active: sourceStatus === item.id }" @click="sourceStatus = item.id"><span>{{ item.label }}</span><span>{{ sourceCount(item.id) }}</span></button></div>
+          <HoverSwitch class="repository-filter-group"><h3>网格分辨率</h3><button v-for="value in [5, 1]" :key="value" type="button" :aria-pressed="resolution === value" :class="{ active: resolution === value }" @click="$emit('resolution-change', value)"><span>{{ value }} km</span><span>{{ countFor(value) }}</span></button></HoverSwitch>
+          <HoverSwitch class="repository-filter-group"><h3>数据类型</h3><button v-for="item in categories" :key="item.id" type="button" :aria-pressed="category === item.id" :class="{ active: category === item.id }" @click="category = item.id"><span>{{ item.label }}</span><span>{{ categoryCount(item.id) }}</span></button></HoverSwitch>
+          <HoverSwitch class="repository-filter-group"><h3>来源登记</h3><button v-for="item in sourceOptions" :key="item.id" type="button" :aria-pressed="sourceStatus === item.id" :class="{ active: sourceStatus === item.id }" @click="sourceStatus = item.id"><span>{{ item.label }}</span><span>{{ sourceCount(item.id) }}</span></button></HoverSwitch>
           <div class="repository-filter-actions"><button type="button" @click="resetFilters">重置条件</button><button type="button" @click="closeFilters">查看 {{ filtered.length }} 项结果</button></div>
         </aside>
 
@@ -73,6 +73,7 @@
 </template>
 
 <script setup>
+import HoverSwitch from './design-system/HoverSwitch.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { fetchIndicators } from './api.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'

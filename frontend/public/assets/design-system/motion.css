@@ -16,42 +16,22 @@
   72% { opacity: 1; transform: scale(1.003); animation-timing-function: cubic-bezier(.3,0,.25,1); }
   100% { opacity: 1; transform: scale(1); }
 }
-#app .site-header {
-  position: sticky;
-  top: var(--site-frame-top);
-  view-transition-name: site-navigation;
-}
+/* Capture only page content. The live header keeps its CSS selection motion,
+   including the current interpolated position when a new destination arrives. */
+:root { view-transition-name: none; }
+#app .site-header { position: sticky; top: var(--site-frame-top); }
 #app .site-content-workspace > .site-header { top: 0; }
+#app .site-content > :is(.explorer-workspace, .resource-workspace, .health-hub, .assistant-workspace, .tools-workspace) {
+  view-transition-name: site-workspace;
+}
+#app .landing-hero { view-transition-name: site-home-hero; }
+#app .landing-modules { view-transition-name: site-home-modules; }
+#app .landing-footer { view-transition-name: site-home-footer; }
 ::view-transition { pointer-events: none; }
-::view-transition-group(root),
-::view-transition-group(site-navigation) { animation: none; }
-::view-transition-image-pair(root) { isolation: isolate; }
-::view-transition-old(root) { animation: none; mix-blend-mode: normal; opacity: 1; }
-::view-transition-new(root) { animation: page-blend 280ms var(--motion-standard) both; mix-blend-mode: normal; }
-::view-transition-old(site-navigation) { display: none; }
-::view-transition-new(site-navigation) { animation: none; }
-::view-transition-group(site-nav-selection) { animation-duration: 360ms; animation-timing-function: cubic-bezier(.2,.75,.25,1); }
-::view-transition-old(site-nav-selection) { display: none; }
-::view-transition-new(site-nav-selection) { animation: none; }
-/* Named snapshots leave the DOM stacking context. Keep navigation labels above
-   the moving plate in the transition tree as well as in the live header. */
-::view-transition-group(site-navigation) { z-index: 1; }
-::view-transition-group(site-nav-selection) { z-index: 2; }
-::view-transition-group(site-nav-label-explore),
-::view-transition-group(site-nav-label-gold),
-::view-transition-group(site-nav-label-research),
-::view-transition-group(site-nav-label-assistant),
-::view-transition-group(site-nav-label-tools) { z-index: 3; animation: none; }
-::view-transition-old(site-nav-label-explore),
-::view-transition-old(site-nav-label-gold),
-::view-transition-old(site-nav-label-research),
-::view-transition-old(site-nav-label-assistant),
-::view-transition-old(site-nav-label-tools) { display: none; }
-::view-transition-new(site-nav-label-explore),
-::view-transition-new(site-nav-label-gold),
-::view-transition-new(site-nav-label-research),
-::view-transition-new(site-nav-label-assistant),
-::view-transition-new(site-nav-label-tools) { animation: none; }
+::view-transition-group(*) { animation: none; }
+::view-transition-image-pair(*) { isolation: isolate; }
+::view-transition-old(*) { animation: none; mix-blend-mode: normal; opacity: 1; }
+::view-transition-new(*) { animation: page-blend 200ms var(--motion-standard) both; mix-blend-mode: normal; }
 :where(button, a, input, select, summary) {
   transition: color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), border-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
 }

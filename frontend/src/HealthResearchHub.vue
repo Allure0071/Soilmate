@@ -1,7 +1,7 @@
 <template>
   <main class="health-hub" aria-labelledby="health-hub-title">
     <header class="health-hub-header"><div><h1 id="health-hub-title">健康研究</h1></div><div class="health-hub-status"><span class="health-status-dot" aria-hidden="true"></span><span :title="context?.sample ? `${context.project} · ${context.sample}` : undefined">{{ stage === 'input' ? '录入草稿 · 尚未提交' : context?.sample ? `${context.project} · ${context.sample}` : '尚未选择样本' }}</span></div></header>
-    <nav class="health-stages" :inert="compact && assistantOpen" aria-label="健康研究阶段"><button v-for="item in stages" :key="item.id" type="button" :class="{ active: stage === item.id }" :aria-current="stage === item.id ? 'step' : undefined" @click="$emit('update:stage', item.id)"><span>{{ item.number }}</span><b>{{ item.label }}</b></button></nav>
+    <HoverSwitch as="nav" class="health-stages" :inert="compact && assistantOpen" aria-label="健康研究阶段"><button v-for="item in stages" :key="item.id" type="button" :class="{ active: stage === item.id }" :aria-current="stage === item.id ? 'step' : undefined" @click="$emit('update:stage', item.id)"><span>{{ item.number }}</span><b>{{ item.label }}</b></button></HoverSwitch>
     <div class="health-hub-columns" :class="{ 'health-hub-ai-hidden': !assistantOpen }">
       <div class="health-hub-content" :inert="compact && assistantOpen">
         <AssessmentWorkspace v-show="stage === 'input'" embedded :account="account" :preview="preview" :map-point="mapPoint" @navigate="$emit('navigate', $event)" />
@@ -15,6 +15,7 @@
 </template>
 
 <script setup>
+import HoverSwitch from './design-system/HoverSwitch.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AssessmentWorkspace from './assessment/AssessmentWorkspace.vue'
 import ResearchWorkspace from './ResearchWorkspace.vue'
