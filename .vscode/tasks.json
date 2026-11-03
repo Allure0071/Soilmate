@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Soilmate: 后端",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/bin/python",
+      "args": ["-m", "uvicorn", "backend.app.main:app", "--host", "127.0.0.1", "--port", "18000"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "soilmate-backend",
+        "pattern": { "regexp": "^(.*):(\\d+):(\\d+): (.*)$", "file": 1, "line": 2, "column": 3, "message": 4 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Started server process",
+          "endsPattern": "Uvicorn running on"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "soilmate" },
+      "runOptions": { "instanceLimit": 1 }
+    },
+    {
+      "label": "Soilmate: 前端",
+      "type": "shell",
+      "command": "npm run dev -- --host 127.0.0.1 --strictPort",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "soilmate-frontend",
+        "pattern": { "regexp": "^(.*):(\\d+):(\\d+): (.*)$", "file": 1, "line": 2, "column": 3, "message": 4 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "vite --host",
+          "endsPattern": "Local:.*http://127\\.0\\.0\\.1:5173"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "soilmate" },
+      "runOptions": { "instanceLimit": 1 }
+    },
+    {
+      "label": "Soilmate: 启动前后端",
+      "dependsOn": ["Soilmate: 后端", "Soilmate: 前端"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    }
+  ]
+}

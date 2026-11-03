@@ -1,0 +1,54 @@
+/* Shared by the Vue workspaces and the standalone account page. */
+:root {
+  --font-ui: 'DengXian', 'PingFang SC', 'Microsoft YaHei UI', sans-serif;
+  --font-display: Georgia, 'STSong', 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif;
+  --text-page-title: 2rem;
+  --text-section-title: 1.5rem;
+  --text-panel-title: 1.25rem;
+  --text-subheading: 1.125rem;
+  --text-item-title: 1rem;
+  --text-data-value: 1.5rem;
+  /* Compact data workspaces use 14px body text at the default root size. */
+  --text-body: .875rem;
+  --text-label: .8125rem;
+  --text-caption: .75rem;
+  --text-input: var(--text-body);
+  --leading-title: 1.4;
+  --leading-body: 1.7;
+  font-family: var(--font-ui);
+  font-size: 100%;
+  line-height: var(--leading-body);
+  font-synthesis: none;
+}
+
+body {
+  font-size: var(--text-body);
+}
+
+:where(button, input, select, textarea) {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+:where(h1, h2, h3, h4) {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+:where(p) {
+  text-wrap: pretty;
+}
+
+:where(table, output) {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+@media (max-width: 780px) {
+  :root {
+    --text-page-title: 1.625rem;
+    --text-section-title: 1.375rem;
+    --text-data-value: 1.375rem;
+    /* Keep mobile form fields readable without triggering focus zoom on iOS. */
+    --text-input: 1rem;
+  }
+}

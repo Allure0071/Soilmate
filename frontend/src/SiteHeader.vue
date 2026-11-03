@@ -27,7 +27,7 @@ function navigate(event, view) {
 </script>
 
 <style scoped>
-.site-header { display: flex; align-items: center; gap: 24px; position: relative; z-index: 1200; flex: none; min-height: var(--site-header-height); height: var(--site-header-height); margin-bottom: var(--site-frame-gap); padding: 0 26px; border-radius: 18px; background: #fff; color: #263d2d; font-family: var(--font-ui, DengXian, 'PingFang SC', 'Microsoft YaHei UI', sans-serif); box-shadow: 0 6px 20px #15362112; }
+.site-header { display: flex; align-items: center; gap: 24px; position: relative; z-index: 1200; flex: none; min-height: var(--site-header-height); height: var(--site-header-height); margin-bottom: var(--site-frame-gap); padding: 0 26px; border-radius: 18px; background: #fff; color: #263d2d; font-family: var(--font-ui); box-shadow: 0 6px 20px #15362112; }
 .site-header-home { width: 100%; }
 .site-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; min-height: 32px; padding-right: 24px; border-right: 1px solid #dce6d8; color: #285b3e; text-decoration: none; }
 .site-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; flex: none; }
@@ -35,12 +35,12 @@ function navigate(event, view) {
 .site-brand-copy { display: flex; flex-direction: column; gap: 3px; }
 .site-brand-copy strong { font: inherit; font-size: 18px; line-height: 1.4; font-weight: 700; white-space: nowrap; }
 .site-primary-nav { display: flex; align-items: center; gap: 6px; flex: none; min-width: 0; }
-.site-primary-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 18px; border-radius: 8px; color: #354f3e; text-decoration: none; font-size: 15px; font-weight: 600; white-space: nowrap; }
+.site-primary-nav a { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 18px; border-radius: 8px; color: #354f3e; text-decoration: none; font-size: var(--text-body); font-weight: 600; white-space: nowrap; }
 .site-primary-nav a:hover { background: #dfead8; color: #245d3b; }
 .site-primary-nav a.active { background: #285b3e; color: #fff; font-weight: 700; }
 .site-primary-nav a.active:hover { background: #204c33; }
-.site-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; max-width: 100%; margin-left: auto; font-size: 13px; }
-.site-account-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4d6755; font-size: 12px; }
+.site-account { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; max-width: 100%; margin-left: auto; font-size: var(--text-label); }
+.site-account-email { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4d6755; font-size: var(--text-caption); }
 .site-account :is(a, button) { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 14px; border: 1px solid #cbdcc8; border-radius: 999px; background: #f4f8f0; color: #28583e; text-decoration: none; font: inherit; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .site-account :is(a, button):hover { background: #e5efdf; border-color: #9cba9e; }
 .site-preview { color: #526d59; white-space: nowrap; }
@@ -64,15 +64,15 @@ function navigate(event, view) {
   .site-brand-mark { width: 32px; height: 32px; }
   .site-brand { flex: none; padding-right: 0; border-right: 0; }
   .site-brand-mark svg { width: 26px; height: 26px; }
-  .site-brand-copy strong { font-size: 17px; }
+  .site-brand-copy strong { font-size: var(--text-subheading); }
   .site-account { gap: 8px; min-width: 0; margin-left: auto; }
-  .site-account-email { max-width: 105px; font-size: 11px; }
-  .site-account :is(a, button) { min-height: 36px; padding: 8px 12px; font-size: 12px; }
-  .site-primary-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); order: 3; flex: 0 0 100%; gap: 4px; width: 100%; margin-top: 4px; padding: 3px 0 4px; border-top: 1px solid #e4ece0; }
-  .site-primary-nav a { min-height: 44px; padding: 9px 4px; font-size: 13px; }
+  .site-account-email { max-width: 105px; font-size: var(--text-caption); }
+  .site-account :is(a, button) { min-height: 36px; padding: 8px 12px; font-size: var(--text-caption); }
+  .site-primary-nav { display: grid; grid-template-columns: repeat(5, minmax(max-content, 1fr)); order: 3; flex: 0 0 100%; gap: 4px; width: 100%; margin-top: 4px; padding: 3px 0 4px; border-top: 1px solid #e4ece0; overflow-x: auto; scrollbar-width: thin; }
+  .site-primary-nav a { min-height: 44px; padding: 9px 4px; font-size: var(--text-label); white-space: nowrap; }
 }
 @media (max-width: 360px) {
   .site-account-email { display: none; }
-  .site-primary-nav a { padding-inline: 2px; font-size: 12px; }
+  .site-primary-nav a { padding-inline: 2px; }
 }
 </style>

@@ -97,7 +97,12 @@ function activate(event, tool) {
   if (tool.path) { emit('open-tool', { id: tool.id, directory: directoryUrl() }); return }
   history.pushState({}, '', href(tool)); selectedId.value = tool.id; focusTitle()
 }
-async function focusTitle() { await nextTick(); document.querySelector('.tools-workspace')?.scrollTo({ top: 0 }); document.getElementById('tools-title')?.focus({ preventScroll: true }) }
+async function focusTitle() {
+  await nextTick()
+  const workspace = document.querySelector('.tools-workspace')
+  ;(workspace?.closest('.site-content-tools') || workspace)?.scrollTo({ top: 0 })
+  document.getElementById('tools-title')?.focus({ preventScroll: true })
+}
 function backToDirectory() { history.pushState({}, '', directoryUrl()); selectedId.value = ''; focusTitle() }
 function clearFilters() { query.value = ''; selectedCategory.value = 'all'; domain.value = 'all' }
 async function clearSearch() { query.value = ''; await nextTick(); searchInputRef.value?.focus() }

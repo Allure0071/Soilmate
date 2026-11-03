@@ -1,4 +1,4 @@
-/* The exploration page owns vertical scrolling; results follow document flow. */
+/* Keep the map frame stable; point results scroll inside their own grid cell. */
 .site-content-map {
   --explore-map-height: max(500px, calc(100dvh - 200px));
   overflow-y: auto;
@@ -13,9 +13,10 @@
 }
 .site-content-map .explorer-workspace > .workspace {
   flex: none;
-  height: auto;
+  height: var(--explore-map-height);
   min-height: var(--explore-map-height);
-  overflow: visible;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
   align-items: stretch;
 }
 .site-content-map .explorer-workspace > .workspace,
@@ -24,23 +25,25 @@
 .site-content-map .map-stage {
   position: relative;
   inset: auto;
-  height: auto;
+  height: var(--explore-map-height);
+  align-self: start;
   min-height: var(--explore-map-height);
 }
 .site-content-map .inspector,
 .site-content-map .workspace.has-point .inspector {
   position: static;
   width: auto;
-  height: auto;
-  min-height: var(--explore-map-height);
-  max-height: none;
-  overflow: visible;
-  overscroll-behavior: auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   border-radius: 0;
   box-shadow: none;
   transition: none;
 }
-.site-content-map .inspector-head { position: static; }
+.site-content-map .inspector-head { position: sticky; top: 0; }
 .site-content-map .inspector-empty { min-height: calc(var(--explore-map-height) - 148px); }
 .site-content-map .catalog { bottom: auto; height: calc(var(--explore-map-height) - 20px); }
 @media (min-width: 761px) and (max-width: 1100px) {
@@ -53,7 +56,7 @@
   .site-content-map .explorer-workspace > .workspace.has-point {
     display: grid;
     grid-template-columns: 52px minmax(0, 1fr);
-    grid-template-rows: var(--explore-map-height) auto;
+    grid-template-rows: var(--explore-map-height) clamp(320px, 50dvh, 480px);
     height: auto;
   }
   .site-content-map .navigation-rail { position: relative; inset: auto; grid-column: 1; grid-row: 1; height: var(--explore-map-height); }

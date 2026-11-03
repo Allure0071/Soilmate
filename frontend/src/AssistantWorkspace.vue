@@ -4,7 +4,7 @@
     <aside class="assistant-sidebar" :class="{ 'assistant-sidebar-open': sidebarOpen }" :inert="(compact && !sidebarOpen) || (inspectorOverlay && inspectorOpen)" :role="compact && sidebarOpen ? 'dialog' : undefined" :aria-modal="compact && sidebarOpen ? true : undefined" aria-label="对话草稿" @keydown.esc="sidebarOpen = false" @keydown.tab="trapWorkspaceFocus($event, compact)">
       <div class="assistant-sidebar-head"><strong>AI 助手</strong><button type="button" class="assistant-sidebar-close" aria-label="关闭会话列表" @click="sidebarOpen = false"><WorkspaceIcon name="close" /></button></div>
       <button type="button" class="assistant-new-chat" @click="newThread"><WorkspaceIcon name="plus" />新建对话</button>
-      <div class="assistant-thread-group"><span>本机草稿</span><button v-for="thread in threads" :key="thread.id" type="button" :class="{ active: thread.id === activeId }" :aria-current="thread.id === activeId ? 'page' : undefined" @click="selectThread(thread.id)"><strong>{{ thread.title }}</strong><small>{{ thread.context?.sample ? thread.context.sample : '独立问答' }}</small></button></div>
+      <div class="assistant-thread-group"><span>本机草稿</span><div v-for="thread in threads" :key="thread.id" class="assistant-thread-row" :class="{ active: thread.id === activeId }" :data-thread-id="thread.id"><button type="button" class="assistant-thread-select" :aria-current="thread.id === activeId ? 'page' : undefined" @click="selectThread(thread.id)"><strong>{{ thread.title }}</strong><small>{{ thread.context?.sample ? thread.context.sample : '独立问答' }}</small></button><button type="button" class="assistant-thread-delete" :aria-label="`删除对话：${thread.title}`" title="删除对话" @click="deleteThread(thread.id)"><WorkspaceIcon name="trash" /></button></div></div>
       <div class="assistant-sidebar-foot"><WorkspaceIcon name="panel" /><p>草稿保留在当前浏览器<br>最多保存最近 20 个对话</p></div>
     </aside>
 
@@ -69,6 +69,22 @@ const runLabel = computed(() => ({ raw_data: '仅有原始数据', exploratory_a
 function syncActive() { emit('update:context', activeThread.value?.context || null); emit('update:draft', activeThread.value?.draft || '') }
 function selectThread(id) { activeId.value = id; sidebarOpen.value = false; inspectorOpen.value = Boolean(activeThread.value?.context?.sample) && window.matchMedia('(min-width: 1180px)').matches; syncActive() }
 function newThread() { const thread = makeThread(); threads.value.unshift(thread); activeId.value = thread.id; sidebarOpen.value = false; inspectorOpen.value = false; syncActive() }
+async function deleteThread(id) {
+  const index = threads.value.findIndex(thread => thread.id === id)
+  if (index < 0) return
+  const wasActive = activeId.value === id
+  threads.value.splice(index, 1)
+  if (!threads.value.length) threads.value.push(makeThread())
+  const adjacent = threads.value[Math.min(index, threads.value.length - 1)]
+  if (wasActive) {
+    activeId.value = adjacent.id
+    inspectorOpen.value = Boolean(activeThread.value?.context?.sample) && !inspectorOverlay.value
+    syncActive()
+  }
+  await nextTick()
+  const row = [...document.querySelectorAll('.assistant-thread-row')].find(item => item.dataset.threadId === adjacent.id)
+  row?.querySelector('.assistant-thread-delete')?.focus()
+}
 function updateDraft(value) { if (!activeThread.value) return; activeThread.value.draft = value.slice(0, 4000); activeThread.value.title = value.trim().slice(0, 18) || '新对话'; emit('update:draft', activeThread.value.draft) }
 function unlinkContext() { if (!activeThread.value) return; activeThread.value.context = null; emit('update:context', null) }
 watch([threads, activeId], () => { try { localStorage.setItem(storageKey, JSON.stringify({ activeId: activeId.value, threads: threads.value.slice(0, 20) })); storageAvailable.value = true } catch { storageAvailable.value = false } }, { deep: true, immediate: true, flush: 'sync' })

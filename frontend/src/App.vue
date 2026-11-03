@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
+    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-tools': siteView==='tools', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
     <HomeLanding v-if="siteView==='home'" :account="account" @navigate="navigateFromLanding" @logout="logout" />
     <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" :inert="soiledgeOpen || scientificOpen" @navigate="navigateFromHeader" @logout="logout" />
 
@@ -91,15 +91,15 @@
         <template v-else>
           <div class="point-summary"><div class="point-label"><span class="point-signal"></span>{{ loading ? '正在解析位置' : pointError ? '查询暂不可用' : clicked.found ? '已定位数据点' : '该位置暂无数据' }}</div><div class="point-coords"><strong>{{ clicked.lat.toFixed(4) }}° N</strong><strong>{{ clicked.lon.toFixed(4) }}° E</strong></div><div v-if="clicked.gridId" class="point-grid-id">栅格 ID · {{ clicked.gridId }}</div><div class="point-separator"></div><div class="point-stats"><div><b>{{ loading ? '···' : validEntries.length }}</b><span>有效指标</span></div><div><b>{{ loading ? '···' : nullCount }}</b><span>无数据</span></div></div></div>
           <div v-if="pointError" class="result-error"><span>{{ pointError }}</span><button type="button" @click="retryPoint">重试</button></div>
-          <div v-if="loading" class="result-loading"><span class="state-spinner"></span>正在读取此位置的数据…</div>
-          <template v-else-if="clicked.found">
+          <div v-if="loading" class="result-loading" role="status"><span class="state-spinner"></span>{{ clicked.found ? '正在读取新位置的数据，下方暂保留上次查询结果…' : '正在读取此位置的数据…' }}</div>
+          <template v-if="clicked.found">
             <div v-if="selected && selectedPointValue != null" class="featured-value"><span>当前图层 · {{ displayName(selected.col_name, selected.cname || selected.name) }}</span><div><strong>{{ fmt(selectedPointValue) }}</strong><small>{{ displayUnit(selected.col_name, selected.unit) }}</small></div></div>
             <section class="assessment-section"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>六项核心土壤指标</h3><div class="core-grid"><button v-for="item in coreIndicators" :key="item.id" type="button" class="core-metric" :aria-expanded="expandedMetric === item.id" @click="expandedMetric = expandedMetric === item.id ? '' : item.id"><span>{{ item.label }}</span><strong>{{ item.value == null ? '—' : fmt(item.value) }} <small>{{ item.unit }}</small></strong><em>{{ item.status }} · {{ expandedMetric === item.id ? '收起' : '详情' }}</em><span v-if="expandedMetric === item.id" class="metric-detail">来源：{{ item.source || '待确认' }}<br>年份：{{ item.year || '待确认' }}<br>土层：{{ item.depth || '待确认' }}</span></button></div></section>
             <details :key="`${clicked.lat}:${clicked.lon}:${resolution}`" class="other-indicators"><summary><span><b>其他指标</b><small>保留当前点位的全部非核心指标</small></span><span class="other-count">{{ otherEntries.length + otherNullEntries.length }} 项 <i aria-hidden="true">⌄</i></span></summary><div class="other-content"><div class="result-tabs" role="tablist" aria-label="其他指标分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeResultCategory === category.id" :class="{ active: activeResultCategory === category.id }" @click="activeResultCategory = category.id">{{ category.label }}</button></div><div class="result-list"><div v-for="[key, item] in filteredEntries" :key="key" class="result-row"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>{{ fmt(displayValue(key, item.value)) }}<small>{{ displayUnit(key, item.unit) }}</small></strong></div><p v-if="!filteredEntries.length" class="results-empty">此分类在该位置没有有效值。</p><button v-if="otherNullEntries.length" type="button" class="missing-toggle" :aria-expanded="showNulls" @click="showNulls = !showNulls">{{ showNulls ? '收起' : '查看' }} {{ otherNullEntries.length }} 项无数据指标 <span>{{ showNulls ? '↑' : '↓' }}</span></button><template v-if="showNulls"><div v-for="[key, item] in otherNullEntries" :key="key" class="result-row missing"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>—</strong></div></template></div></div></details>
             <section class="assessment-section"><span class="section-kicker">REGIONAL CONTEXT</span><h3>区域指标</h3><p v-if="clicked.z01" class="region-name">Z01 参考区划 · {{ clicked.z01.source_name }}<small> · {{ clicked.z01.code }}</small></p><p v-if="clicked.z01" class="regional-caveat">来源区划按 1 km 网格定位，边界附近可能有偏差；与模型九大区的映射尚未核验，不参与 N + X 评分。</p><p v-if="clicked.regionName" class="region-name">模型农业区 · {{ clicked.regionName }}<small v-if="clicked.regionId"> · {{ clicked.regionId }}</small></p><p v-if="!clicked.regionName" class="assessment-note">当前尚无可核验的模型农业区映射；区域扩展指标待接入。</p><p v-else-if="!regionalIndicators.length" class="assessment-note">该农业区尚无已核对的 X 指标配置。</p><div v-else class="regional-list"><div v-for="item in regionalIndicators" :key="item.label" class="regional-row"><span>{{ item.label }}</span><strong>{{ item.value == null ? '待接入' : `${fmt(item.value)} ${item.unit}` }}</strong></div></div><p v-if="regionalIndicators.length" class="regional-caveat">区域归属来自点位接口；X 清单来自项目指标审计。仅展示对应字段的返回值，其余不参与评分。</p></section>
             <section class="assessment-section"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><h3>土壤健康评价</h3><div class="assessment-modes" role="group" aria-label="评价模式"><button type="button" :class="{ active: assessmentMode === 'base' }" @click="assessmentMode = 'base'">Base-SHI</button><button type="button" :class="{ active: assessmentMode === 'regional' }" @click="assessmentMode = 'regional'">N + X</button></div><div class="score-pending"><strong>—</strong><div><b>评分规则待核验</b><p>{{ assessmentMode === 'base' ? '尚未接入经过核验的基础评分规则与结果。' : '区域映射与扩展指标未完整接入，暂不能计算 N + X。' }}</p></div></div></section>
           </template>
-          <div v-else class="unavailable-analysis"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>数据尚未返回</h3><p>位置已经在地图上标记。服务恢复后，可在此查看六项核心土壤指标与区域评价。</p><div class="pending-metrics"><span v-for="item in coreDefinitions" :key="item.id">{{ item.label }}<b>—</b></span></div><div class="pending-score"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><strong>评分待评估</strong><small>没有真实指标和核验规则时，不生成分数。</small></div></div>
+          <div v-else-if="!loading" class="unavailable-analysis"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>数据尚未返回</h3><p>位置已经在地图上标记。服务恢复后，可在此查看六项核心土壤指标与区域评价。</p><div class="pending-metrics"><span v-for="item in coreDefinitions" :key="item.id">{{ item.label }}<b>—</b></span></div><div class="pending-score"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><strong>评分待评估</strong><small>没有真实指标和核验规则时，不生成分数。</small></div></div>
         </template>
       </aside>
     </main>
@@ -594,14 +594,16 @@ async function queryPoint(lng, lat) {
   const currentQuery = ++queryId
   loading.value = apiState.value === 'ready'
   pointError.value = ''
-  previewValues.value = {}
-  showNulls.value = false
-  expandedMetric.value = ''
-  clicked.value = { lon: lng, lat, values: {}, found: false }
+  if (!clicked.value) {
+    previewValues.value = {}
+    clicked.value = { lon: lng, lat, values: {}, found: false }
+  }
   if (highlightLayer) { map.removeLayer(highlightLayer); highlightLayer = null }
   if (marker) marker.setLatLng([lat, lng])
   else marker = L.marker([lat, lng], { icon: L.divIcon({ className: 'probe-marker', html: '<span></span>', iconSize: [30, 30], iconAnchor: [15, 15] }) }).addTo(map)
   if (apiState.value !== 'ready') {
+    clicked.value = { lon: lng, lat, values: {}, found: false }
+    previewValues.value = {}
     pointError.value = '地图已定位；数据服务未连接。请检查本地后端，然后重试。'
     return
   }
@@ -612,6 +614,8 @@ async function queryPoint(lng, lat) {
       fetchZ01Point(lng, lat).catch(() => null),
     ])
     if (currentQuery !== queryId) return
+    showNulls.value = false
+    expandedMetric.value = ''
     previewValues.value = preview?.values || {}
     clicked.value = res ? {
       lon: res.lon ?? lng, lat: res.lat ?? lat, values: res.values || {}, found: !!res.found,
@@ -629,6 +633,8 @@ async function queryPoint(lng, lat) {
     activeResultCategory.value = 'all'
   } catch (e) {
     if (currentQuery !== queryId) return
+    clicked.value = { lon: lng, lat, values: {}, found: false }
+    previewValues.value = {}
     pointError.value = /Failed to fetch|NetworkError|fetch failed/i.test(e.message)
       ? '地图已定位；无法连接数据服务。请检查本地后端。'
       : `点位查询失败：${e.message}`
