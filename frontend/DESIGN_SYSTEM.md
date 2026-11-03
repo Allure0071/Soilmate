@@ -12,6 +12,14 @@
 
 字体来自[华为官方设计资源](https://developer.huawei.com/consumer/cn/design/resource-V1)的[原始字体包](https://developer.huawei.com/images/download/general/HarmonyOS-Sans.zip)。本项目使用未修改的 Regular、Medium 和 Bold TTF，不转换格式、不裁剪字形。字体文件及原始许可位于 `public/assets/fonts/harmonyos/`，页面页脚提供字体使用声明与许可链接。
 
+## 圆角与玻璃表面
+
+`public/assets/design-system/surfaces.css` 统一 Vue 与独立账号页的材质。工作区圆角 28 px、卡片 24 px、导航 24 px、普通控件 14 px、首页行动按钮 18 px；以同级关系保持一致，图标和数据本身不变形。
+
+导航、浮动地图控件、抽屉和局部表单使用半透明浅色底、细高光边、内阴影与柔和外阴影。背景柔化使用 CSS `backdrop-filter`，不模糊文字、地图画布、数据图表或正文。首页主按钮保留绿色层级，次按钮使用深色透明玻璃，文字保持白色。整体为 Apple 风格的 CSS 毛玻璃近似，未实现光学边缘折射，也不照搬视频材质参数。
+
+默认背景模糊 22 px，首页行动按钮 16 px；不支持背景模糊时使用清楚的浅色实体底。减少透明度或增强对比度偏好使用实体底；既有减少动态效果与原位页面切换继续生效。避免嵌套大面积模糊和动态 blur 动画。首页移除“向下了解平台”的提示及其空占位，不增加替代说明。
+
 ## 动效
 
 统一规则位于 `public/assets/design-system/motion.css`；页面衔接、滚动揭示与轻量响应位于 `src/design-system/motion.js`。页面、弹层与滚动分别选择动效，不把局部回弹应用到整个工作区。

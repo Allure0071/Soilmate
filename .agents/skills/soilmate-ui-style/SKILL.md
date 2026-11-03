@@ -31,7 +31,8 @@ For full-page or cross-page UI work, read `product/04-Soilmate全站UI参考库�
 
 - Existing page background is a pale botanical neutral (`#F4F6F1`); cards are white. Existing forest green and field imagery give the homepage its depth, while interface surfaces remain light.
 - Use green as a purposeful accent for actions, selection, maps, and status. Keep text contrast clear, especially on the hero photograph. If the user requests color tuning, adjust the green itself without changing the established page composition.
-- Use softly rounded cards and buttons, subtle shadows, visible focus states, and responsive layouts. Avoid generic gradients, decorative glass effects throughout the product, and repeated photo heroes on data pages.
+- Use rounded rectangular cards and controls, quiet layered shadows and visible focus states. Apple-inspired frosted glass belongs on the shared navigation, floating controls, drawers and selected call-to-action surfaces. Use translucent backing, a coherent bright edge and background blur; keep data canvases, long text and tables clear. Do not spread blur across the whole workspace or add repeated photo heroes on data pages.
+- Reuse `frontend/public/assets/design-system/surfaces.css` for surface, radius and glass rules, including the standalone account page. CSS glass is a visual approximation without optical refraction. Keep readable fallback surfaces when blur or transparency is unavailable or reduced by user preference.
 
 Before changing UI, inspect the relevant existing component and shared CSS. Reuse current patterns and semantic variables where possible, then verify the build and the affected viewport. The user's latest instruction takes precedence over this style guide.
 
