@@ -51,6 +51,8 @@
         </div>
       </div>
     </template>
+    <DataAuditWorkbench v-else-if="selectedTool?.workbench === 'data-audit'" />
+    <TextureWorkbench v-else-if="selectedTool?.workbench === 'texture'" />
     <CalculatorWorkbench v-else-if="selectedTool?.calculator" :key="selectedTool.id" :tool-id="selectedTool.id" />
     <section v-else class="tool-description"><WorkspaceIcon :name="selectedTool?.icon || 'panel'" /><h2>{{ selectedTool?.status === 'planned' ? '这个工具正在建设中' : selectedTool ? '使用说明' : '请重新选择工具' }}</h2><p>{{ selectedTool?.note || '工具目录保留了所有可用入口，可返回后重新选择。' }}</p><p v-if="selectedTool?.status === 'planned'">具体方法和资料核查完成后再接入，当前不生成计算结果。</p><a v-if="selectedTool?.path" class="tool-primary-button" :href="href(selectedTool)" @click="activate($event, selectedTool)">打开工具<WorkspaceIcon name="expand" /></a><button v-else type="button" class="tool-primary-button" @click="backToDirectory">返回工具目录<WorkspaceIcon name="back" /></button></section>
   </main>
@@ -63,6 +65,8 @@ import WorkspaceIcon from '../WorkspaceIcon.vue'
 import ToolIcon from './ToolIcon.vue'
 import { transitionPage } from '../design-system/motion.js'
 import CalculatorWorkbench from './CalculatorWorkbench.vue'
+import DataAuditWorkbench from './research/DataAuditWorkbench.vue'
+import TextureWorkbench from './research/TextureWorkbench.vue'
 import { filterTools, getTool, statusLabel, toolCategories, tools, toolTarget } from './catalog.js'
 import './directory.css'
 import './tools.css'
@@ -76,8 +80,8 @@ const visibleTools = computed(() => filterTools(query.value, selectedCategory.va
 const availableTools = computed(() => visibleTools.value.filter(tool => tool.status !== 'planned'))
 const plannedTools = computed(() => visibleTools.value.filter(tool => tool.status === 'planned'))
 const directoryGroups = [
-  { id: 'lab', title: '土壤理化计算', note: '物理性质、有机碳与实验配液', ids: ['density', 'moisture', 'carbon', 'dilution'] },
-  { id: 'numbers', title: '统计与单位换算', note: '数据整理与实验结果处理', ids: ['units', 'curve', 'statistics'] },
+  { id: 'lab', title: '土壤理化计算', note: '物理性质、有机碳与实验配液', ids: ['density', 'moisture', 'carbon', 'texture', 'dilution'] },
+  { id: 'numbers', title: '数据检查与统计', note: '批量质控、实验结果与单位换算', ids: ['data-audit', 'units', 'curve', 'statistics'] },
   { id: 'data', title: '地图与数据查询', note: '进入空间探索和数据资源', ids: ['map-layers', 'indicator-catalog', 'database-browser'] },
   { id: 'assessment', title: '健康评价', note: '需登录，当前支持录入与核验', ids: ['quick-assessment', 'deep-assessment'] },
 ]

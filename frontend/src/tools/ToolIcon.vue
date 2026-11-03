@@ -19,6 +19,7 @@ import bulb from './icons/bulb.svg'
 const props = defineProps({ toolId: { type: String, required: true } })
 const sources = {
   density: gold, moisture: experiment, carbon: container, dilution: experiment,
+  'data-audit': profile, texture: pieChart,
   units: interaction, curve: fund, statistics: pieChart,
   'map-layers': environment, 'indicator-catalog': profile, 'database-browser': database,
   'quick-assessment': fileText, 'deep-assessment': bulb,

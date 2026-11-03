@@ -53,3 +53,10 @@ npm run dev
 首批本地计算包括容重与孔隙度、含水率换算、单层有机碳储量、同量纲单位换算、溶液稀释、线性标准曲线与统计速算。每项工具包含输入校验、可主动载入的示例、公式、适用条件、原始参考链接及结果文本下载。计算参数不上传或保存；示例不是实测数据，输出不代表健康等级或标准合规结论。地图测量、仪器资料、盐碱与污染判读等条目仍标记为建设中。
 
 计算定义与参考来源位于 `frontend/src/tools/calculators.js`，目录与接入状态位于 `frontend/src/tools/catalog.js`。在 `frontend/` 下运行 `node --test src/tools/calculators.test.js src/siteNavigation.test.js src/assessment/*.test.js` 可验证公式边界、单位口径、工具路由与现有录入校验。
+
+### 数据体检与质地三角图
+
+- `/tools?tool=data-audit`：读取本地 CSV、TSV、Excel `.xlsx` 或粘贴表格，支持工作表选择、缺失与重复记录、数值格式、单位混用、手动范围和 IQR 离群提示。最多 5,000 行、60 列、5 MB；保留原始值，导出问题清单，不自动删行、填补或换算单位。Excel 读取现有值，不重新计算公式。
+- `/tools?tool=texture`：按 USDA 12 类细土体系判别质地，显示三角图样点，导出 SVG 和包含原始输入的判别记录。比例默认须合计 100%，归一化需要手动勾选；不生成健康等级或种植建议。
+
+两个工具均无需登录，文件与参数不上传、不写入账号。算法、来源及适用范围见 `frontend/src/tools/research/SOURCES.md`；运行 `node --test frontend/src/tools/research/research.test.js` 验证分类边界、图形分区、导入和体检规则。
