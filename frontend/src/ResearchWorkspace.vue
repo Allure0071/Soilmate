@@ -18,7 +18,7 @@
 
     <main class="research-main">
       <header class="workspace-header">
-        <div><span class="section-kicker">{{ traceOnly?'证据追溯 / TRACE':'分析中心 / RESEARCH' }}</span><h1>{{ traceOnly?'研究记录':'研究工作台' }}</h1><p class="header-description">{{ traceOnly?'查看分析任务、研究行动与报告版本。':'从当前样本出发，查看已有证据与可执行的下一步。' }}</p></div>
+        <div><h1>{{ traceOnly?'证据追溯':'分析中心' }}</h1></div>
         <button type="button" class="back-link" @click="$emit('back')"><span aria-hidden="true">←</span> 返回地图</button>
       </header>
 
@@ -64,13 +64,13 @@
                 <template v-else><div class="evidence-summary"><span>{{ currentRun.result.module_id }} · {{ currentRun.result.pathway_name || '氮循环通路模块' }}</span><b>{{ currentRun.result.structural_status || statusLabel(currentRun.status) }}</b></div><p class="evidence-copy">BioSample {{ currentRun.result.biosample || '未提供' }} · Run {{ currentRun.result.run_accession || '未提供' }} · 数据集 {{ currentDataset?.name || currentRun.dataset_id }} · {{ datasetSampleCount(currentDataset) }} 个样本</p><details class="evidence-details"><summary>查看注释来源与完整分析版本</summary><dl><dt>数据集</dt><dd>{{ currentRun.result.source?.dataset_id }}</dd><dt>数据版本</dt><dd>{{ currentRun.result.source?.version }}</dd><dt>来源位置</dt><dd>{{ currentRun.result.source?.source_uri }}</dd><dt>SHA-256</dt><dd class="hash-value">{{ currentRun.source_sha256 }}</dd><dt>运行 ID</dt><dd>{{ currentRun.id }}</dd></dl></details><section class="capability-note"><b>已知功能分析（依赖 KO 注释表）</b><p>分析范围限于已有 KO 注释与登记的通路步骤；本次输入能否支持计算，以运行状态和缺口为准。</p><b>未知功能候选挖掘 · 未接入</b><p>需要原始序列（FASTQ）、组装结果或蛋白序列（FASTA/FAA），并完成基因预测与功能注释；当前 KO 计数表不能替代这些输入。</p></section></template>
               </section>
 
-              <section class="gap-section"><div><span class="gap-mark" aria-hidden="true">!</span><h3>结论受到什么限制</h3></div><ul><li v-for="g in currentRun.result.gaps" :key="g">{{ typeof g==='string'?g:JSON.stringify(g) }}</li><li v-if="currentRun.kind==='mfti'">该公开微生物样本未与当前土壤样本可靠配对，不能解释本地地块。</li></ul></section>
+              <section class="gap-section"><div><span class="gap-mark" aria-hidden="true">!</span><h3>证据缺口</h3></div><ul><li v-for="g in currentRun.result.gaps" :key="g">{{ typeof g==='string'?g:JSON.stringify(g) }}</li><li v-if="currentRun.kind==='mfti'">该公开微生物样本未与当前土壤样本可靠配对，不能解释本地地块。</li></ul></section>
             </template>
-            <div v-else class="empty-finding"><span class="empty-index">研究起点</span><h2>{{ currentSample?'准备分析当前样本':'先选择一个研究样本' }}</h2><p>{{ currentSample?'运行分析后，这里会显示真实结果、适用范围和仍然缺少的证据。':'选择已有土壤样本开展指标审计，或切换到公开微生物项目查看 KO 通路结构。' }}</p></div>
+            <div v-else class="empty-finding"><h2>{{ currentSample?'准备分析当前样本':'选择研究样本' }}</h2><p>{{ currentSample?'运行分析，查看结果与证据。':'选择项目与样本，开始分析。' }}</p></div>
           </div>
 
           <aside class="action-column" aria-label="下一步研究行动">
-            <p class="action-overline">下一步研究行动</p>
+            <p class="action-overline">下一步</p>
             <template v-if="currentRun">
               <h2>{{ decision?.chosen?.code ? actionLabel(decision.chosen.code) : '根据证据缺口决定下一步' }}</h2>
               <p v-if="!decision">{{ currentRun.kind==='nshi'?'优先补齐指标定义与适用阈值，再判断是否能形成可解释的评价。':'优先核验该 Run 的质控和注释信息；在质控不足时不估计检测概率。' }}</p>
@@ -81,7 +81,7 @@
               <p v-if="execution" class="execution-state" role="status">{{ execution.status }}：{{ execution.log.join('；') }}</p>
               <p class="action-footnote">需要人工审核或实验室操作的事项会标记为待处理，不会显示成已完成。</p>
             </template>
-            <template v-else><h2>项目进度</h2><div class="project-snapshot" aria-label="项目已登记内容"><span><b>{{ samples.length }}</b><small>样本</small></span><span><b>{{ runs.length }}</b><small>分析运行</small></span><span><b>{{ reports.length }}</b><small>报告</small></span></div><p class="project-progress-note">{{ runs.length ? '已有分析记录，可查看运行与报告。' : '选定样本后运行审计，开始建立可追溯的研究记录。' }}</p><button v-if="runs.length || reports.length" type="button" class="secondary-action" @click="activePanel='records'">查看已有记录</button></template>
+            <template v-else><h2>项目进度</h2><div class="project-snapshot" aria-label="项目已登记内容"><span><b>{{ samples.length }}</b><small>样本</small></span><span><b>{{ runs.length }}</b><small>分析运行</small></span><span><b>{{ reports.length }}</b><small>报告</small></span></div><p class="project-progress-note">{{ runs.length ? '已有分析记录，可查看运行与报告。' : '选择样本后开始分析。' }}</p><button v-if="runs.length || reports.length" type="button" class="secondary-action" @click="activePanel='records'">查看已有记录</button></template>
           </aside>
         </section>
 

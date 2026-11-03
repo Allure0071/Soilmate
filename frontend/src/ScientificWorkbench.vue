@@ -1,6 +1,6 @@
 <template>
   <section class="scientific-workbench" role="dialog" aria-modal="true" aria-labelledby="science-title">
-    <header class="science-head"><div><span>SOILMATE · SCIENTIFIC INTELLIGENCE</span><h2 id="science-title">壤脉天玑 · 分析中心</h2><p>从地图点位出发，判断基因与通路数据能够支持什么。</p></div><button type="button" @click="$emit('close')">返回地图 ×</button></header>
+    <header class="science-head"><div><h2 id="science-title">点位研究</h2></div><button type="button" @click="$emit('close')">返回地图 ×</button></header>
     <nav class="science-tabs" aria-label="分析中心"><button v-for="tab in tabs" :key="tab.id" type="button" :class="{active:active===tab.id}" @click="active=tab.id">{{ tab.label }}</button></nav>
     <div class="science-body">
       <section v-if="active==='health'"><h3>土壤状态与研究问题</h3><p v-if="!point?.found" class="science-warning">请先返回地图并选择一个有数据的点位。</p><template v-else><p>位置 {{ point.lat.toFixed(4) }}° N，{{ point.lon.toFixed(4) }}° E · {{ resolution }} km 栅格。</p><div class="science-measures"><div v-for="metric in metrics" :key="metric.key"><small>{{ metric.label }}</small><strong>{{ metricValue(metric) }}</strong><small>{{ metricSource(metric) }}</small></div></div><p class="science-warning">目前健康评分规则未核验，平台不产生 SHI 或健康等级。地图点位与公开微生物样本未配对。</p></template><h4>研究问题</h4><p>这处土壤的氮素状态值得进一步研究吗？独立的公开微生物数据能否展示氮循环过程的分析方法，并指出获得田块级解释仍缺什么？</p><p>土壤指标描述状态；基因与通路提供过程线索。只有样本 ID、时间、地点和土层对应，才可做样本级关联。</p></section>
