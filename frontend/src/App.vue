@@ -107,8 +107,8 @@
       </aside>
     </main>
     </section>
-    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="stage => transitionTo(setResearchStage, stage)" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="destination => transitionTo(openMainView, destination)" @open-assistant="openAssistant" />
-    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
+    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="stage => transitionTo(setResearchStage, stage)" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="destination => transitionTo(openMainView, destination)" @open-assistant="transitionTo(openAssistant)" />
+    <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="transitionTo(openResearch, assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
     <main v-show="siteView==='gold'" class="data-browser resource-workspace" aria-labelledby="browser-title">
@@ -297,7 +297,12 @@ function openMainView(view) {
 function transitionTo(action, ...args) {
   return transitionPage(() => action(...args), nextTick)
 }
-function onHistoryNavigation() { transitionTo(onRouteChange) }
+function onHistoryNavigation() {
+  transitionTo(() => {
+    onRouteChange()
+    window.dispatchEvent(new Event('soilmate:history-commit'))
+  })
+}
 function navigateFromHeader(destination) {
   soiledgeOpen.value = false
   scientificOpen.value = false

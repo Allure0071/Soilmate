@@ -30,6 +30,9 @@
 ::view-transition-new(root) { animation: page-blend 280ms var(--motion-standard) both; mix-blend-mode: normal; }
 ::view-transition-old(site-navigation) { display: none; }
 ::view-transition-new(site-navigation) { animation: none; }
+::view-transition-group(site-nav-selection) { animation-duration: 360ms; animation-timing-function: cubic-bezier(.2,.75,.25,1); }
+::view-transition-old(site-nav-selection) { display: none; }
+::view-transition-new(site-nav-selection) { animation: none; }
 :where(button, a, input, select, summary) {
   transition: color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), border-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
 }
@@ -37,7 +40,7 @@
   transition: transform var(--motion-short) var(--motion-pop), color var(--motion-instant) var(--motion-standard), background-color var(--motion-short) var(--motion-standard), box-shadow var(--motion-short) var(--motion-standard);
 }
 :where(.site-primary-nav a, .site-account a, .site-account button, .landing-actions button):active { transform: scale(.97); }
-:where(.assistant-inspector, .health-hub-assistant, .calculator-workbench, .tool-context-menu, .panel) {
+:where(.calculator-workbench, .tool-context-menu, .panel) {
   animation: panel-arrive 420ms cubic-bezier(0, 0, 1, 1) backwards;
   transform-origin: center;
 }

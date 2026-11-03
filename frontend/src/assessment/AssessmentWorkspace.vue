@@ -6,7 +6,7 @@
       <nav v-if="!embedded || page !== 'mode'" class="assessment-progress" aria-label="录入步骤"><ol><li v-for="(item, index) in steps" :key="item.id" :class="{ current: page === item.id, completed: index < pageIndex }" :aria-current="page === item.id ? 'step' : undefined"><button v-if="index < pageIndex" type="button" :aria-label="`返回${item.label}`" @click="goPage(item.id)"><span class="assessment-step-marker"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg></span><b>{{ item.label }}</b></button><span v-else class="assessment-step-label"><span class="assessment-step-marker">{{ index + 1 }}</span><b>{{ item.label }}</b></span></li></ol></nav>
       <header class="assessment-intro">
         <div class="assessment-intro-copy"><component :is="embedded ? 'h2' : 'h1'" id="assessment-title" tabindex="-1">{{ page === 'mode' ? '选择评价方式' : pageTitle }}</component><p v-if="page !== 'mode'">{{ pageDescription }}</p></div>
-        <button type="button" class="assessment-map-link" @click="$emit('navigate', 'explore')"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16" /></svg>返回地图</button>
+        <button type="button" class="assessment-map-link" v-if="!embedded" @click="$emit('navigate', 'explore')"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16" /></svg>返回地图</button>
       </header>
 
       <section v-if="page === 'mode'" class="assessment-mode-section" aria-label="评价方式">
@@ -69,7 +69,7 @@
         </section>
       </div>
       <div class="assessment-feedback" aria-live="polite" role="status"><p v-if="message">{{ message }}</p></div>
-      <footer class="assessment-footer"><span>{{ storageAvailable ? '草稿仅存当前浏览器，分析服务尚未接入。' : '浏览器存储不可用，请自行保留当前输入。' }}</span><button type="button" @click="$emit('navigate', 'home')">返回首页</button></footer>
+      <footer class="assessment-footer"><details :open="!storageAvailable"><summary>{{ storageAvailable ? '草稿说明' : '草稿未保存' }}</summary><p>{{ storageAvailable ? '本机保存；分析服务待接入。' : '浏览器存储不可用，请自行保留当前输入。' }}</p></details><button v-if="!embedded" type="button" @click="$emit('navigate', 'home')">返回首页</button></footer>
     </div>
   </component>
 </template>
@@ -77,6 +77,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { createRow, inspectRows, restoreRows, reviewIndicators } from './measurementDraft.js'
+import { transitionPage } from '../design-system/motion.js'
 
 const props = defineProps({ account: { type: Object, default: null }, preview: { type: Boolean, default: false }, mapPoint: { type: Object, default: null }, embedded: { type: Boolean, default: false } })
 defineEmits(['navigate'])
@@ -133,13 +134,14 @@ function goPage(target) {
   if (target === 'review' && !rowInspection.value.valid) target = 'input'
   if (target === 'background' && mode.value !== 'deep') target = 'input'
   if (page.value === target) return
-  page.value = target
-  errors.value = {}; formError.value = ''; message.value = ''
-  const url = new URL(location.href)
-  url.searchParams.set('mode', mode.value)
-  url.searchParams.set('step', page.value)
-  history.pushState(history.state, '', url.pathname + url.search + url.hash)
-  focusPage()
+  transitionPage(() => {
+    page.value = target
+    errors.value = {}; formError.value = ''; message.value = ''
+    const url = new URL(location.href)
+    url.searchParams.set('mode', mode.value)
+    url.searchParams.set('step', page.value)
+    history.pushState(history.state, '', url.pathname + url.search + url.hash)
+  }, focusPage)
 }
 function readPageFromUrl(focus = false) {
   if (!['/assessment', '/assessment/preview', '/research'].includes(location.pathname)) return
@@ -188,8 +190,8 @@ async function checkInput() {
 watch([mode, context, rows], () => { errors.value = {}; formError.value = ''; saveDraft() }, { deep: true, flush: 'sync' })
 watch(mode, syncModeUrl)
 readPageFromUrl()
-onMounted(() => window.addEventListener('popstate', onPopState))
-onBeforeUnmount(() => { clearTimeout(messageTimer); window.removeEventListener('popstate', onPopState) })
+onMounted(() => window.addEventListener('soilmate:history-commit', onPopState))
+onBeforeUnmount(() => { clearTimeout(messageTimer); window.removeEventListener('soilmate:history-commit', onPopState) })
 </script>
 
 <style src="./assessment.css"></style>
