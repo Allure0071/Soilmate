@@ -5,7 +5,7 @@
     <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" @navigate="destination => transitionTo(navigateFromHeader, destination)" @logout="logout" />
 
     <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="transitionTo(returnToTools)"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
-    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="tool => transitionTo(openTool, tool)" />
+    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="tool => transitionTo(openTool, tool)" @import-research="payload => transitionTo(openResearchImport, payload)" />
 
     <section v-show="siteView==='explore'" class="explorer-workspace" :inert="soiledgeOpen || scientificOpen">
       <div class="map-workspace-toolbar">
@@ -54,6 +54,7 @@
         <div id="map"></div>
         <div v-if="basemapState !== 'ready'" class="basemap-status" :class="{ 'basemap-status-loading': basemapState === 'loading' }" role="status"><span>{{ basemapState === 'unconfigured' ? `${basemapProviderLabel}底图待启用` : basemapState === 'loading' ? `正在加载${basemapProviderLabel}` : `${basemapProviderLabel}底图暂不可用` }}</span><button v-if="basemapState === 'error'" type="button" @click="changeBasemap(basemapMode)">重试</button></div>
         <div class="map-tools"><span class="map-tools-title">{{ selectedPreview?.name || (selected ? displayName(selected.col_name, selected.cname || selected.name) : '中国土壤空间分布') }}</span><button type="button" @click="catalogOpen = true">切换图层 <span aria-hidden="true">↗</span></button><button type="button" :aria-pressed="zonesVisible" :disabled="zonesLoading" @click="toggleReferenceZones">{{ zonesLoading ? '加载分区…' : zonesVisible ? '隐藏参考分区' : '参考分区' }}</button></div>
+        <div v-if="dataNavigationError" class="map-data-link-error" role="status">{{ dataNavigationError }}</div>
         <div v-if="zoneError" class="map-tile-note map-zone-error" role="status">{{ zoneError }}</div>
         <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">专题图层暂未提供 · 可点选查询</div>
         <div class="map-coordinate">{{ cursorCoords || '移动鼠标查看坐标' }}</div>
@@ -69,6 +70,7 @@
 
       <aside class="inspector" :class="`sheet-${sheetState}`" aria-label="点位分析结果">
         <div class="inspector-head"><div><span class="section-kicker">{{ siteView==='home' && !clicked ? '沃壤知行 / 研究总览' : '点位数据' }}</span><h2>{{ siteView==='home' && !clicked ? '研究总览' : '位置剖面' }}</h2></div><button class="sheet-toggle" type="button" :aria-label="sheetState === 'full' ? '收起分析面板' : '展开分析面板'" @click="cycleSheet">{{ sheetState === 'full' ? '收起' : '展开' }} <span aria-hidden="true">{{ sheetState === 'full' ? '⌄' : '⌃' }}</span></button></div>
+        <section v-if="selected && !selectedPreviewId" class="map-layer-source" aria-label="当前图层资料"><h3>{{ displayName(selected.col_name, selected.cname || selected.name) }}</h3><dl><div><dt>单位</dt><dd>{{ displayUnit(selected.col_name, selected.unit) || (selected.col_name === 'soil_ph' ? '无量纲' : '待核对') }}</dd></div><div><dt>分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ selected.source_file || '未登记' }}</dd></div></dl><p>{{ selected.source_file === 'SYNTHETIC_TEST_DATA' ? '合成测试数据，仅供界面演示。' : '年份、土层与覆盖范围请到资源详情核对。' }}</p><button type="button" @click="transitionTo(openIndicatorResource)">查看数据来源与覆盖信息</button><button v-if="resourceReturn" type="button" @click="transitionTo(returnToResource)">返回数据资源</button></section>
         <section v-if="!clicked && siteView==='home'" class="home-overview" aria-labelledby="home-title">
           <div class="home-intro">
             <span class="section-kicker">研究方向 / NITROGEN CYCLE</span>
@@ -113,7 +115,7 @@
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
     <main v-show="siteView==='gold'" class="data-browser resource-workspace" aria-labelledby="browser-title">
 
-        <RepositoryWorkspace v-if="browserTab === 'layers'" :key="repositoryVisitKey" :indicators="indicators" :resolution="resolution" :api-state="apiState" :error="indicatorError" :tiles-available="tileAvailability" @resolution-change="changeResolution" @map-preview="showCatalogLayer" @open-database="openRawDatabase" @retry="loadIndicators" />
+        <RepositoryWorkspace v-if="browserTab === 'layers'" :active="siteView === 'gold'" :indicators="indicators" :resolution="resolution" :api-state="apiState" :error="indicatorError" :tiles-available="tileAvailability" @resolution-change="changeResolution" @map-preview="payload => transitionTo(showCatalogLayer, payload)" @return-map="path => transitionTo(returnToDataMap, path)" @open-database="openRawDatabase" @retry="loadIndicators" />
         <template v-else>
           <header class="browser-head"><div class="browser-head-copy"><h1 id="browser-title" tabindex="-1">原始数据表</h1><p>按数据库与数据表分页检查字段和记录。</p></div><button type="button" class="browser-close" @click="openResourceCatalog">返回数据目录</button></header>
 
@@ -130,7 +132,7 @@
 
 <script setup>
 import HoverSwitch from './design-system/HoverSwitch.vue'
-import { onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
+import { defineAsyncComponent, onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
 import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import SiteHeader from './SiteHeader.vue'
@@ -141,7 +143,7 @@ import { createGcj02Crs } from './map/coordinates.js'
 import { createScientificTileLayer } from './map/scientificTiles.js'
 import mapConfig from './map/config.json'
 import ToolsCenter from './tools/ToolsCenter.vue'
-import RepositoryWorkspace from './RepositoryWorkspace.vue'
+const RepositoryWorkspace = defineAsyncComponent(() => import('./RepositoryWorkspace.vue'))
 import { getTool, toolTarget } from './tools/catalog.js'
 import { siteLinks, viewFromPath } from './siteNavigation.js'
 import ScientificWorkbench from './ScientificWorkbench.vue'
@@ -150,11 +152,15 @@ import AssistantWorkspace from './AssistantWorkspace.vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
 import L from 'leaflet'
 import { fetchIndicators, fetchMeta, fetchPoint, fetchData, fetchPreviewLayers, fetchPreviewPoint, fetchZ01Boundaries, fetchZ01Point, previewTileUrl, tileUrl } from './api.js'
+import { localDataPath, mapDataPath, readDataLocation, resourceDataPath } from './dataNavigation.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'
 import { regionalConfigFor } from './regionIndicatorConfig.js'
 const indicators = ref([])
 const siteContentRef = ref(null)
-const selectedKey = ref('')
+const initialDataLocation = readDataLocation(location.search)
+const selectedKey = ref(location.pathname === '/explore' ? initialDataLocation.key : '')
+const resourceReturn = ref(location.pathname === '/explore' ? initialDataLocation.resourceReturn : '')
+const dataNavigationError = ref('')
 const selected = computed(() => indicators.value.find(ind => ind.col_name === selectedKey.value) || null)
 const previewLayers = ref([])
 const selectedPreviewId = ref('')
@@ -178,7 +184,7 @@ const expandedMetric = ref('')
 const sheetState = ref('half')
 const cursorCoords = ref('')
 const layerOpacity = ref(78)
-const resolution = ref(5)
+const resolution = ref(['/explore', '/resources'].includes(location.pathname) ? initialDataLocation.res : 5)
 const tileAvailability = ref(null)
 const zonesVisible = ref(false)
 const zonesLoading = ref(false)
@@ -221,6 +227,14 @@ function openTool(payload) {
   if (getTool(id)?.login && !account.value) { window.location.assign(accountUrl(path)); return }
   history.pushState({}, '', path)
   onRouteChange()
+}
+function openResearchImport({ token, directory }) {
+  const params = new URLSearchParams({ stage: 'input', mode: 'quick', step: 'input', import: token, from: 'tools', tool: 'data-audit', returnTo: directory })
+  const path = '/research?' + params.toString()
+  if (!account.value) { window.location.assign(accountUrl(path)); return }
+  history.pushState({}, '', path)
+  onRouteChange()
+  window.dispatchEvent(new Event('soilmate:history-commit'))
 }
 function returnToTools() {
   history.pushState({}, '', toolDirectoryPath.value)
@@ -278,7 +292,7 @@ function openMainView(view) {
   const path = withToolsOrigin(siteLinks.find(link => link.id === view)?.href || '/')
   if (window.location.pathname + window.location.search !== path) history.pushState({}, '', path)
   siteView.value = view
-  if (view === 'gold') repositoryVisitKey.value++
+  if (view === 'gold') window.dispatchEvent(new Event('soilmate:history-commit'))
   if (view === 'tools' && previousView === 'tools') toolsCenterRef.value?.readLocation()
   assessmentPreview.value = false
   scientificOpen.value = false
@@ -355,7 +369,8 @@ function openResearch(view = 'analysis') {
 function setResearchStage(stage) {
   const changed = researchStage.value !== stage
   researchStage.value = stage
-  const path = withToolsOrigin(`/research?stage=${stage}`)
+  const stageUrl = new URL(location.href); stageUrl.searchParams.set('stage', stage)
+  const path = stageUrl.pathname + stageUrl.search
   if (window.location.pathname + window.location.search !== path) history.pushState({}, '', path)
   if (changed) nextTick(() => {
     siteContentRef.value?.scrollTo({ top: 0 })
@@ -406,6 +421,7 @@ function onRouteChange() {
   if ((siteView.value === 'assistant' || (siteView.value === 'research' && !assessmentPreview.value)) && !account.value) window.location.replace(accountUrl(window.location.pathname + window.location.search))
   if (leavingAnalysis || siteView.value === 'explore') restoreMapAfterAnalysis()
   catalogOpen.value = false
+  if (siteView.value === 'explore') nextTick(applyDataLocation)
 }
 watch(siteView, async view => {
   await nextTick()
@@ -414,7 +430,6 @@ watch(siteView, async view => {
   if (target) { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }) }
 })
 const browserTab = ref(new URLSearchParams(location.search).get('tab') === 'database' ? 'database' : 'layers')
-const repositoryVisitKey = ref(0)
 const dbResolution = ref(5)
 const dbTables = [{ name: 'points' }, { name: 'indicators' }, { name: 'meta' }]
 const tableSearch = ref('')
@@ -527,9 +542,10 @@ function fmt(v) {
   if (a >= 0.01) return v.toFixed(3)
   return v.toExponential(1)
 }
-function chooseIndicator(key) {
+function chooseIndicator(key, persist = true) {
   selectedPreviewId.value = ''
   selectedKey.value = key
+  if (persist && key && location.pathname === '/explore') { const url = new URL(location.href); url.searchParams.set('indicator', key); url.searchParams.set('res', String(resolution.value)); history.replaceState(history.state, '', url.pathname + url.search) }
   catalogOpen.value = false
   if (!map) return
   if (tileLayer) map.removeLayer(tileLayer)
@@ -594,6 +610,7 @@ function onDrawerTouchEnd(event) {
 function cycleSheet() { sheetState.value = sheetState.value === 'half' ? 'full' : sheetState.value === 'full' ? 'closed' : 'half'; nextTick(() => map?.invalidateSize({ pan: false })) }
 function handleKeydown(event) { if (event.key === 'Escape') { if (soiledgeOpen.value) soiledgeOpen.value = false; else catalogOpen.value = false } }
 function updateOpacity() { if (tileLayer) tileLayer.setOpacity(layerOpacity.value / 100) }
+let pendingIndicatorLoad = null
 async function loadIndicators() {
   const currentLoad = ++indicatorId
   apiState.value = 'loading'
@@ -606,8 +623,8 @@ async function loadIndicators() {
     indicators.value = Array.isArray(data.indicators) ? data.indicators : []
     apiState.value = 'ready'
     if (!indicators.value.some(ind => ind.col_name === selectedKey.value)) selectedKey.value = ''
-    if (!selectedKey.value) chooseIndicator(indicators.value.find(ind => ind.col_name === 'soil_ph')?.col_name || indicators.value[0]?.col_name || '')
-    else chooseIndicator(selectedKey.value)
+    if (!selectedKey.value) chooseIndicator(indicators.value.find(ind => ind.col_name === 'soil_ph')?.col_name || indicators.value[0]?.col_name || '', false)
+    else chooseIndicator(selectedKey.value, false)
   } catch (e) {
     if (currentLoad !== indicatorId) return
     apiState.value = 'error'
@@ -689,6 +706,7 @@ function retryPoint() { if (lastPoint) queryPoint(lastPoint.lng, lastPoint.lat) 
 function changeResolution(value) {
   if (resolution.value === value) return
   resolution.value = value
+  if (location.pathname === '/explore') { const url = new URL(location.href); url.searchParams.set('res', String(value)); history.replaceState(history.state, '', url.pathname + url.search) }
   loadTileAvailability()
   const pendingQuery = ++queryId
   const point = lastPoint
@@ -698,9 +716,44 @@ function changeResolution(value) {
   selectedKey.value = ''
   selectedPreviewId.value = ''
   if (value === 1) activeCategory.value = 'all'
-  loadIndicators().then(() => { if (point && queryId === pendingQuery) queryPoint(point.lng, point.lat) })
+  pendingIndicatorLoad = loadIndicators().then(() => { if (point && queryId === pendingQuery) queryPoint(point.lng, point.lat) })
 }
-function showCatalogLayer(key) { chooseIndicator(key); openMainView('explore') }
+async function showCatalogLayer(payload) {
+  const key = typeof payload === 'string' ? payload : payload.key
+  const res = typeof payload === 'string' ? resolution.value : payload.res
+  const center = map ? [map.getCenter().lat, map.getCenter().lng, map.getZoom()] : null
+  const path = mapDataPath(key, res, center, payload.returnTo || '')
+  history.pushState({}, '', path)
+  onRouteChange()
+  await applyDataLocation()
+}
+function openIndicatorResource() {
+  if (!selected.value) return
+  const center = map ? [map.getCenter().lat, map.getCenter().lng, map.getZoom()] : null
+  const returnMap = mapDataPath(selectedKey.value, resolution.value, center)
+  const path = resourceDataPath(selectedKey.value, resolution.value, returnMap, resourceReturn.value || '/resources')
+  history.pushState({}, '', path); onRouteChange()
+  window.dispatchEvent(new Event('soilmate:history-commit'))
+}
+function returnToDataMap(path) {
+  const target = localDataPath(path, '/explore')
+  if (!target) return
+  history.pushState({}, '', target); onRouteChange(); applyDataLocation()
+}
+async function applyDataLocation() {
+  if (location.pathname !== '/explore') return
+  const state = readDataLocation(location.search)
+  resourceReturn.value = state.resourceReturn
+  if (state.res !== resolution.value) { changeResolution(state.res); await pendingIndicatorLoad }
+  if (location.pathname !== '/explore') return
+  if (state.key && apiState.value === 'ready') {
+    if (indicators.value.some(item => item.col_name === state.key)) { chooseIndicator(state.key, false); dataNavigationError.value = '' }
+    else { chooseIndicator('', false); dataNavigationError.value = '当前分辨率下未找到此指标，请重新选择图层。' }
+  }
+  if (state.center && map) map.setView(state.center.slice(0, 2), state.center[2], { animate: false })
+}
+function returnToResource() { if (resourceReturn.value) { history.pushState({}, '', resourceReturn.value); onRouteChange(); window.dispatchEvent(new Event('soilmate:history-commit')) } }
+
 function openRawDatabase() { browserTab.value = 'database'; history.pushState({}, '', '/resources?tab=database') }
 function openResourceCatalog() { browserTab.value = 'layers'; history.pushState({}, '', '/resources') }
 function selectDatabase(value) { if (dbResolution.value === value) return; ++dataId; dbResolution.value = value; selectedTable.value = ''; dataResult.value = { columns: [], rows: [], total: 0 }; dataPage.value = 1; dataLoading.value = false; dataError.value = '' }
@@ -728,7 +781,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('popstate', onHistoryNavigation)
   fitMapToViewport()
-  map = L.map('map', { crs: usingAmap ? createGcj02Crs(L) : L.CRS.EPSG3857, zoomAnimation: !usingAmap, center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
+  map = L.map('map', { crs: usingAmap ? createGcj02Crs(L) : L.CRS.EPSG3857, zoomAnimation: !usingAmap, center: initialDataLocation.center?.slice(0, 2) || [35, 105], zoom: initialDataLocation.center?.[2] || 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
   mapResizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false, debounceMoveend: true }))
   mapResizeObserver.observe(document.getElementById('map'))
   mapViewportObserver = new ResizeObserver(fitMapToViewport)
@@ -744,7 +797,7 @@ onMounted(() => {
   map.on('mousemove', e => { cursorCoords.value = `${e.latlng.lat.toFixed(3)}° N  /  ${e.latlng.lng.toFixed(3)}° E` })
   map.on('mouseout', () => { cursorCoords.value = '' })
   map.on('click', e => queryPoint(e.latlng.lng, e.latlng.lat))
-  loadIndicators()
+  pendingIndicatorLoad = loadIndicators().then(applyDataLocation)
   loadTileAvailability()
   loadPreviewLayers()
   checkAccount()

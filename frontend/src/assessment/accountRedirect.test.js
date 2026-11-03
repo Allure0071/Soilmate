@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { accountDestination } from '../../public/account/redirect.js'
 
 test('login preserves new workspace routes, stages and assessment steps', () => {
-  for (const path of ['/assistant', '/research?stage=evidence', '/assessment?mode=deep&step=input', '/analysis', '/evidence', '/explore', '/resources']) {
+  for (const path of ['/assistant', '/research?stage=evidence', '/research?stage=input&step=input&import=test-token&from=tools&tool=data-audit', '/assessment?mode=deep&step=input', '/analysis', '/evidence', '/explore', '/resources']) {
     assert.equal(accountDestination(path), path)
   }
 })

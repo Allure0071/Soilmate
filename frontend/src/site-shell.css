@@ -174,3 +174,14 @@
   .resource-workspace .product-detail { min-height: 0; overflow: visible; }
   .map-data-connection { font-size: var(--text-caption); }
 }
+.map-layer-source { padding:20px 24px; border-bottom:1px solid #dce5d8; color:#294833; }
+.map-layer-source h3 { margin:0 0 14px; font-size:var(--text-item-title); font-weight:600; }
+.map-layer-source dl { margin:0; font-size:var(--text-label); }
+.map-layer-source dl > div { display:grid; grid-template-columns:76px minmax(0,1fr); gap:12px; margin:8px 0; }
+.map-layer-source dt,.map-layer-source p { color:#4d6253; }
+.map-layer-source dd { margin:0; overflow-wrap:anywhere; }
+.map-layer-source p { font-size:var(--text-caption); line-height:1.7; }
+.map-layer-source button { display:block; min-height:40px; padding:8px 12px; margin-top:10px; border:1px solid #bfd0b9; border-radius:8px; background:#f0f5eb; color:#285b3e; font:inherit; font-size:var(--text-label); cursor:pointer; }
+.map-layer-source button:hover { background:#e3eddd; }
+.map-layer-source button:focus-visible { outline:3px solid #80af89; outline-offset:3px; }
+.map-data-link-error { position:absolute; z-index:500; bottom:45px; left:20px; right:20px; padding:12px; border-radius:10px; background:#fff4df; color:#6e5228; font-size:var(--text-label); }

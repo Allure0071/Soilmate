@@ -28,6 +28,7 @@ const { selection, selectionStyle } = useHoverSelection(root)
   border-color: transparent !important;
 }
 #app .hover-switch > :is(button, a):not(:disabled) { color: #31583d !important; }
+#app .hover-switch > :is(button, a):is(.active, [aria-selected="true"], [aria-pressed="true"], [aria-current]:not([aria-current="false"])):not(:disabled) { color: #173f29 !important; font-weight: 600; }
 #app .hover-switch > :is(button, a)::after { background: transparent !important; }
 #app .hover-switch.category-tabs { --hover-surface: #fff; --hover-radius: 7px; }
 @media (prefers-reduced-motion: reduce) {

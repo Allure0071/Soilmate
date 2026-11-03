@@ -31,7 +31,7 @@
 #app .site-primary-nav a.active:hover {
   background: transparent;
   box-shadow: none;
-  color: #214c34;
+  color: #173f29;
 }
 #app .site-account :is(a, button) {
   border-radius: var(--radius-control);

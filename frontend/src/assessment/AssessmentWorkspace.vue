@@ -9,6 +9,11 @@
         <button type="button" class="assessment-map-link" v-if="!embedded" @click="$emit('navigate', 'explore')"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2ZM9 3v16M15 5v16" /></svg>返回地图</button>
       </header>
 
+      <section v-if="pendingImport || importError" class="assessment-pending-import" aria-label="确认导入样本">
+        <template v-if="pendingImport"><h2>确认带入检测记录</h2><p>{{ pendingImport.source.sample_id }} · {{ pendingImport.source.file_name }}{{ pendingImport.source.sheet_name ? ' · ' + pendingImport.source.sheet_name : '' }} · 表格第 {{ pendingImport.source.table_row }} 行，共 {{ pendingImport.rows.length }} 项检测值。</p><p>确认后将替换当前检测指标、样本名称、采样日期和方法说明；地块与作物背景保留。请先保留需要的旧草稿。此操作只更新录入草稿。</p><div class="assessment-source-scroll"><table><caption>待带入检测值</caption><thead><tr><th>指标</th><th>检测值</th><th>单位</th></tr></thead><tbody><tr v-for="row in pendingImport.rows" :key="row.id"><th scope="row">{{ indicatorName(row.indicator_code) }}</th><td>{{ row.value }}</td><td>{{ row.unit || '无量纲' }}</td></tr></tbody></table></div><ImportSource :source="pendingImport.source" /><div class="assessment-form-actions"><button type="button" class="assessment-secondary-button" @click="cancelImport">保留原草稿，取消带入</button><button type="button" class="assessment-primary-button" @click="applyImport">确认替换检测草稿</button></div></template>
+        <template v-else><p role="alert">{{ importError }}</p><button type="button" class="assessment-secondary-button" @click="cancelImport">关闭提示，继续原草稿</button></template>
+      </section>
+      <ImportSource v-if="importSource" :source="importSource" />
       <section v-if="page === 'mode'" class="assessment-mode-section" aria-label="评价方式">
         <div class="assessment-mode-options" role="radiogroup" aria-label="选择评价模式">
           <label :class="{ selected: mode === 'quick' }"><span class="assessment-mode-top"><svg class="assessment-icon assessment-mode-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v7l-5 8a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-8V3M8 14h8" /></svg><input v-model="mode" type="radio" name="assessment-mode" value="quick" aria-label="快速试用" /></span><b>快速试用</b><p>已有检测值，直接录入。</p></label>
@@ -36,7 +41,7 @@
               <div class="assessment-context-grid assessment-quick-context"><label>种植作物 <span>选填</span><input v-model="context.crop_name" placeholder="如：水稻、玉米" maxlength="80" /></label><label>样本名称 <span>选填</span><input v-model="context.sample_alias" placeholder="如：地块 A 表层样本" maxlength="100" /></label></div>
               <div v-if="mapLocation" class="assessment-map-context"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>地图参考位置：{{ mapLocation }}<small>仅作为位置背景，不自动填入实测值。</small></span></div>
 
-              <div class="assessment-input-toolbar"><b>检测指标</b><div class="assessment-toolbar-actions"><button class="assessment-text-button" type="button" @click="fillExample">填入示例</button><button class="assessment-import-button" type="button" disabled>文件导入（待接入）</button></div></div>
+              <div class="assessment-input-toolbar"><b>检测指标</b><div class="assessment-toolbar-actions"><button class="assessment-text-button" type="button" @click="fillExample">填入示例</button><a class="assessment-import-button" href="/tools?tool=data-audit">从数据体检导入</a></div></div>
 
               <div class="assessment-row-head" aria-hidden="true"><span>检测指标</span><span>检测值</span><span>报告单位</span><span></span></div>
               <div v-if="!rows.length" class="assessment-empty-input"><b>还没有检测指标</b><p>添加一个指标，即可填写本次检测值。</p></div>
@@ -64,8 +69,10 @@
           <table class="assessment-review-table"><caption>本次有效检测指标</caption><thead><tr><th scope="col">检测指标</th><th scope="col">检测值</th><th scope="col">报告单位</th></tr></thead><tbody><tr v-for="value in rowInspection.values" :key="value.indicator_code"><th scope="row">{{ indicatorName(value.indicator_code) }}</th><td>{{ value.value }}</td><td>{{ value.unit || '无量纲' }}</td></tr></tbody></table>
           <dl class="assessment-review-meta"><div><dt>评价方式</dt><dd>{{ mode === 'quick' ? '快速试用' : '深度分析' }}</dd></div><div><dt>检测样本</dt><dd>{{ context.sample_alias.trim() || '未命名样本' }}</dd></div><div v-if="context.crop_name.trim()"><dt>种植作物</dt><dd>{{ context.crop_name }}</dd></div><div v-if="mode === 'deep' && context.field_name.trim()"><dt>地块名称</dt><dd>{{ context.field_name }}</dd></div><div v-if="mode === 'deep' && context.location_label.trim()"><dt>地块位置</dt><dd>{{ context.location_label }}</dd></div><div v-if="context.sampling_date"><dt>采样日期</dt><dd>{{ context.sampling_date }}</dd></div><div v-if="context.method_note.trim()"><dt>检测方法</dt><dd>{{ context.method_note }}</dd></div><div v-if="mode === 'deep' && context.background.trim()"><dt>管理背景</dt><dd>{{ context.background }}</dd></div></dl>
           <p v-if="rowInspection.emptyCount" class="assessment-storage-note">{{ rowInspection.emptyCount }} 个空白项不计入本次输入。</p>
-          <div class="assessment-analysis-note"><b>下一阶段：评价与决策</b><p>分析服务待接入。接入后将单独展示评价、问题分析与种植建议，并支持继续追问。</p></div>
-          <div class="assessment-form-actions"><button type="button" class="assessment-secondary-button" @click="goPage('input')">返回修改</button><button type="button" class="assessment-primary-button" disabled>提交分析（待接入）</button></div>
+          <div class="assessment-analysis-note"><b>提交前核对</b><p>提交后将保存到当前账号的分析服务。结果范围由检测证据和模型适用条件决定，可能没有综合分数。</p><p v-if="mode==='deep'">深度分析还需服务端地块与种植周期，当前可保留草稿；可以返回选择快速试用。</p><p v-if="exampleData">当前含界面示例，不能作为实测提交。<button type="button" class="assessment-text-button" @click="clearExample">清空示例并重新录入</button></p></div>
+          <label class="assessment-measurement-confirm"><input v-model="measurementConfirmed" type="checkbox" :disabled="exampleData" />我已核对检测值、单位和采样信息，确认这些是可提交的实际检测记录。</label>
+          <div v-if="preview" class="assessment-demo-controls"><p>匿名审核仅支持流程示例，不提交当前草稿。</p><label>审核场景<select v-model="demoScenario"><option value="completed">完成但无综合分数</option><option value="partial">证据不足的有限结果</option><option value="failed">失败与重新分析</option><option value="interrupted">服务中断</option><option value="running">持续运行与暂停查询</option></select></label><button type="button" class="assessment-secondary-button" @click="$emit('open-demo',demoScenario)">查看分析流程示例</button></div>
+          <div class="assessment-form-actions"><button type="button" class="assessment-secondary-button" @click="goPage('input')">返回修改</button><button type="button" class="assessment-primary-button" :disabled="preview || !account || !measurementConfirmed || exampleData || mode==='deep' || submitPending" @click="submitAnalysis">提交分析</button></div>
         </section>
       </div>
       <div class="assessment-feedback" aria-live="polite" role="status"><p v-if="message">{{ message }}</p></div>
@@ -77,10 +84,13 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { createRow, inspectRows, restoreRows, reviewIndicators } from './measurementDraft.js'
+import './run.css'
+import ImportSource from './ImportSource.vue'
+import { discardPendingImport, readPendingImport, restoreImportSource } from './measurementImport.js'
 import { transitionPage } from '../design-system/motion.js'
 
-const props = defineProps({ account: { type: Object, default: null }, preview: { type: Boolean, default: false }, mapPoint: { type: Object, default: null }, embedded: { type: Boolean, default: false } })
-defineEmits(['navigate'])
+const props = defineProps({ account: { type: Object, default: null }, preview: { type: Boolean, default: false }, mapPoint: { type: Object, default: null }, embedded: { type: Boolean, default: false }, active: { type: Boolean, default: true } })
+const emit=defineEmits(['navigate', 'submit-analysis', 'open-demo'])
 const storageKey = `soilmate.assessment.input-review.v1.${props.preview ? 'preview' : props.account?.id || 'guest'}`
 const storageAvailable = ref(true)
 let saved = null
@@ -92,10 +102,16 @@ if (saved?.context && typeof saved.context === 'object') {
   for (const key of Object.keys(context)) if (typeof saved.context[key] === 'string') context[key] = saved.context[key].slice(0, 1500)
 }
 const rows = ref(restoreRows(saved?.rows))
+const exampleData=ref(saved?.example_data===true || saved?.context?.sample_alias==='前端示例样本')
+const measurementConfirmed=ref(false), submitPending=ref(false)
+const importSource = ref(restoreImportSource(saved?.import_source))
+const pendingImport = ref(null), importError = ref('')
+let pendingToken = ''
 const errors = ref({})
 const formError = ref('')
 const page = ref('mode')
 const message = ref('')
+const demoScenario=ref('completed')
 let messageTimer
 const rowInspection = computed(() => inspectRows(rows.value))
 const steps = computed(() => [{ id: 'mode', label: '选择方式' }, ...(mode.value === 'deep' ? [{ id: 'background', label: '地块资料' }] : []), { id: 'input', label: '检测录入' }, { id: 'review', label: '录入确认' }])
@@ -113,7 +129,7 @@ function indicatorFor(row) { return reviewIndicators.find(item => item.code === 
 function notify(text) { clearTimeout(messageTimer); message.value = text; messageTimer = setTimeout(() => { message.value = '' }, 4000) }
 function saveDraft(announce = false) {
   try {
-    localStorage.setItem(storageKey, JSON.stringify({ version: 1, mode: mode.value, context: { ...context }, rows: rows.value }))
+    localStorage.setItem(storageKey, JSON.stringify({ version: 1, mode: mode.value, context: { ...context }, rows: rows.value, import_source: importSource.value, example_data: exampleData.value }))
     storageAvailable.value = true
     if (announce) notify('草稿已保存在当前浏览器。')
   } catch { storageAvailable.value = false; if (announce) notify('浏览器未允许保存草稿，请保留当前页面。') }
@@ -157,7 +173,35 @@ function readPageFromUrl(focus = false) {
   errors.value = {}; formError.value = ''
   if (focus) focusPage()
 }
-function onPopState() { readPageFromUrl(true) }
+function loadImport() {
+  const token = new URLSearchParams(location.search).get('import') || ''
+  if (token === pendingToken) return
+  pendingToken = token; pendingImport.value = null; importError.value = ''
+  try { pendingImport.value = readPendingImport(token) } catch (e) { importError.value = e.message }
+}
+function clearImportUrl() {
+  discardPendingImport(pendingToken)
+  pendingImport.value = null; importError.value = ''; pendingToken = ''
+  const url = new URL(location.href); url.searchParams.delete('import')
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash)
+}
+function cancelImport() { clearImportUrl() }
+function applyImport() {
+  // Re-read at confirmation so expired/replaced handoffs cannot overwrite a draft.
+  let incoming
+  try { incoming = readPendingImport(pendingToken) } catch(e) { pendingImport.value = null; importError.value = e.message; return }
+  if (!incoming) return
+  rows.value = restoreRows(incoming.rows)
+  context.sample_alias = incoming.source.sample_id.slice(0, 100)
+  context.sampling_date = ''; context.method_note = ''
+  importSource.value = incoming.source
+  exampleData.value = false
+  saveDraft()
+  clearImportUrl()
+  page.value = 'input'; syncModeUrl(); focusPage()
+  notify('检测记录已带入草稿，请核对采样日期与方法；尚未提交分析。')
+}
+function onPopState() { readPageFromUrl(true); loadImport() }
 function changeIndicator(row) { row.unit = indicatorFor(row).units[0] || '' }
 async function addRow() {
   if (rows.value.length >= reviewIndicators.length) return
@@ -169,10 +213,19 @@ async function addRow() {
 function removeRow(id) { rows.value = rows.value.filter(row => row.id !== id) }
 function fillExample() {
   const examples = [{ code: 'soil_ph', value: '6.2' }, { code: 'TN', value: '1.2' }, { code: 'cec', value: '18' }]
+  if (!rows.value.some(row => String(row.value).trim()) || rows.value.some(row => !String(row.value).trim() && examples.some(item => item.code === row.indicator_code))) exampleData.value = true
   if (!rows.value.some(row => String(row.value).trim())) rows.value = examples.map(item => ({ ...createRow(item.code), value: item.value }))
   else for (const row of rows.value) if (!String(row.value).trim()) row.value = examples.find(item => item.code === row.indicator_code)?.value || ''
   if (!context.sample_alias) context.sample_alias = '前端示例样本'
   notify('已填入界面示例；示例数值不是实际地块记录，已有数值未覆盖。')
+}
+function clearExample(){ rows.value=[createRow()];context.sample_alias='';exampleData.value=false;importSource.value=null;saveDraft();goPage('input') }
+function submitAnalysis(){
+  if(!props.account || props.preview || !measurementConfirmed.value || exampleData.value || !rowInspection.value.valid)return
+  if(submitPending.value)return
+  submitPending.value=true
+  saveDraft()
+  emit('submit-analysis',{ session:{mode:mode.value,crop_name:context.crop_name.trim() || null,background:context.background},measurement:{sample_alias:context.sample_alias.trim() || '未命名样本',sampling_date:context.sampling_date || null,values:rowInspection.value.values.map(value=>({...value,method:value.method || context.method_note.trim() || null}))} })
 }
 async function checkInput() {
   const result = inspectRows(rows.value)
@@ -187,9 +240,11 @@ async function checkInput() {
   saveDraft()
   goPage('review')
 }
-watch([mode, context, rows], () => { errors.value = {}; formError.value = ''; saveDraft() }, { deep: true, flush: 'sync' })
+watch([mode, context, rows], () => { measurementConfirmed.value=false; errors.value = {}; formError.value = ''; saveDraft() }, { deep: true, flush: 'sync' })
+watch(()=>props.active, active=>{if(active)submitPending.value=false})
 watch(mode, syncModeUrl)
 readPageFromUrl()
+loadImport()
 onMounted(() => window.addEventListener('soilmate:history-commit', onPopState))
 onBeforeUnmount(() => { clearTimeout(messageTimer); window.removeEventListener('soilmate:history-commit', onPopState) })
 </script>

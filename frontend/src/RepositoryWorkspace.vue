@@ -57,17 +57,18 @@
     </template>
 
     <template v-else>
-      <nav class="repository-breadcrumb" aria-label="当前位置"><button type="button" @click="backToCatalog">数据目录</button><span aria-hidden="true">/</span><span>指标详情</span></nav>
+      <nav class="repository-breadcrumb" aria-label="当前位置"><button type="button" @click="backToCatalog">数据目录</button><span aria-hidden="true">/</span><span>指标详情</span><button v-if="mapReturn" type="button" @click="$emit('return-map', mapReturn)">返回地图位置</button></nav>
       <div v-if="selected" class="repository-detail">
-        <div class="repository-detail-title"><div><span class="repository-detail-tag">{{ groupLabel(selected.col_name) }} · {{ resolution }} km</span><h2>{{ nameOf(selected) }}</h2><code>{{ selected.col_name }}</code></div><button class="repository-preview-button" type="button" @click="$emit('map-preview', selected.col_name)">打开空间预览 <span aria-hidden="true">↗</span></button></div>
+        <div class="repository-detail-title"><div><span class="repository-detail-tag">{{ groupLabel(selected.col_name) }} · {{ resolution }} km</span><h2>{{ nameOf(selected) }}</h2><code>{{ selected.col_name }}</code></div><button class="repository-preview-button" type="button" @click="previewOnMap">打开空间预览 <span aria-hidden="true">↗</span></button></div>
+        <p v-if="selected.source_file==='SYNTHETIC_TEST_DATA'" class="repository-detail-note">合成测试数据，仅用于界面和接口演示，不代表实测或正式研究结果。</p>
         <div class="repository-detail-grid">
           <section class="repository-detail-section"><header><span>01 / 元数据</span><h3>已登记字段</h3></header><dl><div><dt>单位</dt><dd>{{ unitOf(selected) }}</dd></div><div><dt>空间分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>原始来源文件</dt><dd>{{ selected.source_file || '未登记' }}</dd></div><div><dt>波段</dt><dd>{{ selected.band ?? '未登记' }}</dd></div><div><dt>数值范围</dt><dd>{{ rangeOf(selected) }}</dd></div><div><dt>平均值</dt><dd>{{ metricOf(selected, selected.mean) }}</dd></div></dl></section>
           <section class="repository-detail-section"><header><span>02 / 质量审计</span><h3>当前可核对的质量信息</h3></header><dl><div><dt>有效像元</dt><dd>{{ selected.valid_count == null ? '未统计' : Number(selected.valid_count).toLocaleString() }}</dd></div><div><dt>缺失率</dt><dd class="repository-pending">未统计</dd></div><div><dt>异常值比例</dt><dd class="repository-pending">未统计</dd></div><div><dt>空间覆盖率</dt><dd class="repository-pending">未统计</dd></div></dl><p class="repository-detail-note">有效像元数不能直接换算为独立样本数；当前目录没有足够信息计算缺失率或覆盖率。</p></section>
           <section class="repository-detail-section repository-provenance"><header><span>03 / 来源与使用条件</span><h3>待补齐的溯源信息</h3></header><dl><div><dt>数据年份</dt><dd class="repository-pending">未登记</dd></div><div><dt>土层深度</dt><dd class="repository-pending">未登记</dd></div><div><dt>论文 DOI / 原始下载地址</dt><dd class="repository-pending">未登记</dd></div><div><dt>处理版本</dt><dd class="repository-pending">未登记</dd></div><div><dt>许可协议</dt><dd class="repository-pending">未登记</dd></div><div><dt>九大农业区覆盖</dt><dd class="repository-pending">尚未核验映射</dd></div></dl></section>
-          <section class="repository-detail-section repository-spatial"><header><span>04 / 空间数据</span><h3>地图与网格预览</h3></header><p>{{ tilesAvailable === false ? '当前专题瓦片未发布，仍可查询可用网格值。' : '图层是否可显示取决于当前瓦片服务。' }}</p><button type="button" @click="$emit('map-preview', selected.col_name)">在地图查看 <span aria-hidden="true">↗</span></button></section>
+          <section class="repository-detail-section repository-spatial"><header><span>04 / 空间数据</span><h3>地图与网格预览</h3></header><p>{{ tilesAvailable === false ? '当前专题瓦片未发布，仍可查询可用网格值。' : '图层是否可显示取决于当前瓦片服务。' }}</p><button type="button" @click="previewOnMap">在地图查看 <span aria-hidden="true">↗</span></button></section>
         </div>
       </div>
-      <div v-else class="repository-state">当前分辨率下找不到该指标。<button type="button" @click="backToCatalog">返回数据目录</button></div>
+      <div v-else class="repository-state"><template v-if="apiState==='loading'">正在读取当前分辨率的指标资料…</template><template v-else-if="apiState==='error'">{{ error }} <button type="button" @click="$emit('retry')">重新连接</button></template><template v-else>当前分辨率下找不到该指标。<button type="button" @click="backToCatalog">返回数据目录</button></template></div>
     </template>
   </div>
 </template>
@@ -76,10 +77,11 @@
 import HoverSwitch from './design-system/HoverSwitch.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { fetchIndicators } from './api.js'
+import { localDataPath } from './dataNavigation.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'
 
-const props = defineProps({ indicators: { type: Array, default: () => [] }, resolution: { type: Number, default: 5 }, apiState: { type: String, default: 'loading' }, error: { type: String, default: '' }, tilesAvailable: { type: Boolean, default: null } })
-const emit = defineEmits(['resolution-change', 'map-preview', 'open-database', 'retry'])
+const props = defineProps({ indicators: { type: Array, default: () => [] }, resolution: { type: Number, default: 5 }, apiState: { type: String, default: 'loading' }, error: { type: String, default: '' }, tilesAvailable: { type: Boolean, default: null }, active: { type: Boolean, default: false } })
+const emit = defineEmits(['resolution-change', 'map-preview', 'open-database', 'retry', 'return-map'])
 const categories = [{ id: 'all', label: '全部' }, { id: 'soil', label: '土壤' }, { id: 'env', label: '环境' }, { id: 'crop', label: '农业' }, { id: 'spatial', label: '空间' }, { id: 'water', label: '水域' }]
 const sourceOptions = [{ id: 'all', label: '全部' }, { id: 'registered', label: '文件已登记' }, { id: 'missing', label: '来源待补' }]
 const search = ref('')
@@ -92,6 +94,8 @@ const page = ref(1)
 const pageSize = 25
 const view = ref('catalog')
 const detailKey = ref('')
+const mapReturn = ref('')
+let readingLocation = false
 const counts = ref({ 5: null, 1: null })
 const catalogs = ref({ 5: [], 1: [] })
 const overviewLoading = ref(false)
@@ -104,8 +108,9 @@ const activeFilterCount = computed(() => Number(category.value !== 'all') + Numb
 const filtered = computed(() => { const query = search.value.trim().toLocaleLowerCase(); const order = { soil: 0, spatial: 1, env: 2, crop: 3, water: 4 }; return props.indicators.filter(item => (category.value === 'all' || groupOf(item.col_name) === category.value) && (sourceStatus.value === 'all' || (sourceStatus.value === 'registered') === Boolean(item.source_file)) && (!query || `${item.col_name} ${nameOf(item)} ${item.source_file || ''}`.toLocaleLowerCase().includes(query))).sort((a, b) => { let result = 0; if (sortKey.value === 'category') result = (order[groupOf(a.col_name)] ?? 9) - (order[groupOf(b.col_name)] ?? 9); if (sortKey.value === 'name') result = nameOf(a).localeCompare(nameOf(b), 'zh-CN'); if (sortKey.value === 'valid') result = (a.valid_count == null ? -1 : Number(a.valid_count)) - (b.valid_count == null ? -1 : Number(b.valid_count)); if (sortKey.value === 'source') result = Number(Boolean(a.source_file)) - Number(Boolean(b.source_file)); return (sortDirection.value === 'asc' ? result : -result) || nameOf(a).localeCompare(nameOf(b), 'zh-CN') || a.col_name.localeCompare(b.col_name) }) })
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / pageSize)))
 const pageItems = computed(() => filtered.value.slice((page.value - 1) * pageSize, page.value * pageSize))
+watch([pageCount, () => props.apiState], () => { if (!readingLocation && props.apiState==='ready' && page.value>pageCount.value) page.value=pageCount.value })
 const selected = computed(() => props.indicators.find(item => item.col_name === detailKey.value) || null)
-watch([search, category, sourceStatus, () => props.resolution, sortKey, sortDirection], () => { page.value = 1 })
+watch([search, category, sourceStatus, () => props.resolution, sortKey, sortDirection], () => { if (!readingLocation) page.value = 1 }, { flush: 'sync' })
 watch(() => props.indicators, items => { if (props.apiState === 'ready') { counts.value[props.resolution] = items.length; catalogs.value[props.resolution] = items } })
 watch(() => props.apiState, state => { if (state === 'ready') { counts.value[props.resolution] = props.indicators.length; catalogs.value[props.resolution] = props.indicators } })
 
@@ -127,9 +132,40 @@ async function closeFilters() { filtersOpen.value = false; await nextTick(); doc
 function handleFilterKeydown(event) { if (event.key === 'Escape') { closeFilters(); return } if (event.key !== 'Tab') return; const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled)')]; const first = controls[0]; const last = controls[controls.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() } }
 function segmentsFor(res) { const items = catalogs.value[res]; if (!items.length) return []; return chartCategories.map(item => { const count = items.filter(row => groupOf(row.col_name) === item.id).length; return { ...item, count, percent: count / items.length * 100 } }).filter(item => item.count > 0) }
 async function refreshOverview() { overviewLoading.value = true; overviewError.value = false; const results = await Promise.allSettled([5, 1].map(res => fetchIndicators(res))); results.forEach((result, index) => { if (result.status === 'fulfilled') { const res = [5, 1][index]; const items = result.value.indicators || []; catalogs.value[res] = items; counts.value[res] = items.length } else overviewError.value = true }); overviewSynced.value = results.some(result => result.status === 'fulfilled'); overviewLoading.value = false }
-function syncFromLocation() { const params = new URLSearchParams(location.search); detailKey.value = params.get('indicator') || ''; view.value = detailKey.value ? 'detail' : 'catalog'; const requested = Number(params.get('res')); if ([1, 5].includes(requested) && requested !== props.resolution) emit('resolution-change', requested) }
-function openDetail(key) { filtersOpen.value = false; detailKey.value = key; view.value = 'detail'; history.pushState({}, '', `/resources?indicator=${encodeURIComponent(key)}&res=${props.resolution}`); document.querySelector('.site-content-resources')?.scrollTo(0, 0); document.querySelector('#browser-title')?.focus({ preventScroll: true }) }
-function backToCatalog() { view.value = 'catalog'; detailKey.value = ''; history.pushState({}, '', '/resources'); document.querySelector('.site-content-resources')?.scrollTo(0, 0); document.querySelector('#browser-title')?.focus({ preventScroll: true }) }
-onMounted(() => { syncFromLocation(); if (props.apiState === 'ready') { counts.value[props.resolution] = props.indicators.length; catalogs.value[props.resolution] = props.indicators } window.addEventListener('popstate', syncFromLocation); refreshOverview() })
-onBeforeUnmount(() => window.removeEventListener('popstate', syncFromLocation))
+function catalogPath(includeDetail = true) {
+  const params = new URLSearchParams({ res: String(props.resolution) })
+  if (search.value) params.set('q', search.value)
+  if (category.value !== 'all') params.set('category', category.value)
+  if (sourceStatus.value !== 'all') params.set('source', sourceStatus.value)
+  if (sortKey.value !== 'category') params.set('sort', sortKey.value)
+  if (sortDirection.value !== 'asc') params.set('direction', sortDirection.value)
+  if (page.value > 1) params.set('page', String(page.value))
+  if (includeDetail && detailKey.value) params.set('indicator', detailKey.value)
+  if (mapReturn.value) params.set('mapReturn', mapReturn.value)
+  return '/resources?' + params
+}
+function syncFromLocation() {
+  if (!props.active || location.pathname !== '/resources') return
+  readingLocation = true
+  const params = new URLSearchParams(location.search)
+  search.value = (params.get('q') || '').slice(0, 200)
+  category.value = categories.some(item => item.id === params.get('category')) ? params.get('category') : 'all'
+  sourceStatus.value = sourceOptions.some(item => item.id === params.get('source')) ? params.get('source') : 'all'
+  sortKey.value = ['category', 'name', 'valid', 'source'].includes(params.get('sort')) ? params.get('sort') : 'category'
+  sortDirection.value = params.get('direction') === 'desc' ? 'desc' : 'asc'
+  page.value = Math.max(1, Math.min(100000, Math.floor(Number(params.get('page'))) || 1))
+  detailKey.value = params.get('indicator') || ''; view.value = detailKey.value ? 'detail' : 'catalog'
+  mapReturn.value = localDataPath(params.get('mapReturn'), '/explore')
+  const requested = params.get('res') === '1' ? 1 : 5
+  if (requested !== props.resolution) emit('resolution-change', requested)
+  readingLocation = false
+}
+function focusCatalog() { document.querySelector('.site-content-resources')?.scrollTo(0, 0); document.querySelector('#browser-title')?.focus({ preventScroll: true }) }
+function openDetail(key) { filtersOpen.value = false; detailKey.value = key; view.value = 'detail'; history.pushState({}, '', catalogPath()); focusCatalog() }
+function backToCatalog() { view.value = 'catalog'; detailKey.value = ''; history.pushState({}, '', catalogPath(false)); focusCatalog() }
+function previewOnMap() { emit('map-preview', { key: selected.value.col_name, res: props.resolution, returnTo: catalogPath() }) }
+watch([search, category, sourceStatus, sortKey, sortDirection, page, () => props.resolution], () => { if (!readingLocation && props.active && location.pathname === '/resources') history.replaceState(history.state, '', catalogPath()) }, { flush: 'sync' })
+watch(() => props.active, active => { if (active) syncFromLocation() })
+onMounted(() => { syncFromLocation(); if (props.apiState === 'ready') { counts.value[props.resolution] = props.indicators.length; catalogs.value[props.resolution] = props.indicators } window.addEventListener('soilmate:history-commit', syncFromLocation); refreshOverview() })
+onBeforeUnmount(() => window.removeEventListener('soilmate:history-commit', syncFromLocation))
 </script>

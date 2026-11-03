@@ -51,7 +51,7 @@
         </div>
       </div>
     </template>
-    <DataAuditWorkbench v-else-if="selectedTool?.workbench === 'data-audit'" />
+    <DataAuditWorkbench v-else-if="selectedTool?.workbench === 'data-audit'" @open-research="token => emit('import-research', { token, directory: directoryUrl() })" />
     <TextureWorkbench v-else-if="selectedTool?.workbench === 'texture'" />
     <CalculatorWorkbench v-else-if="selectedTool?.calculator" :key="selectedTool.id" :tool-id="selectedTool.id" />
     <section v-else class="tool-description"><WorkspaceIcon :name="selectedTool?.icon || 'panel'" /><h2>{{ selectedTool?.status === 'planned' ? '这个工具正在建设中' : selectedTool ? '使用说明' : '请重新选择工具' }}</h2><p>{{ selectedTool?.note || '工具目录保留了所有可用入口，可返回后重新选择。' }}</p><p v-if="selectedTool?.status === 'planned'">具体方法和资料核查完成后再接入，当前不生成计算结果。</p><a v-if="selectedTool?.path" class="tool-primary-button" :href="href(selectedTool)" @click="activate($event, selectedTool)">打开工具<WorkspaceIcon name="expand" /></a><button v-else type="button" class="tool-primary-button" @click="backToDirectory">返回工具目录<WorkspaceIcon name="back" /></button></section>
@@ -71,7 +71,7 @@ import { filterTools, getTool, statusLabel, toolCategories, tools, toolTarget } 
 import './directory.css'
 import './tools.css'
 const props = defineProps({ account: { type: Object, default: null }, active: { type: Boolean, default: false } })
-const emit = defineEmits(['open-tool'])
+const emit = defineEmits(['open-tool', 'import-research'])
 const domains = [...new Set(tools.map(tool => tool.domain))]
 const searchInputRef = ref(null)
 const query = ref(''), selectedCategory = ref('all'), domain = ref('all'), selectedId = ref('')

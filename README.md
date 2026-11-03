@@ -44,7 +44,7 @@ npm run dev
 
 前端与后端协作的 [接口契约确认稿](docs/assessment-api/README.md) 包含 OpenAPI 定义、前端类型、调用示例及 [后端确认清单](docs/assessment-api/BACKEND-CHECKLIST.md)。
 
-接口契约当前为 `0.1.0-draft`，待后端同学确认。健康评价前端已提供模式选择、地块资料、动态指标录入与录入确认页面，支持本机草稿和分步导航；新分析接口尚未接入，启动方式不变。详见 [前端审核说明](docs/assessment-api/FRONTEND-REVIEW.md)。
+接口契约当前为 `0.1.0-draft`，待后端同学确认。健康评价前端已提供模式选择、地块资料、动态指标录入与录入确认页面，支持本机草稿和分步导航；前端已按草案接入快速评价提交、任务进度、结果和重试恢复流程，实际后端分析服务仍待接入，启动方式不变。详见 [任务流程与开发审核](docs/assessment-api/FRONTEND-FLOW.md)。详见 [前端审核说明](docs/assessment-api/FRONTEND-REVIEW.md)。
 
 ## 工具中心
 
@@ -59,4 +59,8 @@ npm run dev
 - `/tools?tool=data-audit`：读取本地 CSV、TSV、Excel `.xlsx` 或粘贴表格，支持工作表选择、缺失与重复记录、数值格式、单位混用、手动范围和 IQR 离群提示。最多 5,000 行、60 列、5 MB；保留原始值，导出问题清单，不自动删行、填补或换算单位。Excel 读取现有值，不重新计算公式。
 - `/tools?tool=texture`：按 USDA 12 类细土体系判别质地，显示三角图样点，导出 SVG 和包含原始输入的判别记录。比例默认须合计 100%，归一化需要手动勾选；不生成健康等级或种植建议。
 
-两个工具均无需登录，文件与参数不上传、不写入账号。算法、来源及适用范围见 `frontend/src/tools/research/SOURCES.md`；运行 `node --test frontend/src/tools/research/research.test.js` 验证分类边界、图形分区、导入和体检规则。
+两个工具均无需登录，文件与参数在浏览器内处理。数据体检完成后，可确认字段映射和单位，选择一行检测记录带入健康研究（需登录）；同名样本不合并、冲突单位不自动换算、合成问题示例不能带入实测录入。跳转暂存仅限当前标签页，有效期 30 分钟；确认替换后，检测值及文件名、工作表、表格行号、字段映射和原始样本行保存在当前浏览器草稿，刷新可恢复，不上传、不写入账号。分析服务仍待接入。算法、来源及适用范围见 `frontend/src/tools/research/SOURCES.md`；运行 `node --test frontend/src/tools/research/research.test.js` 验证分类边界、图形分区、导入和体检规则。
+
+## 地图与数据资源互通
+
+地图的当前图层资料可打开对应资源详情，保留指标、1/5 km 分辨率和地图位置；资源详情也可回到地图，并恢复目录搜索、类别、来源、排序与页码。缺失的覆盖率、年份、土层和许可仍明确显示待核验，不因跳转补造元数据。
