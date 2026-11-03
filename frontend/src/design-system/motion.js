@@ -1,6 +1,37 @@
 // Native scrolling is preserved. Only the marked content gets a small visual offset.
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 
+let activeTransition = null
+let navigationVersion = 0
+
+// Snapshot the previous view, let Vue commit the destination, then blend in place.
+// A skipped transition still runs its callback, so only the latest may commit.
+export function transitionPage(update, afterRender = () => {}) {
+  const version = ++navigationVersion
+  activeTransition?.skipTransition()
+  const media = reducedMotion()
+  if (media.matches || !document.startViewTransition) {
+    update()
+    return Promise.resolve(afterRender())
+  }
+  const transition = document.startViewTransition(async () => {
+    if (version !== navigationVersion) return
+    update()
+    await afterRender()
+  })
+  activeTransition = transition
+  const onPreferenceChange = () => { if (media.matches) transition.skipTransition() }
+  media.addEventListener('change', onPreferenceChange)
+  const release = () => {
+    media.removeEventListener('change', onPreferenceChange)
+    if (activeTransition === transition) activeTransition = null
+  }
+  // Skipping the visual layer rejects ready, while the DOM update still completes.
+  transition.ready.catch(() => {})
+  transition.finished.then(release, release)
+  return transition.updateCallbackDone
+}
+
 export function revealOnScroll(root) {
   const media = reducedMotion()
   if (media.matches) return () => {}
@@ -14,10 +45,9 @@ export function revealOnScroll(root) {
       element.style.opacity = ''
       if (media.matches) continue
       const animation = element.animate([
-        { opacity: 0, transform: 'translate3d(0, 20px, 0)', offset: 0, easing: 'cubic-bezier(.16,.85,.24,1)' },
-        { opacity: 1, transform: 'translate3d(0, -2px, 0)', offset: .74, easing: 'cubic-bezier(.3,0,.25,1)' },
-        { opacity: 1, transform: 'translate3d(0, 0, 0)', offset: 1 },
-      ], { duration: 620, delay: Number(element.dataset.reveal || 0), fill: 'backwards', easing: 'cubic-bezier(0,0,1,1)' })
+        { opacity: 0, transform: 'scale(.99)', offset: 0, easing: 'cubic-bezier(.2,.65,.3,1)' },
+        { opacity: 1, transform: 'scale(1)', offset: 1 },
+      ], { duration: 420, delay: Number(element.dataset.reveal || 0), fill: 'backwards', easing: 'cubic-bezier(0,0,1,1)' })
       animations.add(animation)
       animation.onfinish = animation.oncancel = () => animations.delete(animation)
     }

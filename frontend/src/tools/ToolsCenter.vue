@@ -60,6 +60,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import WorkspaceIcon from '../WorkspaceIcon.vue'
 import ToolIcon from './ToolIcon.vue'
+import { transitionPage } from '../design-system/motion.js'
 import CalculatorWorkbench from './CalculatorWorkbench.vue'
 import { filterTools, getTool, statusLabel, toolCategories, tools, toolTarget } from './catalog.js'
 import './directory.css'
@@ -95,7 +96,7 @@ function activate(event, tool) {
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
   event.preventDefault()
   if (tool.path) { emit('open-tool', { id: tool.id, directory: directoryUrl() }); return }
-  history.pushState({}, '', href(tool)); selectedId.value = tool.id; focusTitle()
+  transitionPage(() => { history.pushState({}, '', href(tool)); selectedId.value = tool.id }, focusTitle)
 }
 async function focusTitle() {
   await nextTick()
@@ -103,7 +104,7 @@ async function focusTitle() {
   ;(workspace?.closest('.site-content-tools') || workspace)?.scrollTo({ top: 0 })
   document.getElementById('tools-title')?.focus({ preventScroll: true })
 }
-function backToDirectory() { history.pushState({}, '', directoryUrl()); selectedId.value = ''; focusTitle() }
+function backToDirectory() { transitionPage(() => { history.pushState({}, '', directoryUrl()); selectedId.value = '' }, focusTitle) }
 function clearFilters() { query.value = ''; selectedCategory.value = 'all'; domain.value = 'all' }
 async function clearSearch() { query.value = ''; await nextTick(); searchInputRef.value?.focus() }
 defineExpose({ readLocation })

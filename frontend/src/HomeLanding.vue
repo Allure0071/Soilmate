@@ -6,7 +6,7 @@
       <div class="landing-shade" aria-hidden="true"></div>
 
 
-      <div class="landing-content" data-reveal>
+      <div class="landing-content">
         <span class="landing-eyebrow"><span class="landing-eyebrow-line"></span> 土壤数据与健康研究</span>
         <h1 id="landing-title">读懂土地，<br /><em>看见土壤的脉络。</em></h1>
         <p>探索土壤数据，开启地块健康研究。</p>

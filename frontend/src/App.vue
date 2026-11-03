@@ -1,11 +1,11 @@
 <template>
   <div class="app-shell">
     <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-tools': siteView==='tools', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
-    <HomeLanding v-if="siteView==='home'" :account="account" @navigate="navigateFromLanding" @logout="logout" />
-    <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" @navigate="navigateFromHeader" @logout="logout" />
+    <HomeLanding v-if="siteView==='home'" :account="account" @navigate="destination => transitionTo(navigateFromLanding, destination)" @logout="logout" />
+    <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" @navigate="destination => transitionTo(navigateFromHeader, destination)" @logout="logout" />
 
-    <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="returnToTools"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
-    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="openTool" />
+    <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="transitionTo(returnToTools)"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
+    <ToolsCenter ref="toolsCenterRef" v-show="siteView === 'tools'" :active="siteView === 'tools'" :account="account" @open-tool="tool => transitionTo(openTool, tool)" />
 
     <section v-show="siteView==='explore'" class="explorer-workspace" :inert="soiledgeOpen || scientificOpen">
       <div class="map-workspace-toolbar">
@@ -104,7 +104,7 @@
       </aside>
     </main>
     </section>
-    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="setResearchStage" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="openMainView" @open-assistant="openAssistant" />
+    <HealthResearchHub v-if="siteView==='research' && (account || assessmentPreview)" :account="account" :preview="assessmentPreview" :map-point="assessmentMapPoint || clicked" :csrf-token="csrfToken" :stage="researchStage" :context="assistantContext" :draft="assistantDraft" @update:stage="stage => transitionTo(setResearchStage, stage)" @context-change="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate="destination => transitionTo(openMainView, destination)" @open-assistant="openAssistant" />
     <AssistantWorkspace v-if="siteView==='assistant' && account" :account-id="String(account.id || 'local')" :context="assistantContext" :draft="assistantDraft" :csrf-token="csrfToken" @update:context="assistantContext = $event" @update:draft="assistantDraft = $event" @navigate-research="openResearch(assistantContext?.sample && researchStage === 'input' ? 'analysis' : researchStage)" />
     <div v-if="soiledgeOpen" class="edge-backdrop"><SoiledgeWorkbench @close="soiledgeOpen = false" /></div>
     <ScientificWorkbench v-if="scientificOpen" :key="scientificTab" :initial-tab="scientificTab" :point="clicked" :resolution="resolution" :preview-values="previewValues" @close="scientificOpen=false;siteView='explore'" />
@@ -130,6 +130,7 @@ import { onMounted, onBeforeUnmount, ref, computed, nextTick, watch } from 'vue'
 import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import SiteHeader from './SiteHeader.vue'
+import { transitionPage } from './design-system/motion.js'
 import ToolsCenter from './tools/ToolsCenter.vue'
 import RepositoryWorkspace from './RepositoryWorkspace.vue'
 import { getTool, toolTarget } from './tools/catalog.js'
@@ -285,6 +286,10 @@ function openMainView(view) {
     }
   })
 }
+function transitionTo(action, ...args) {
+  return transitionPage(() => action(...args), nextTick)
+}
+function onHistoryNavigation() { transitionTo(onRouteChange) }
 function navigateFromHeader(destination) {
   soiledgeOpen.value = false
   scientificOpen.value = false
@@ -686,7 +691,7 @@ function goToPage(page) { dataPage.value = page; loadData() }
 function formatDbCell(value) { if (value == null) return 'NULL'; if (typeof value === 'object') return JSON.stringify(value); return String(value) }
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('popstate', onRouteChange)
+  window.addEventListener('popstate', onHistoryNavigation)
   fitMapToViewport()
   map = L.map('map', { center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
   mapResizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false, debounceMoveend: true }))
@@ -705,6 +710,6 @@ onMounted(() => {
   loadPreviewLayers()
   checkAccount()
 })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onRouteChange); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); if (map) { map.remove(); map = null } })
+onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); if (map) { map.remove(); map = null } })
 </script>
 

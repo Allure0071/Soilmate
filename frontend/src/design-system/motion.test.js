@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { attachScrollResponse, revealOnScroll } from './motion.js'
+import { attachScrollResponse, revealOnScroll, transitionPage } from './motion.js'
 
 function environment(reduced = false) {
   const media = Object.assign(new EventTarget(), { matches: reduced })
@@ -88,4 +88,50 @@ test('changing reduced motion reveals pending content without animation', () => 
   assert.equal(element.style.opacity, '')
   assert.equal(disconnected, true)
   stop()
+})
+
+
+test('page updates immediately without animation support or with reduced motion', async () => {
+  const env = environment()
+  const calls = []
+  await transitionPage(() => calls.push('update'), () => calls.push('render'))
+  assert.deepEqual(calls, ['update', 'render'])
+  env.document.startViewTransition = () => assert.fail('reduced motion must skip snapshots')
+  env.media.matches = true
+  await transitionPage(() => calls.push('reduced'))
+  assert.equal(calls.at(-1), 'reduced')
+})
+
+test('rapid navigation skips old snapshots and only the newest destination commits', async () => {
+  const env = environment()
+  const transitions = [], calls = []
+  env.document.startViewTransition = update => {
+    let resolveFinished
+    const transition = {
+      update,
+      ready: Promise.resolve(),
+      finished: new Promise(resolve => { resolveFinished = resolve }),
+      updateCallbackDone: Promise.resolve(),
+      skipped: 0,
+      skipTransition() { this.skipped++ },
+      finish() { resolveFinished() },
+    }
+    transitions.push(transition)
+    return transition
+  }
+  transitionPage(() => calls.push('old'))
+  transitionPage(() => calls.push('new'), async () => calls.push('rendered'))
+  assert.equal(transitions[0].skipped, 1)
+  await transitions[0].update()
+  await transitions[1].update()
+  assert.deepEqual(calls, ['new', 'rendered'])
+  transitions[0].finish()
+  await Promise.resolve()
+  env.media.matches = true
+  env.media.dispatchEvent(new Event('change'))
+  assert.equal(transitions[1].skipped, 1, 'a preference change must finish the current visual transition')
+  transitions[1].finish()
+  await Promise.resolve()
+  env.media.dispatchEvent(new Event('change'))
+  assert.equal(transitions[1].skipped, 1, 'completed transitions must release their listener')
 })
