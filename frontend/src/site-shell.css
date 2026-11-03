@@ -50,6 +50,18 @@
   font: 600 var(--text-page-title)/var(--leading-title) var(--font-display);
 }
 .map-data-controls { display: flex; align-items: center; gap: 24px; }
+.map-basemap-control { display: flex; align-items: center; gap: 10px; color: #4d6655; font-size: var(--text-caption); }
+.map-basemap-control > div { display: flex; gap: 2px; padding: 3px; border: 1px solid #d4e0cf; border-radius: 9px; background: #fff; }
+.map-basemap-control button { min-height: 36px; padding: 7px 12px; border: 0; border-radius: 6px; background: transparent; color: #4d6655; font: inherit; cursor: pointer; white-space: nowrap; }
+.map-basemap-control button.active:not(:disabled) { background: #e5efdf; color: #255b38; font-weight: 700; }
+.map-basemap-control button:disabled { color: #758273; cursor: default; }
+.basemap-status { position: absolute; z-index: 460; top: 68px; left: 50%; display: flex; align-items: center; gap: 14px; max-width: calc(100% - 32px); padding: 10px 16px; border: 1px solid #d6e0d2; border-radius: 10px; background: #fcfdf9f5; color: #45604b; font-size: var(--text-label); transform: translateX(-50%); box-shadow: 0 4px 16px #203c2710; }
+.basemap-status button { padding: 0; border: 0; background: none; color: #245e3d; font: inherit; text-decoration: underline; cursor: pointer; }
+.basemap-status-loading { opacity: .9; }
+.amap-basemap { position: absolute; inset: 0; pointer-events: none; }
+.map-stage-amap::before { display: none; }
+.map-stage-amap #map { background: transparent; }
+#amap-basemap .amap-logo, #amap-basemap .amap-copyright { z-index: 1100; }
 .module-resolution { display: flex; align-items: center; gap: 10px; color: #4d6655; font-size: var(--text-caption); }
 .module-resolution > div { display: flex; gap: 2px; padding: 3px; border: 1px solid #d4e0cf; border-radius: 9px; background: #fff; }
 .module-resolution button { min-width: 56px; min-height: 36px; padding: 7px 12px; border: 0; border-radius: 6px; background: transparent; color: #4d6655; font: inherit; font-size: var(--text-label); cursor: pointer; }

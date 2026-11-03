@@ -22,6 +22,8 @@ npm run dev
 
 浏览器访问 `http://localhost:5173/`。Vite 将 `/api` 和 `/tiles` 请求转发到本地后端。生产构建运行 `npm run build`；FastAPI 可在根路径提供生成的 `frontend/dist`。
 
+地图底图默认使用高德官方 JS API，支持标准地图与卫星影像；已按用户要求在前端配置中提供本项目浏览器 Key。天地图可作为另一配置来源；本地覆盖、坐标适配和验证范围见 [地图配置](frontend/MAP_SETUP.md)。地图加载失败时显示状态，不回退到未经核查的其他底图。
+
 ## 数据与功能说明
 
 - `sample-data/soil.sqlite` 和 `sample-data/soil_1km.sqlite` 是合成测试库。`scripts/install_sample_data.py` 不会覆盖 `data/` 中已有的数据库。

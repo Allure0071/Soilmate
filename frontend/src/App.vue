@@ -11,6 +11,7 @@
       <div class="map-workspace-toolbar">
         <h1 tabindex="-1">探索数据</h1>
         <div class="map-data-controls">
+          <div class="map-basemap-control" role="group" aria-label="地图底图"><span>底图</span><div><button v-for="option in basemapOptions" :key="option.id" type="button" :class="{ active: basemapMode === option.id }" :aria-pressed="basemapMode === option.id" :disabled="!basemapEnabled" :title="!basemapEnabled ? `${basemapProviderLabel}底图待启用` : option.label" @click="changeBasemap(option.id)">{{ option.label }}</button></div></div>
           <div class="module-resolution" role="group" aria-label="地图数据分辨率"><span>数据分辨率</span><div><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></div></div>
           <span class="map-dataset-count">{{ indicators.length ? `${indicators.length} 项已登记指标` : '正在读取目录' }}</span>
           <span class="map-data-connection" :class="apiState"><i aria-hidden="true"></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
@@ -48,8 +49,10 @@
         <div class="catalog-foot"><span class="foot-orbit" aria-hidden="true"></span><span>{{ resolution }} km 网格数据 · 全国范围</span></div>
       </aside>
 
-      <section class="map-stage" aria-label="土壤指标地图">
+      <section class="map-stage" :class="{ 'map-stage-amap': usingAmap }" aria-label="土壤指标地图">
+        <div v-if="usingAmap" id="amap-basemap" ref="amapContainerRef" class="amap-basemap" aria-hidden="true"></div>
         <div id="map"></div>
+        <div v-if="basemapState !== 'ready'" class="basemap-status" :class="{ 'basemap-status-loading': basemapState === 'loading' }" role="status"><span>{{ basemapState === 'unconfigured' ? `${basemapProviderLabel}底图待启用` : basemapState === 'loading' ? `正在加载${basemapProviderLabel}` : `${basemapProviderLabel}底图暂不可用` }}</span><button v-if="basemapState === 'error'" type="button" @click="changeBasemap(basemapMode)">重试</button></div>
         <div class="map-tools"><span class="map-tools-title">{{ selectedPreview?.name || (selected ? displayName(selected.col_name, selected.cname || selected.name) : '中国土壤空间分布') }}</span><button type="button" @click="catalogOpen = true">切换图层 <span aria-hidden="true">↗</span></button><button type="button" :aria-pressed="zonesVisible" :disabled="zonesLoading" @click="toggleReferenceZones">{{ zonesLoading ? '加载分区…' : zonesVisible ? '隐藏参考分区' : '参考分区' }}</button></div>
         <div v-if="zoneError" class="map-tile-note map-zone-error" role="status">{{ zoneError }}</div>
         <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">专题图层暂未提供 · 可点选查询</div>
@@ -131,6 +134,11 @@ import SoiledgeWorkbench from './SoiledgeWorkbench.vue'
 import HomeLanding from './HomeLanding.vue'
 import SiteHeader from './SiteHeader.vue'
 import { transitionPage } from './design-system/motion.js'
+import { createTiandituBasemap } from './map/tianditu.js'
+import { createAmapBasemap } from './map/amap.js'
+import { createGcj02Crs } from './map/coordinates.js'
+import { createScientificTileLayer } from './map/scientificTiles.js'
+import mapConfig from './map/config.json'
 import ToolsCenter from './tools/ToolsCenter.vue'
 import RepositoryWorkspace from './RepositoryWorkspace.vue'
 import { getTool, toolTarget } from './tools/catalog.js'
@@ -457,6 +465,17 @@ const categoryLegendCss = 'linear-gradient(90deg, #440154 0% 16%, #3b528b 16% 33
 const isCategorical = computed(() => selectedKey.value === 'soil_texcls')
 const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 let map = null, tileLayer = null, marker = null, highlightLayer = null, zoneLayer = null, queryId = 0, lastPoint = null, indicatorId = 0, dataId = 0
+const usingAmap = (import.meta.env.VITE_MAP_PROVIDER || mapConfig.provider) === 'amap'
+const amapKey = (import.meta.env.VITE_AMAP_KEY || mapConfig.amapKey || '').trim()
+const tiandituKey = (import.meta.env.VITE_TIANDITU_KEY || '').trim()
+const basemapEnabled = usingAmap ? Boolean(amapKey) : Boolean(tiandituKey)
+const basemapProviderLabel = usingAmap ? '高德地图' : '天地图'
+const amapContainerRef = ref(null)
+const basemapOptions = [{ id: 'vector', label: '标准地图' }, { id: 'satellite', label: '卫星影像' }]
+const basemapMode = ref('vector'), basemapState = ref('unconfigured')
+let basemap = null
+function changeBasemap(mode) { basemapMode.value = mode; basemap?.switchTo(mode) }
+function scientificTileLayer(url, options) { return usingAmap ? createScientificTileLayer(L, url, options) : L.tileLayer(url, options) }
 let mapResizeObserver = null, mapViewportObserver = null
 let drawerTouchStart = null
 function fitMapToViewport() {
@@ -500,8 +519,8 @@ function chooseIndicator(key) {
   if (tileLayer) map.removeLayer(tileLayer)
   if (!key) { tileLayer = null; return }
   if (tileAvailability.value === false) { tileLayer = null; return }
-  tileLayer = L.tileLayer(tileUrl(key, resolution.value), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: resolution.value === 1 ? 8 : 7, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
-  tileLayer.on('tileload', event => { if (selectedKey.value === key && !event.tile.src.startsWith('data:')) tileAvailability.value = true })
+  tileLayer = scientificTileLayer(tileUrl(key, resolution.value), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: resolution.value === 1 ? 8 : 7, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
+  tileLayer.on('tileload', event => { if (selectedKey.value === key && !event.tile.src?.startsWith('data:')) tileAvailability.value = true })
   tileLayer.setZIndex(50)
 }
 function choosePreview(id) {
@@ -510,7 +529,7 @@ function choosePreview(id) {
   catalogOpen.value = false
   if (!map) return
   if (tileLayer) map.removeLayer(tileLayer)
-  tileLayer = L.tileLayer(previewTileUrl(id), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: 8, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
+  tileLayer = scientificTileLayer(previewTileUrl(id), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: 8, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
   tileLayer.setZIndex(50)
 }
 function openLayerSearch() { catalogOpen.value = true; requestAnimationFrame(() => requestAnimationFrame(() => document.querySelector('.catalog-search input')?.focus())) }
@@ -693,14 +712,18 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('popstate', onHistoryNavigation)
   fitMapToViewport()
-  map = L.map('map', { center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
+  map = L.map('map', { crs: usingAmap ? createGcj02Crs(L) : L.CRS.EPSG3857, zoomAnimation: !usingAmap, center: [35, 105], zoom: 4, minZoom: 3, maxZoom: 12, zoomControl: false, scrollWheelZoom: true })
   mapResizeObserver = new ResizeObserver(() => map?.invalidateSize({ pan: false, debounceMoveend: true }))
   mapResizeObserver.observe(document.getElementById('map'))
   mapViewportObserver = new ResizeObserver(fitMapToViewport)
   for (const element of [siteContentRef.value, siteContentRef.value?.querySelector('.site-header'), document.querySelector('.map-workspace-toolbar')]) {
     if (element) mapViewportObserver.observe(element)
   }
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19, className: 'soil-basemap-tiles' }).addTo(map)
+  const onBasemapState = state => { basemapState.value = state }
+  basemap = usingAmap
+    ? createAmapBasemap(map, amapContainerRef.value, amapKey, onBasemapState, import.meta.env.VITE_AMAP_SERVICE_HOST || '')
+    : createTiandituBasemap(L, map, tiandituKey, onBasemapState)
+  basemap.switchTo(basemapMode.value)
   L.control.zoom({ position: 'bottomright' }).addTo(map)
   map.on('mousemove', e => { cursorCoords.value = `${e.latlng.lat.toFixed(3)}° N  /  ${e.latlng.lng.toFixed(3)}° E` })
   map.on('mouseout', () => { cursorCoords.value = '' })
@@ -710,6 +733,6 @@ onMounted(() => {
   loadPreviewLayers()
   checkAccount()
 })
-onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); if (map) { map.remove(); map = null } })
+onBeforeUnmount(() => { window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (map) { map.remove(); map = null } })
 </script>
 

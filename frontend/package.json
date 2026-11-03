@@ -8,6 +8,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "gcoord": "1.0.7",
     "leaflet": "^1.9.4",
     "vue": "^3.4.0"
   },

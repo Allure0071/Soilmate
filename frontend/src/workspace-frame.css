@@ -195,7 +195,7 @@
 .site-content-map .topbar-map .connection { color: #4d6452; font-size: var(--text-caption); }
 .site-content-map .map-tools button { color: #245e3d; font-size: var(--text-caption); }
 .site-content-map .leaflet-tile-pane { filter: none; }
-.site-content-map .soil-basemap-tiles { filter: saturate(.8) contrast(1.08) brightness(.98); }
+.site-content-map :is(.soil-basemap-tiles, .soil-basemap-labels) { filter: none; }
 .site-content-map .map-tile-note { color: #334e3c; font-size: var(--text-label); }
 .site-content-map .map-coordinate { color: #3e5b46; font-size: var(--text-caption); }
 .site-content-map .inspector-empty p { color: #435b49; font-size: var(--text-body); }
