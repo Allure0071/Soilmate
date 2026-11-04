@@ -50,3 +50,15 @@ export async function fetchData({ res = 5, table = 'points', page = 1, pageSize 
 export function tileUrl(colName, res = 5) {
   return `${BASE}/tiles/${res === 1 ? '1km/' : ''}${colName}/{z}/{x}/{y}.png`
 }
+
+export async function fetchSoilgridsLayers() {
+  return getJson(`${BASE}/api/soilgrids/layers`)
+}
+
+export async function fetchSoilgridsPoint(lon, lat) {
+  return getJson(`${BASE}/api/soilgrids/point?lon=${encodeURIComponent(lon)}&lat=${encodeURIComponent(lat)}`)
+}
+
+export function soilgridsTileUrl(code) {
+  return `${BASE}/api/soilgrids/tiles/${code}/{z}/{x}/{y}.png`
+}

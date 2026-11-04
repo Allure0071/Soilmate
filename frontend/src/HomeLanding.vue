@@ -27,6 +27,18 @@
         <button class="landing-card" data-reveal type="button" @click="emit('navigate', 'tools')"><span class="landing-card-icon" aria-hidden="true"><WorkspaceIcon name="calculator" /></span><strong>工具中心</strong><span class="landing-card-copy">土壤计算与常用工具。</span><span class="landing-card-link">查找与使用工具<WorkspaceIcon name="arrow" /></span></button>
       </div>
     </section>
+    <section v-if="account" class="landing-recent" aria-labelledby="recent-title">
+      <div class="landing-section-head recent-head"><h2 id="recent-title">最近研究任务</h2><button type="button" class="recent-more" @click="emit('navigate', 'assessment')">进入健康研究 <WorkspaceIcon name="arrow" /></button></div>
+      <p v-if="recentLoading" class="recent-state">正在读取已保存任务…</p>
+      <p v-else-if="recentError" class="recent-state">任务记录暂不可用，稍后重试。</p>
+      <p v-else-if="!recentTasks.length" class="recent-state">完成一次健康评价后，任务状态会显示在这里。</p>
+      <ul v-else class="recent-list">
+        <li v-for="run in recentTasks" :key="run.id">
+          <span class="recent-copy"><b>{{ run.kind === 'assessment' ? '土壤健康评价' : run.kind === 'nshi' ? '土壤指标筛选' : 'KO 通路结构分析' }}</b><small>{{ run.project_name }} · {{ run.dataset_id }}</small></span>
+          <em class="recent-status" :class="`recent-status-${run.status}`">{{ statusLabel(run.status) }}</em>
+        </li>
+      </ul>
+    </section>
     <footer class="landing-footer"><strong>沃壤知行</strong><a class="font-credit" href="/assets/fonts/harmonyos/LICENSE.txt" target="_blank" rel="noopener">字体 HarmonyOS Sans</a><button type="button" @click="emit('navigate', 'explore')">进入地图 ↗</button></footer>
   </div>
 </template>
@@ -36,7 +48,8 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { revealOnScroll, attachScrollResponse } from './design-system/motion.js'
 import SiteHeader from './SiteHeader.vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
-defineProps({ account: { type: Object, default: null } })
+defineProps({ account: { type: Object, default: null }, recentTasks: { type: Array, default: () => [] }, recentLoading: { type: Boolean, default: false }, recentError: { type: String, default: '' } })
+const statusLabel = status => ({ queued: '排队中', running: '分析中', completed: '已完成', partial: '有限结果', failed: '未完成', interrupted: '已中断', raw_data: '仅原始数据', exploratory_assessment: '探索性评价', validated_assessment: '经验证评价', insufficient_data: '数据不足' })[status] || status || '状态未登记'
 const emit = defineEmits(['navigate', 'logout'])
 const landingRoot = ref(null)
 let stopReveal, stopScroll
@@ -61,6 +74,10 @@ onBeforeUnmount(() => { stopReveal?.(); stopScroll?.() })
 .landing-note{display:flex;align-items:center;gap:10px;padding:11px 15px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:rgba(12,37,23,.32);backdrop-filter:blur(8px)}.landing-note-dot{width:7px;height:7px;border-radius:50%;background:#b9e9b7;box-shadow:0 0 0 4px rgba(185,233,183,.18)}
 .landing-modules{box-sizing:border-box;width:100%;margin:var(--site-frame-gap) auto 0;padding:80px max(32px,calc((100% - 1280px)/2)) 88px;border-radius:var(--site-surface-radius);background:#f4f6f1}.landing-section-head{display:flex;justify-content:space-between;align-items:end;gap:40px;margin-bottom:34px}.landing-section-kicker{color:#2b7550;font-size:var(--text-caption);font-weight:800;letter-spacing:.17em}.landing-section-head h2{max-width:660px;margin:14px 0 0;font-size:var(--text-page-title);line-height:var(--leading-title);letter-spacing:-.035em}.landing-section-head p{max-width:295px;margin:0 0 5px;color:#6b7b6f;font-size:var(--text-label);line-height:1.8}.landing-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.landing-card{display:flex;flex-direction:column;align-items:flex-start;min-height:278px;padding:25px;border:1px solid #dce5d9;border-radius:16px;background:#fff;color:#21362b;text-align:left;box-shadow:0 8px 30px rgba(27,55,34,.04);cursor:pointer;transition:transform .22s var(--motion-standard),box-shadow .22s var(--motion-standard),border-color .22s var(--motion-standard)}.landing-card:not(.landing-card-planned):hover{transform:translateY(-5px);border-color:#bdd7c4;box-shadow:0 18px 40px rgba(27,55,34,.09)}.landing-card-index{color:#819187;font-size:var(--text-caption);font-weight:700;letter-spacing:.15em}.landing-card-icon{display:grid;place-items:center;width:48px;height:48px;margin:22px 0 20px;border-radius:13px;background:#e9f4ea;color:#286747;font-size:27px;line-height:1}.landing-card strong{font-size:var(--text-panel-title);letter-spacing:-.02em}.landing-card-copy{margin-top:10px;color:#6d7c71;font-size:var(--text-caption);line-height:1.75}.landing-card-link,.landing-card-status{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:auto;padding-top:22px;color:#276c49;font-size:var(--text-caption);font-weight:800}.landing-card-link b{font-size:18px;font-weight:500}.landing-card-planned{cursor:default;background:#f8faf6}.landing-card-status{color:#809085}
 .landing-footer{margin-top:var(--site-frame-gap);border-radius:var(--site-surface-radius);background:#f4f6f1;display:flex;align-items:center;gap:18px;padding:27px max(36px,calc((100vw - 1280px)/2));border-top:1px solid #dce5d9;color:#607165;font-size:var(--text-caption)}.landing-footer strong{color:#254631;font-size:var(--text-body)}.landing-footer button{margin-left:auto;border:0;background:none;color:#286747;font-family:inherit;font-size:var(--text-caption);font-weight:700;cursor:pointer}
+.landing-footer .demo-entry{color:#286747;font-size:var(--text-caption);font-weight:700;text-decoration:none;border-bottom:1px dashed rgba(40,103,71,.35);padding-bottom:1px}
+.landing-footer .demo-entry:hover{color:#1f5438;border-bottom-color:#286747}
+.landing-footer .demo-entry{margin-left:auto}
+.landing-footer .demo-entry + button{margin-left:18px}
 .landing-shell :is(button,a):focus-visible{outline:3px solid #a9dbb4;outline-offset:3px}
 .landing-content h1,.landing-section-head h2{font-family:var(--font-display);letter-spacing:-.025em}
 .landing-card-grid{grid-template-columns:minmax(0,1.35fr) repeat(2,minmax(0,1fr));grid-template-rows:minmax(245px,auto) minmax(175px,auto)}
@@ -92,4 +109,23 @@ onBeforeUnmount(() => { stopReveal?.(); stopScroll?.() })
 .landing-footer .font-credit{font-size:var(--text-caption)}
 .landing-card-icon .workspace-icon{width:27px;height:27px}
 .landing-card-link .workspace-icon{width:18px;height:18px}
+
+.landing-recent{box-sizing:border-box;width:100%;margin:var(--site-frame-gap) auto 0;padding:34px max(32px,calc((100% - 1280px)/2)) 38px;border-radius:var(--site-surface-radius);background:#f4f6f1;color:#21362b}
+.landing-recent .landing-section-head{margin-bottom:12px}
+.landing-recent .landing-section-head h2{margin:0;font-size:var(--text-section-title)}
+.recent-head{align-items:flex-end}
+.recent-more{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0;border:0;background:none;color:#286747;font:inherit;font-size:var(--text-caption);font-weight:700;cursor:pointer}
+.recent-more:hover{color:#1f5438;text-decoration:underline;text-underline-offset:4px}
+.recent-more:focus-visible{outline:3px solid #9ac5a5;outline-offset:3px;border-radius:4px}
+.recent-state{margin:0;color:#7b8c7d;font-size:var(--text-body)}
+.recent-list{list-style:none;margin:0;padding:0}
+.recent-list li{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #dfe8dc}
+.recent-list li:last-child{padding-bottom:0}
+.recent-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.recent-copy b{color:#2a4a34;font-size:13px}
+.recent-copy small{color:#809184;font-size:11px}
+.recent-status{display:inline-flex;align-items:center;gap:7px;color:#4f7a5e;font-size:11px;font-style:normal;white-space:nowrap}
+.recent-status:before{content:'';width:6px;height:6px;border-radius:50%;background:#5fa678}
+.recent-status-running:before,.recent-status-queued:before{background:#c69a4a}
+.recent-status-failed:before,.recent-status-interrupted:before{background:#b4685c}
 </style>

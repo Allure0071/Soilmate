@@ -1,7 +1,8 @@
 <template>
   <div class="app-shell">
-    <div ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-tools': siteView==='tools', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
-    <HomeLanding v-if="siteView==='home'" :account="account" @navigate="destination => transitionTo(navigateFromLanding, destination)" @logout="logout" />
+    <DemoShowcase v-if="demoMode" @exit="exitDemo" />
+    <div v-show="!demoMode" ref="siteContentRef" class="site-content" :class="{ 'site-content-home': siteView==='home', 'site-content-workspace': siteView!=='home', 'site-content-resources': siteView==='gold', 'site-content-tools': siteView==='tools', 'site-content-map': siteView==='explore', 'site-content-research': siteView==='research'||siteView==='assistant', 'site-content-health': siteView==='research', 'site-content-assessment': siteView==='research' && researchStage==='input' }">
+    <HomeLanding v-if="siteView==='home'" :account="account" :recent-tasks="homeResearch.runs" :recent-loading="homeResearch.loading" :recent-error="homeResearch.error" @navigate="destination => transitionTo(navigateFromLanding, destination)" @logout="logout" />
     <SiteHeader v-if="siteView!=='home'" :active="siteView === 'research' ? 'research' : siteView" :account="account" :preview="assessmentPreview && siteView==='research'" :login-href="accountUrl(locationPath())" @navigate="destination => transitionTo(navigateFromHeader, destination)" @logout="logout" />
 
     <div v-if="toolOrigin && siteView !== 'tools'" class="tools-return-bar"><a :href="toolDirectoryPath" @click.prevent="transitionTo(returnToTools)"><WorkspaceIcon name="back" />返回工具目录</a><span>{{ activeToolName }}</span></div>
@@ -13,6 +14,7 @@
         <div class="map-data-controls">
           <div class="map-basemap-control" role="group" aria-label="地图底图"><span>底图</span><HoverSwitch><button v-for="option in basemapOptions" :key="option.id" type="button" :class="{ active: basemapMode === option.id }" :aria-pressed="basemapMode === option.id" :disabled="!basemapEnabled" :title="!basemapEnabled ? `${basemapProviderLabel}底图待启用` : option.label" @click="changeBasemap(option.id)">{{ option.label }}</button></HoverSwitch></div>
           <div class="module-resolution" role="group" aria-label="地图数据分辨率"><span>数据分辨率</span><HoverSwitch><button v-for="value in [5, 1]" :key="value" type="button" :class="{ active: resolution === value }" :aria-pressed="resolution === value" @click="changeResolution(value)">{{ value }} km</button></HoverSwitch></div>
+          <div class="map-basemap-control map-public-control" role="group" aria-label="公开土壤数据图层"><span>公开数据</span><select v-model="soilPublicKey" :disabled="!soilPublicLayers.length" @change="applySoilPublicLayer(soilPublicKey)"><option value="">关闭</option><option v-for="item in soilPublicLayers" :key="item.code" :value="item.code">{{ item.name }}</option></select></div>
           <span class="map-dataset-count">{{ indicators.length ? `${indicators.length} 项已登记指标` : '正在读取目录' }}</span>
           <span class="map-data-connection" :class="apiState"><i aria-hidden="true"></i>{{ apiState === 'ready' ? '数据已连接' : apiState === 'loading' ? '正在连接' : '连接中断' }}</span>
         </div>
@@ -53,10 +55,9 @@
         <div v-if="usingAmap" id="amap-basemap" ref="amapContainerRef" class="amap-basemap" aria-hidden="true"></div>
         <div id="map"></div>
         <div v-if="basemapState !== 'ready'" class="basemap-status" :class="{ 'basemap-status-loading': basemapState === 'loading' }" role="status"><span>{{ basemapState === 'unconfigured' ? `${basemapProviderLabel}底图待启用` : basemapState === 'loading' ? `正在加载${basemapProviderLabel}` : `${basemapProviderLabel}底图暂不可用` }}</span><button v-if="basemapState === 'error'" type="button" @click="changeBasemap(basemapMode)">重试</button></div>
-        <div class="map-tools"><span class="map-tools-title">{{ selectedPreview?.name || (selected ? displayName(selected.col_name, selected.cname || selected.name) : '中国土壤空间分布') }}</span><button type="button" @click="catalogOpen = true">切换图层 <span aria-hidden="true">↗</span></button><button type="button" :aria-pressed="zonesVisible" :disabled="zonesLoading" @click="toggleReferenceZones">{{ zonesLoading ? '加载分区…' : zonesVisible ? '隐藏参考分区' : '参考分区' }}</button></div>
+        <div class="map-tools"><span class="map-tools-title">{{ selectedPreview?.name || (selected ? displayName(selected.col_name, selected.cname || selected.name) : '中国土壤空间分布') }}</span><button type="button" @click="catalogOpen = true">切换图层 <span aria-hidden="true">↗</span></button></div>
         <div v-if="dataNavigationError" class="map-data-link-error" role="status">{{ dataNavigationError }}</div>
-        <div v-if="zoneError" class="map-tile-note map-zone-error" role="status">{{ zoneError }}</div>
-        <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">专题图层暂未提供 · 可点选查询</div>
+        <div v-if="tileAvailability === false && !selectedPreviewId" class="map-tile-note" role="status">公开数据图层已接入 · 点选地图查看点位属性</div>
         <div class="map-coordinate">{{ cursorCoords || '移动鼠标查看坐标' }}</div>
         <div v-if="selected && legend && tileAvailability !== false" class="map-legend">
           <div class="legend-title"><span>{{ displayName(selected.col_name, selected.cname || selected.name) }}</span><strong>{{ displayUnit(selected.col_name, selected.unit) || (/(^|_)soil_ph$/.test(selected.col_name) ? '无量纲' : '单位待核实') }}</strong></div>
@@ -65,12 +66,13 @@
           <div class="legend-opacity"><label for="opacity">图层透明度</label><input id="opacity" v-model.number="layerOpacity" type="range" min="20" max="100" @input="updateOpacity"/><span>{{ layerOpacity }}%</span></div>
         </div>
         <div v-if="selectedPreview" class="map-legend preview-legend"><div class="legend-title"><span>{{ selectedPreview.name }}</span><strong>{{ selectedPreview.unit }}</strong></div><div class="legend-gradient" :style="{ background: previewLegendCss }"></div><div class="legend-range"><span>{{ selectedPreview.range[0] }}</span><span>{{ selectedPreview.range[1] }}</span></div><p>研究预览 · 不参与评分</p></div>
-        <div class="map-attribution">数据视图 · WGS84 坐标</div>
+        <div v-if="soilPublicMeta" class="map-legend public-legend"><div class="legend-title"><span>{{ soilPublicMeta.name }} · 公开数据</span><strong>{{ soilPublicMeta.unit }}</strong></div><div class="legend-range public-legend-range"><span>数值范围</span><span>{{ soilPublicMeta.range[0] }}–{{ soilPublicMeta.range[1] }}</span></div><p class="public-legend-source">ISRIC SoilGrids 2.0 · {{ soilPublicMeta.depth }} 区域预测值 · CC BY 4.0</p></div>
+        <div class="map-attribution">数据视图 · WGS84 坐标 · 公开数据：ISRIC SoilGrids 2.0</div>
       </section>
 
       <aside class="inspector" :class="`sheet-${sheetState}`" aria-label="点位分析结果">
         <div class="inspector-head"><div><span class="section-kicker">{{ siteView==='home' && !clicked ? '沃壤知行 / 研究总览' : '点位数据' }}</span><h2>{{ siteView==='home' && !clicked ? '研究总览' : '位置剖面' }}</h2></div><button class="sheet-toggle" type="button" :aria-label="sheetState === 'full' ? '收起分析面板' : '展开分析面板'" @click="cycleSheet">{{ sheetState === 'full' ? '收起' : '展开' }} <span aria-hidden="true">{{ sheetState === 'full' ? '⌄' : '⌃' }}</span></button></div>
-        <section v-if="selected && !selectedPreviewId" class="map-layer-source" aria-label="当前图层资料"><h3>{{ displayName(selected.col_name, selected.cname || selected.name) }}</h3><dl><div><dt>单位</dt><dd>{{ displayUnit(selected.col_name, selected.unit) || (selected.col_name === 'soil_ph' ? '无量纲' : '待核对') }}</dd></div><div><dt>分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ selected.source_file || '未登记' }}</dd></div></dl><p>{{ selected.source_file === 'SYNTHETIC_TEST_DATA' ? '合成测试数据，仅供界面演示。' : '年份、土层与覆盖范围请到资源详情核对。' }}</p><button type="button" @click="transitionTo(openIndicatorResource)">查看数据来源与覆盖信息</button><button v-if="resourceReturn" type="button" @click="transitionTo(returnToResource)">返回数据资源</button></section>
+        <section v-if="selected && !selectedPreviewId && !soilPublicKey" class="map-layer-source" aria-label="当前图层资料"><h3>{{ displayName(selected.col_name, selected.cname || selected.name) }}</h3><dl><div><dt>单位</dt><dd>{{ displayUnit(selected.col_name, selected.unit) || (selected.col_name === 'soil_ph' ? '无量纲' : '待核对') }}</dd></div><div><dt>分辨率</dt><dd>{{ resolution }} km</dd></div><div><dt>来源文件</dt><dd>{{ selected.source_file || '未登记' }}</dd></div></dl><p>{{ selected.source_file === 'SYNTHETIC_TEST_DATA' ? '合成测试数据，仅供界面演示。' : '年份、土层与覆盖范围请到资源详情核对。' }}</p><button type="button" @click="transitionTo(openIndicatorResource)">查看数据来源与覆盖信息</button><button v-if="resourceReturn" type="button" @click="transitionTo(returnToResource)">返回数据资源</button></section>
         <section v-if="!clicked && siteView==='home'" class="home-overview" aria-labelledby="home-title">
           <div class="home-intro">
             <span class="section-kicker">研究方向 / NITROGEN CYCLE</span>
@@ -89,22 +91,36 @@
             <p v-else-if="homeResearch.loading" class="home-task-state" role="status">正在读取已保存任务…</p>
             <p v-else-if="homeResearch.error" class="home-task-state home-task-error" role="status">任务记录暂不可用：{{ homeResearch.error }}</p>
             <p v-else-if="!homeResearch.runs.length" class="home-task-state">尚无已保存分析任务。运行分析后，任务状态会显示在这里。</p>
-            <ul v-else><li v-for="run in homeResearch.runs" :key="run.id"><span><b>{{ run.kind==='nshi'?'土壤指标筛选':'KO 通路结构分析' }}</b><small>{{ run.project_name }} · {{ run.dataset_id }}</small></span><em :class="`task-${run.status}`">{{ researchStatusLabel(run.status) }}</em></li></ul>
+            <ul v-else><li v-for="run in homeResearch.runs" :key="run.id"><span><b>{{ run.kind==='assessment' ? '土壤健康评价' : run.kind==='nshi' ? '土壤指标筛选' : 'KO 通路结构分析' }}</b><small>{{ run.project_name }} · {{ run.dataset_id }}</small></span><em :class="`task-${run.status}`">{{ researchStatusLabel(run.status) }}</em></li></ul>
           </section>
         </section>
         <div v-else-if="!clicked" class="inspector-empty"><div class="empty-target" aria-hidden="true"><WorkspaceIcon name="location" /></div><strong>选取地图位置</strong><p>点击地图，查看该位置的土壤指标。</p></div>
         <template v-else>
-          <div class="point-summary"><div class="point-label"><span class="point-signal"></span>{{ loading ? '正在解析位置' : pointError ? '查询暂不可用' : clicked.found ? '已定位数据点' : '该位置暂无数据' }}</div><div class="point-coords"><strong>{{ clicked.lat.toFixed(4) }}° N</strong><strong>{{ clicked.lon.toFixed(4) }}° E</strong></div><div v-if="clicked.gridId" class="point-grid-id">栅格 ID · {{ clicked.gridId }}</div><div class="point-separator"></div><div class="point-stats"><div><b>{{ loading ? '···' : validEntries.length }}</b><span>有效指标</span></div><div><b>{{ loading ? '···' : nullCount }}</b><span>无数据</span></div></div></div>
+          <div class="point-summary"><div class="point-label"><span class="point-signal"></span>{{ soilPublicKey && soilPublicState === 'loading' ? '正在读取公开数据' : soilPublicKey && soilPublicPoint ? '公开数据点位' : loading ? '正在解析位置' : pointError ? '查询暂不可用' : clicked.found ? '已定位数据点' : '该位置暂无数据' }}</div><div class="point-coords"><strong>{{ clicked.lat.toFixed(4) }}° N</strong><strong>{{ clicked.lon.toFixed(4) }}° E</strong></div><div v-if="clicked.gridId" class="point-grid-id">栅格 ID · {{ clicked.gridId }}</div><div class="point-separator"></div><div class="point-stats"><div><b>{{ soilPublicKey ? (soilPublicState === 'ready' ? soilPublicItems.length : '···') : (loading ? '···' : validEntries.length) }}</b><span>{{ soilPublicKey ? '公开指标' : '有效指标' }}</span></div><div><b>{{ soilPublicKey ? (soilPublicPoint?.depth || '0–5 cm') : (loading ? '···' : nullCount) }}</b><span>{{ soilPublicKey ? '土层深度' : '无数据' }}</span></div></div></div>
+          <section v-if="clicked && (soilPublicState !== 'idle' || soilPublicPoint)" class="assessment-section public-soil-section" aria-label="公开土壤数据">
+            <span class="section-kicker">PUBLIC SOIL DATA / ISRIC SOILGRIDS 2.0</span>
+            <h3>公开土壤属性 <small>250 m 区域预测</small></h3>
+            <p v-if="soilPublicState === 'loading'" class="public-soil-state">正在读取公开土壤数据…</p>
+            <p v-else-if="soilPublicState === 'error'" class="public-soil-state">公开数据暂不可用：{{ soilPublicError }}</p>
+            <div v-else class="public-soil-grid"><div v-for="item in soilPublicItems" :key="item.code" class="public-soil-item"><span>{{ item.name }}</span><strong>{{ item.value }} <small>{{ item.unit }}</small></strong></div></div>
+            <div v-if="soilPublicPoint?.assessment" class="public-assessment">
+              <div class="public-assessment-head"><span>点位健康评价</span><strong class="public-assessment-score">{{ soilPublicPoint.assessment.composite_score ?? '—' }}<small>分</small></strong></div>
+              <p class="public-assessment-summary">{{ soilPublicPoint.assessment.summary }}</p>
+              <div v-if="soilPublicPoint.assessment.problems?.length" class="public-assessment-block"><span>优先核查项</span><ul><li v-for="item in soilPublicPoint.assessment.problems" :key="item.title">{{ item.title }}：{{ item.observation }}</li></ul></div>
+              <div v-if="soilPublicPoint.assessment.decisions?.length" class="public-assessment-block"><span>建议与核对目标</span><ul><li v-for="item in soilPublicPoint.assessment.decisions" :key="item.action">{{ item.action }}（{{ item.reason }}）</li></ul></div>
+              <p v-if="soilPublicPoint.assessment.limitations?.length" class="public-assessment-note">{{ soilPublicPoint.assessment.limitations[0] }}</p>
+            </div>
+            <p class="regional-caveat">来源：ISRIC SoilGrids 2.0（0–5 cm 预测值，CC BY 4.0），由 WMS 服务读取；用于区域背景，不代表本地实测。</p>
+            <a class="public-soil-link" href="https://soilgrids.org" target="_blank" rel="noopener">查看数据说明 ↗</a>
+          </section>
           <div v-if="pointError" class="result-error"><span>{{ pointError }}</span><button type="button" @click="retryPoint">重试</button></div>
           <div v-if="loading" class="result-loading" role="status"><span class="state-spinner"></span>{{ clicked.found ? '正在读取新位置的数据，下方暂保留上次查询结果…' : '正在读取此位置的数据…' }}</div>
-          <template v-if="clicked.found">
+          <template v-if="clicked.found && !soilPublicKey">
             <div v-if="selected && selectedPointValue != null" class="featured-value"><span>当前图层 · {{ displayName(selected.col_name, selected.cname || selected.name) }}</span><div><strong>{{ fmt(selectedPointValue) }}</strong><small>{{ displayUnit(selected.col_name, selected.unit) }}</small></div></div>
             <section class="assessment-section"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>六项核心土壤指标</h3><div class="core-grid"><button v-for="item in coreIndicators" :key="item.id" type="button" class="core-metric" :aria-expanded="expandedMetric === item.id" @click="expandedMetric = expandedMetric === item.id ? '' : item.id"><span>{{ item.label }}</span><strong>{{ item.value == null ? '—' : fmt(item.value) }} <small>{{ item.unit }}</small></strong><em>{{ item.status }} · {{ expandedMetric === item.id ? '收起' : '详情' }}</em><span v-if="expandedMetric === item.id" class="metric-detail">来源：{{ item.source || '待确认' }}<br>年份：{{ item.year || '待确认' }}<br>土层：{{ item.depth || '待确认' }}</span></button></div></section>
             <details :key="`${clicked.lat}:${clicked.lon}:${resolution}`" class="other-indicators"><summary><span><b>其他指标</b><small>保留当前点位的全部非核心指标</small></span><span class="other-count">{{ otherEntries.length + otherNullEntries.length }} 项 <i aria-hidden="true">⌄</i></span></summary><div class="other-content"><HoverSwitch class="result-tabs" role="tablist" aria-label="其他指标分类"><button v-for="category in categories" :key="category.id" type="button" role="tab" :aria-selected="activeResultCategory === category.id" :class="{ active: activeResultCategory === category.id }" @click="activeResultCategory = category.id">{{ category.label }}</button></HoverSwitch><div class="result-list"><div v-for="[key, item] in filteredEntries" :key="key" class="result-row"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>{{ fmt(displayValue(key, item.value)) }}<small>{{ displayUnit(key, item.unit) }}</small></strong></div><p v-if="!filteredEntries.length" class="results-empty">此分类在该位置没有有效值。</p><button v-if="otherNullEntries.length" type="button" class="missing-toggle" :aria-expanded="showNulls" @click="showNulls = !showNulls">{{ showNulls ? '收起' : '查看' }} {{ otherNullEntries.length }} 项无数据指标 <span>{{ showNulls ? '↑' : '↓' }}</span></button><template v-if="showNulls"><div v-for="[key, item] in otherNullEntries" :key="key" class="result-row missing"><span>{{ displayName(key, item.cname || item.name) }}</span><strong>—</strong></div></template></div></div></details>
-            <section class="assessment-section"><span class="section-kicker">REGIONAL CONTEXT</span><h3>区域指标</h3><p v-if="clicked.z01" class="region-name">Z01 参考区划 · {{ clicked.z01.source_name }}<small> · {{ clicked.z01.code }}</small></p><p v-if="clicked.z01" class="regional-caveat">来源区划按 1 km 网格定位，边界附近可能有偏差；与模型九大区的映射尚未核验，不参与 N + X 评分。</p><p v-if="clicked.regionName" class="region-name">模型农业区 · {{ clicked.regionName }}<small v-if="clicked.regionId"> · {{ clicked.regionId }}</small></p><p v-if="!clicked.regionName" class="assessment-note">当前尚无可核验的模型农业区映射；区域扩展指标待接入。</p><p v-else-if="!regionalIndicators.length" class="assessment-note">该农业区尚无已核对的 X 指标配置。</p><div v-else class="regional-list"><div v-for="item in regionalIndicators" :key="item.label" class="regional-row"><span>{{ item.label }}</span><strong>{{ item.value == null ? '待接入' : `${fmt(item.value)} ${item.unit}` }}</strong></div></div><p v-if="regionalIndicators.length" class="regional-caveat">区域归属来自点位接口；X 清单来自项目指标审计。仅展示对应字段的返回值，其余不参与评分。</p></section>
-            <section class="assessment-section"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><h3>土壤健康评价</h3><HoverSwitch class="assessment-modes" role="group" aria-label="评价模式"><button type="button" :class="{ active: assessmentMode === 'base' }" @click="assessmentMode = 'base'">Base-SHI</button><button type="button" :class="{ active: assessmentMode === 'regional' }" @click="assessmentMode = 'regional'">N + X</button></HoverSwitch><div class="score-pending"><strong>—</strong><div><b>评分规则待核验</b><p>{{ assessmentMode === 'base' ? '尚未接入经过核验的基础评分规则与结果。' : '区域映射与扩展指标未完整接入，暂不能计算 N + X。' }}</p></div></div></section>
           </template>
-          <div v-else-if="!loading" class="unavailable-analysis"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>数据尚未返回</h3><p>位置已经在地图上标记。服务恢复后，可在此查看六项核心土壤指标与区域评价。</p><div class="pending-metrics"><span v-for="item in coreDefinitions" :key="item.id">{{ item.label }}<b>—</b></span></div><div class="pending-score"><span class="section-kicker">SOIL HEALTH ASSESSMENT</span><strong>评分待评估</strong><small>没有真实指标和核验规则时，不生成分数。</small></div></div>
+          <div v-else-if="!loading && !soilPublicKey" class="unavailable-analysis"><span class="section-kicker">SOIL PROFILE / 核心指标</span><h3>该位置暂无合成网格数据</h3><p>位置已经在地图上标记；可开启公开数据图层查看该点位的真实土壤属性与评价。</p><div class="pending-metrics"><span v-for="item in coreDefinitions" :key="item.id">{{ item.label }}<b>—</b></span></div></div>
         </template>
       </aside>
     </main>
@@ -149,9 +165,10 @@ import { siteLinks, viewFromPath } from './siteNavigation.js'
 import ScientificWorkbench from './ScientificWorkbench.vue'
 import HealthResearchHub from './HealthResearchHub.vue'
 import AssistantWorkspace from './AssistantWorkspace.vue'
+import DemoShowcase from './assessment/DemoShowcase.vue'
 import WorkspaceIcon from './WorkspaceIcon.vue'
 import L from 'leaflet'
-import { fetchIndicators, fetchMeta, fetchPoint, fetchData, fetchPreviewLayers, fetchPreviewPoint, fetchZ01Boundaries, fetchZ01Point, previewTileUrl, tileUrl } from './api.js'
+import { fetchIndicators, fetchMeta, fetchPoint, fetchData, fetchPreviewLayers, fetchPreviewPoint, fetchZ01Boundaries, fetchZ01Point, fetchSoilgridsLayers, fetchSoilgridsPoint, previewTileUrl, soilgridsTileUrl, tileUrl } from './api.js'
 import { localDataPath, mapDataPath, readDataLocation, resourceDataPath } from './dataNavigation.js'
 import { displayName, displayUnit, displayValue } from './dataDisplay.js'
 import { regionalConfigFor } from './regionIndicatorConfig.js'
@@ -184,6 +201,11 @@ const expandedMetric = ref('')
 const sheetState = ref('half')
 const cursorCoords = ref('')
 const layerOpacity = ref(78)
+const soilPublicLayers = ref([])
+const soilPublicKey = ref('')
+const soilPublicPoint = ref(null)
+const soilPublicState = ref('idle')
+const soilPublicError = ref('')
 const resolution = ref(['/explore', '/resources'].includes(location.pathname) ? initialDataLocation.res : 5)
 const tileAvailability = ref(null)
 const zonesVisible = ref(false)
@@ -243,6 +265,7 @@ function returnToTools() {
 
 const assistantContext = ref(null)
 const assistantDraft = ref('')
+const demoMode = ref(window.location.pathname === '/demo')
 const assessmentPreview = ref(isAssessmentPreview())
 const assessmentMapPoint = ref(readAssessmentMapPoint())
 function readAssessmentMapPoint() {
@@ -256,6 +279,11 @@ const account = ref(null)
 const csrfToken = ref('')
 function locationPath() { return window.location.pathname + window.location.search }
 function accountUrl(path = '/research') { return '/account/index.html?next=' + encodeURIComponent(path) }
+function exitDemo() {
+  demoMode.value = false
+  if (window.location.pathname === '/demo') history.pushState({}, '', '/')
+  onRouteChange()
+}
 async function checkAccount() {
   try {
     const response = await fetch('/api/auth/me', { credentials: 'same-origin' })
@@ -387,12 +415,15 @@ function openAssistant() {
   assessmentPreview.value = false
   catalogOpen.value = false
 }
-function researchStatusLabel(status) { return ({raw_data:'仅原始数据',exploratory_assessment:'探索性评价',validated_assessment:'经验证评价',insufficient_data:'数据不足，无法判断'})[status] || status || '状态未知' }
+function researchStatusLabel(status) { return ({raw_data:'仅原始数据',exploratory_assessment:'探索性评价',validated_assessment:'经验证评价',insufficient_data:'数据不足，无法判断',queued:'排队中',running:'分析中',completed:'已完成',partial:'有限结果',failed:'未完成',interrupted:'已中断'})[status] || status || '状态未知' }
 async function loadHomeResearch() {
   if (!account.value) return
   homeResearch.value = { loading: true, error: '', runs: [] }
   try {
-    const bootstrapResponse = await fetch('/api/research/bootstrap')
+    const [bootstrapResponse, tasksResponse] = await Promise.all([
+      fetch('/api/research/bootstrap'),
+      fetch('/api/assessment/tasks?limit=5').catch(() => null),
+    ])
     if (!bootstrapResponse.ok) throw new Error(`HTTP ${bootstrapResponse.status}`)
     const bootstrap = await bootstrapResponse.json()
     const results = await Promise.all(bootstrap.projects.map(async project => {
@@ -400,7 +431,28 @@ async function loadHomeResearch() {
       if (!response.ok) throw new Error(`读取 ${project.name} 任务失败：HTTP ${response.status}`)
       return (await response.json()).map(run => ({ ...run, project_name: project.name }))
     }))
-    const runs = results.flat().sort((a,b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0,2)
+    let assessmentRuns = []
+    if (tasksResponse?.ok) {
+      const tasks = (await tasksResponse.json()).data?.items || []
+      const seen = new Set()
+      const uniqueTasks = tasks.filter(item => {
+        const key = item.sample_alias || item.task_id
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+      assessmentRuns = uniqueTasks.map(item => ({
+        id: item.task_id,
+        kind: 'assessment',
+        project_name: item.sample_alias || '健康评价样本',
+        dataset_id: item.type === 'deep_analysis' ? '深度健康分析' : '快速健康评价',
+        status: item.status,
+        created_at: item.created_at,
+      }))
+    }
+    const runs = [...results.flat(), ...assessmentRuns]
+      .sort((a,b) => String(b.created_at).localeCompare(String(a.created_at)))
+      .slice(0,2)
     homeResearch.value = { loading: false, error: '', runs }
   } catch (error) {
     homeResearch.value = { loading: false, error: error.message || '读取失败', runs: [] }
@@ -409,6 +461,7 @@ async function loadHomeResearch() {
 function onRouteChange() {
   const leavingAnalysis = ['research', 'assistant'].includes(siteView.value) && !['/analysis', '/evidence', '/assessment', '/assessment/preview', '/research', '/assistant'].includes(window.location.pathname)
   siteView.value = viewFromLocation()
+  demoMode.value = window.location.pathname === '/demo'
   const params = new URLSearchParams(location.search)
   toolOrigin.value = params.get('from') === 'tools'
   toolDirectoryPath.value = readToolDirectory()
@@ -495,7 +548,7 @@ const previewLegendCss = 'linear-gradient(90deg, #efe5c2 0%, #accc97 35%, #398f8
 const categoryLegendCss = 'linear-gradient(90deg, #440154 0% 16%, #3b528b 16% 33%, #21918c 33% 50%, #5ec962 50% 67%, #fde725 67% 84%, #b5de2b 84% 100%)'
 const isCategorical = computed(() => selectedKey.value === 'soil_texcls')
 const transparentTile = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
-let map = null, tileLayer = null, marker = null, highlightLayer = null, zoneLayer = null, queryId = 0, lastPoint = null, indicatorId = 0, dataId = 0
+let map = null, tileLayer = null, marker = null, highlightLayer = null, zoneLayer = null, queryId = 0, lastPoint = null, indicatorId = 0, dataId = 0, soilPublicTileLayer = null, soilPublicQueryId = 0
 const usingAmap = (import.meta.env.VITE_MAP_PROVIDER || mapConfig.provider) === 'amap'
 const amapKey = (import.meta.env.VITE_AMAP_KEY || mapConfig.amapKey || '').trim()
 const tiandituKey = (import.meta.env.VITE_TIANDITU_KEY || '').trim()
@@ -609,7 +662,41 @@ function onDrawerTouchEnd(event) {
 }
 function cycleSheet() { sheetState.value = sheetState.value === 'half' ? 'full' : sheetState.value === 'full' ? 'closed' : 'half'; nextTick(() => map?.invalidateSize({ pan: false })) }
 function handleKeydown(event) { if (event.key === 'Escape') { if (soiledgeOpen.value) soiledgeOpen.value = false; else catalogOpen.value = false } }
-function updateOpacity() { if (tileLayer) tileLayer.setOpacity(layerOpacity.value / 100) }
+const soilPublicMeta = computed(() => soilPublicLayers.value.find(item => item.code === soilPublicKey.value) || null)
+const soilPublicItems = computed(() => {
+  const values = soilPublicPoint.value?.values || {}
+  return soilPublicLayers.value.filter(layer => values[layer.code]).map(layer => ({ code: layer.code, name: layer.name, unit: layer.unit, ...values[layer.code] }))
+})
+async function loadSoilPublicLayers() {
+  try {
+    const data = await fetchSoilgridsLayers()
+    soilPublicLayers.value = Array.isArray(data.properties) ? data.properties : []
+    if (!soilPublicKey.value && soilPublicLayers.value.length) applySoilPublicLayer(soilPublicLayers.value[0].code)
+  } catch { soilPublicLayers.value = [] }
+}
+function applySoilPublicLayer(code) {
+  soilPublicKey.value = code || ''
+  if (soilPublicTileLayer) { map?.removeLayer(soilPublicTileLayer); soilPublicTileLayer = null }
+  if (!code || !map) return
+  soilPublicTileLayer = scientificTileLayer(soilgridsTileUrl(code), { opacity: layerOpacity.value / 100, maxZoom: 12, maxNativeZoom: 8, minZoom: 3, errorTileUrl: transparentTile }).addTo(map)
+}
+async function loadSoilPublicPoint(lng, lat) {
+  const current = ++soilPublicQueryId
+  soilPublicState.value = 'loading'
+  soilPublicError.value = ''
+  try {
+    const data = await fetchSoilgridsPoint(lng, lat)
+    if (current !== soilPublicQueryId) return
+    soilPublicPoint.value = data
+    soilPublicState.value = 'ready'
+  } catch (error) {
+    if (current !== soilPublicQueryId) return
+    soilPublicPoint.value = null
+    soilPublicState.value = 'error'
+    soilPublicError.value = error.message || '公开数据暂不可用'
+  }
+}
+function updateOpacity() { if (tileLayer) tileLayer.setOpacity(layerOpacity.value / 100); if (soilPublicTileLayer) soilPublicTileLayer.setOpacity(layerOpacity.value / 100) }
 let pendingIndicatorLoad = null
 async function loadIndicators() {
   const currentLoad = ++indicatorId
@@ -650,6 +737,7 @@ async function loadPreviewLayers() {
 }
 async function queryPoint(lng, lat) {
   lastPoint = { lng, lat }
+  loadSoilPublicPoint(lng, lat)
   sheetState.value = 'half'
   const currentQuery = ++queryId
   loading.value = apiState.value === 'ready'
@@ -800,8 +888,9 @@ onMounted(() => {
   pendingIndicatorLoad = loadIndicators().then(applyDataLocation)
   loadTileAvailability()
   loadPreviewLayers()
+  loadSoilPublicLayers()
   checkAccount()
 })
-onBeforeUnmount(() => { navigationFade?.cancel(); window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (map) { map.remove(); map = null } })
+onBeforeUnmount(() => { navigationFade?.cancel(); window.removeEventListener('keydown', handleKeydown); window.removeEventListener('popstate', onHistoryNavigation); mapResizeObserver?.disconnect(); mapViewportObserver?.disconnect(); basemap?.destroy(); if (soilPublicTileLayer) { soilPublicTileLayer.remove(); soilPublicTileLayer = null } if (map) { map.remove(); map = null } })
 </script>
 

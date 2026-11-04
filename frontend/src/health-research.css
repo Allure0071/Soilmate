@@ -442,3 +442,11 @@
   #app .assistant-sidebar { width: min(280px, 86vw); }
   #app .assistant-main .expert-compose { width: calc(100% - 32px); margin-inline: 16px; }
 }
+.expert-model-status { margin:0 24px 16px; padding:12px 0; color:#71552c; border-bottom:1px solid #dce5d8; font-size:var(--text-caption); line-height:1.7; }
+.expert-model-status.is-connected, .expert-model-status.is-local { color:#31583d; }
+.expert-model-status small { display:block; margin-top:6px; color:#526b58; font-size:inherit; }
+.expert-model-status button { display:inline-flex; min-height:36px; align-items:center; padding:5px 10px; margin:6px 0 0 8px; border:1px solid #bfceb7; border-radius:8px; background:#f4f7ef; color:#31583d; font:inherit; cursor:pointer; }
+.expert-model-status button:disabled { color:#526b58; cursor:default; }
+.expert-model-status button:focus-visible { outline:3px solid #80af89; outline-offset:3px; }
+
+.expert-evidence-state { margin: 0 24px 10px; color: #8a9c8d; font-size: 10px; line-height: 1.6; }

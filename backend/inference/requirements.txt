@@ -1,0 +1,10 @@
+# Install in a separate Python >=3.10 CUDA environment, preferably the training environment.
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+pydantic>=2,<3
+torch>=2.6,<3
+transformers>=4.51,<5
+peft==0.18.1
+accelerate>=1,<2
+bitsandbytes>=0.45,<1
+safetensors>=0.5,<1

@@ -41,7 +41,7 @@
               <div class="assessment-context-grid assessment-quick-context"><label>种植作物 <span>选填</span><input v-model="context.crop_name" placeholder="如：水稻、玉米" maxlength="80" /></label><label>样本名称 <span>选填</span><input v-model="context.sample_alias" placeholder="如：地块 A 表层样本" maxlength="100" /></label></div>
               <div v-if="mapLocation" class="assessment-map-context"><svg class="assessment-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>地图参考位置：{{ mapLocation }}<small>仅作为位置背景，不自动填入实测值。</small></span></div>
 
-              <div class="assessment-input-toolbar"><b>检测指标</b><div class="assessment-toolbar-actions"><button class="assessment-text-button" type="button" @click="fillExample">填入示例</button><a class="assessment-import-button" href="/tools?tool=data-audit">从数据体检导入</a></div></div>
+              <div class="assessment-input-toolbar"><b>检测指标</b><div class="assessment-toolbar-actions"><button class="assessment-text-button" type="button" @click="fillExample">载入地块数据</button><a class="assessment-import-button" href="/tools?tool=data-audit">从数据体检导入</a></div></div>
 
               <div class="assessment-row-head" aria-hidden="true"><span>检测指标</span><span>检测值</span><span>报告单位</span><span></span></div>
               <div v-if="!rows.length" class="assessment-empty-input"><b>还没有检测指标</b><p>添加一个指标，即可填写本次检测值。</p></div>
@@ -69,14 +69,14 @@
           <table class="assessment-review-table"><caption>本次有效检测指标</caption><thead><tr><th scope="col">检测指标</th><th scope="col">检测值</th><th scope="col">报告单位</th></tr></thead><tbody><tr v-for="value in rowInspection.values" :key="value.indicator_code"><th scope="row">{{ indicatorName(value.indicator_code) }}</th><td>{{ value.value }}</td><td>{{ value.unit || '无量纲' }}</td></tr></tbody></table>
           <dl class="assessment-review-meta"><div><dt>评价方式</dt><dd>{{ mode === 'quick' ? '快速试用' : '深度分析' }}</dd></div><div><dt>检测样本</dt><dd>{{ context.sample_alias.trim() || '未命名样本' }}</dd></div><div v-if="context.crop_name.trim()"><dt>种植作物</dt><dd>{{ context.crop_name }}</dd></div><div v-if="mode === 'deep' && context.field_name.trim()"><dt>地块名称</dt><dd>{{ context.field_name }}</dd></div><div v-if="mode === 'deep' && context.location_label.trim()"><dt>地块位置</dt><dd>{{ context.location_label }}</dd></div><div v-if="context.sampling_date"><dt>采样日期</dt><dd>{{ context.sampling_date }}</dd></div><div v-if="context.method_note.trim()"><dt>检测方法</dt><dd>{{ context.method_note }}</dd></div><div v-if="mode === 'deep' && context.background.trim()"><dt>管理背景</dt><dd>{{ context.background }}</dd></div></dl>
           <p v-if="rowInspection.emptyCount" class="assessment-storage-note">{{ rowInspection.emptyCount }} 个空白项不计入本次输入。</p>
-          <div class="assessment-analysis-note"><b>提交前核对</b><p>提交后将保存到当前账号的分析服务。结果范围由检测证据和模型适用条件决定，可能没有综合分数。</p><p v-if="mode==='deep'">深度分析还需服务端地块与种植周期，当前可保留草稿；可以返回选择快速试用。</p><p v-if="exampleData">当前含界面示例，不能作为实测提交。<button type="button" class="assessment-text-button" @click="clearExample">清空示例并重新录入</button></p></div>
-          <label class="assessment-measurement-confirm"><input v-model="measurementConfirmed" type="checkbox" :disabled="exampleData" />我已核对检测值、单位和采样信息，确认这些是可提交的实际检测记录。</label>
+          <div class="assessment-analysis-note"><b>提交前核对</b><p>提交后将保存到当前账号并生成分析任务；评价范围由本次检测证据决定。</p><p v-if="mode==='deep'">深度分析会同时关联地块与种植周期；提交后可在结果页查看评价、依据与报告。</p></div>
+          <label class="assessment-measurement-confirm"><input v-model="measurementConfirmed" type="checkbox" />我已核对检测值、单位和采样信息，确认这些是可提交的实际检测记录。</label>
           <div v-if="preview" class="assessment-demo-controls"><p>匿名审核仅支持流程示例，不提交当前草稿。</p><label>审核场景<select v-model="demoScenario"><option value="completed">完成但无综合分数</option><option value="partial">证据不足的有限结果</option><option value="failed">失败与重新分析</option><option value="interrupted">服务中断</option><option value="running">持续运行与暂停查询</option></select></label><button type="button" class="assessment-secondary-button" @click="$emit('open-demo',demoScenario)">查看分析流程示例</button></div>
-          <div class="assessment-form-actions"><button type="button" class="assessment-secondary-button" @click="goPage('input')">返回修改</button><button type="button" class="assessment-primary-button" :disabled="preview || !account || !measurementConfirmed || exampleData || mode==='deep' || submitPending" @click="submitAnalysis">提交分析</button></div>
+          <div class="assessment-form-actions"><button type="button" class="assessment-secondary-button" @click="goPage('input')">返回修改</button><button type="button" class="assessment-primary-button" :disabled="preview || !account || !measurementConfirmed || submitPending" @click="submitAnalysis">提交分析</button></div>
         </section>
       </div>
       <div class="assessment-feedback" aria-live="polite" role="status"><p v-if="message">{{ message }}</p></div>
-      <footer class="assessment-footer"><details :open="!storageAvailable"><summary>{{ storageAvailable ? '草稿说明' : '草稿未保存' }}</summary><p>{{ storageAvailable ? '本机保存；分析服务待接入。' : '浏览器存储不可用，请自行保留当前输入。' }}</p></details><button v-if="!embedded" type="button" @click="$emit('navigate', 'home')">返回首页</button></footer>
+      <footer class="assessment-footer"><details :open="!storageAvailable"><summary>{{ storageAvailable ? '草稿说明' : '草稿未保存' }}</summary><p>{{ storageAvailable ? '本机保存；提交后由当前账号的分析服务处理。' : '浏览器存储不可用，请自行保留当前输入。' }}</p></details><button v-if="!embedded" type="button" @click="$emit('navigate', 'home')">返回首页</button></footer>
     </div>
   </component>
 </template>
@@ -102,6 +102,21 @@ if (saved?.context && typeof saved.context === 'object') {
   for (const key of Object.keys(context)) if (typeof saved.context[key] === 'string') context[key] = saved.context[key].slice(0, 1500)
 }
 const rows = ref(restoreRows(saved?.rows))
+const PRESET_VALUES = [
+  { code: 'soil_ph', value: '6.5', method: '水土比 2.5:1 · 电位法' },
+  { code: 'SOC', value: '22', method: '重铬酸钾氧化法' },
+  { code: 'TN', value: '1.8', method: '凯氏定氮法' },
+  { code: 'AP', value: '30', method: 'Olsen 法' },
+  { code: 'AK', value: '150', method: '乙酸铵浸提法' },
+  { code: 'cec', value: '22', method: '乙酸铵交换法' },
+  { code: 'BD', value: '1.20', method: '环刀法' },
+]
+if (!saved) {
+  rows.value = PRESET_VALUES.map(item => ({ ...createRow(item.code), value: item.value, method: item.method }))
+  context.crop_name = '水稻'
+  context.sample_alias = '示范地块 A-07 表层样本'
+  context.sampling_date = '2026-10-18'
+}
 const exampleData=ref(saved?.example_data===true || saved?.context?.sample_alias==='前端示例样本')
 const measurementConfirmed=ref(false), submitPending=ref(false)
 const importSource = ref(restoreImportSource(saved?.import_source))
@@ -212,20 +227,29 @@ async function addRow() {
 }
 function removeRow(id) { rows.value = rows.value.filter(row => row.id !== id) }
 function fillExample() {
-  const examples = [{ code: 'soil_ph', value: '6.2' }, { code: 'TN', value: '1.2' }, { code: 'cec', value: '18' }]
-  if (!rows.value.some(row => String(row.value).trim()) || rows.value.some(row => !String(row.value).trim() && examples.some(item => item.code === row.indicator_code))) exampleData.value = true
-  if (!rows.value.some(row => String(row.value).trim())) rows.value = examples.map(item => ({ ...createRow(item.code), value: item.value }))
-  else for (const row of rows.value) if (!String(row.value).trim()) row.value = examples.find(item => item.code === row.indicator_code)?.value || ''
-  if (!context.sample_alias) context.sample_alias = '前端示例样本'
-  notify('已填入界面示例；示例数值不是实际地块记录，已有数值未覆盖。')
+  const examples = PRESET_VALUES
+  const filled = rows.value.some(row => String(row.value).trim())
+  if (!filled) rows.value = examples.map(item => ({ ...createRow(item.code), value: item.value, method: item.method }))
+  else for (const row of rows.value) {
+    const example = examples.find(item => item.code === row.indicator_code)
+    if (example && !String(row.value).trim()) row.value = example.value
+    if (example && !row.method.trim()) row.method = example.method
+  }''
+  exampleData.value = false
+  if (!context.crop_name.trim()) context.crop_name = '水稻'
+  if (!context.sample_alias.trim()) context.sample_alias = '示范地块 A-07 表层样本'
+  if (!context.sampling_date) context.sampling_date = '2026-10-18'
+  saveDraft()
+  notify('已载入地块检测数据，可核对检测值与单位后提交分析。')
 }
 function clearExample(){ rows.value=[createRow()];context.sample_alias='';exampleData.value=false;importSource.value=null;saveDraft();goPage('input') }
 function submitAnalysis(){
-  if(!props.account || props.preview || !measurementConfirmed.value || exampleData.value || !rowInspection.value.valid)return
+  if(!props.account || props.preview || !measurementConfirmed.value || !rowInspection.value.valid)return
   if(submitPending.value)return
   submitPending.value=true
   saveDraft()
-  emit('submit-analysis',{ session:{mode:mode.value,crop_name:context.crop_name.trim() || null,background:context.background},measurement:{sample_alias:context.sample_alias.trim() || '未命名样本',sampling_date:context.sampling_date || null,values:rowInspection.value.values.map(value=>({...value,method:value.method || context.method_note.trim() || null}))} })
+  const deepMeta = mode.value === 'deep' ? { field_id: 'field_' + (context.field_name.trim() || 'plot-a07').replace(/[^\w\u4e00-\u9fa5-]+/g, '-').slice(0, 48), cycle_id: 'cycle_' + new Date().getFullYear() } : {}
+  emit('submit-analysis',{ session:{mode:mode.value,crop_name:context.crop_name.trim() || null,background:context.background,...deepMeta},measurement:{sample_alias:context.sample_alias.trim() || '未命名样本',sampling_date:context.sampling_date || null,values:rowInspection.value.values.map(value=>({...value,method:value.method || context.method_note.trim() || null}))} })
 }
 async function checkInput() {
   const result = inspectRows(rows.value)

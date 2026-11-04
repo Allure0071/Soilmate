@@ -6,13 +6,13 @@ import json
 import math
 import re
 import statistics
-import urllib.error
-import urllib.request
 import zipfile
 from xml.etree import ElementTree as ET
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
+from ..models.gateway import ModelGateway, ModelUnavailable
+from .auth import current_user_id
 
 router = APIRouter(prefix="/api/soiledge", tags=["soiledge"])
 NS = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
@@ -181,6 +181,7 @@ class AiInput(BaseModel):
 
 @router.post("/ai")
 def ai_evaluate(payload: AiInput):
+    current_user_id()
     if payload.crop not in THRESHOLDS or not math.isfinite(payload.score):
         raise HTTPException(400, "评估输入无效")
     details = []
@@ -196,15 +197,10 @@ def ai_evaluate(payload: AiInput):
                 "作物参照阈值只适用于整份 SHI，绝对不能把它当成任一指标的阈值。"
                 "未列出的指标一律不推断；不判断未给出的有机质、土层、年份和土壤结构。"
                 "不用 Markdown，不给未经验证的施用剂量，不宣称正式诊断。")
-    data = json.dumps({"model": "qwen3:1.7b", "messages": [
-        {"role": "system", "content": "你是土壤研究助理。严格依据输入数据，用纯文字简洁说明。SHI 作物阈值不适用于单项指标。禁止补造缺失指标、单项阈值、土层和施用剂量。"},
-        {"role": "user", "content": prompt}], "stream": False, "think": False,
-        "options": {"num_predict": 360}}).encode("utf-8")
     try:
-        request = urllib.request.Request("http://127.0.0.1:11434/api/chat", data=data,
-                                         headers={"Content-Type": "application/json"}, method="POST")
-        with urllib.request.urlopen(request, timeout=120) as response:
-            result = json.load(response)
-        return {"available": True, "evaluation": str(result.get("message", {}).get("content", ""))[:5000]}
-    except (urllib.error.URLError, TimeoutError, OSError):
-        return {"available": False, "evaluation": "本机 Ollama 未启动或 qwen3:1.7b 模型不可用。"}
+        response=ModelGateway().answer([
+            {'role':'system','content':'你是土壤研究助理。仅解释给出的研究估算，不修改分数、不补造缺失数据、不给未经验证的剂量。只输出最终回答。'},
+            {'role':'user','content':prompt}])
+        return {'available':True,'evaluation':response['text'],'model':response['model'],'truncated':response['truncated']}
+    except ModelUnavailable as error:
+        raise HTTPException(503,{'code':error.code,'message':str(error)})

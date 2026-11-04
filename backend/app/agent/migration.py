@@ -19,14 +19,28 @@ def migrate_agent_schema(connection: sqlite3.Connection) -> bool:
     if connection.execute("SELECT 1 FROM schema_migrations WHERE version=?", (VERSION,)).fetchone():
         return False
     statements = [statement.strip() for statement in SQL_PATH.read_text(encoding="utf-8").split(";") if statement.strip()]
-    connection.execute("BEGIN IMMEDIATE")
+    # Callers may already hold an implicit transaction (sqlite3 default mode).
+    # Use a savepoint in that case so the migration stays atomic without raising
+    # "cannot start a transaction within a transaction".
+    nested = connection.in_transaction
+    if nested:
+        connection.execute("SAVEPOINT agent_schema_v2")
+    else:
+        connection.execute("BEGIN IMMEDIATE")
     try:
         for statement in statements:
             connection.execute(statement)
         connection.execute("INSERT INTO schema_migrations(version,applied_at) VALUES(?,?)",
                            (VERSION, datetime.now(timezone.utc).isoformat()))
-        connection.commit()
+        if nested:
+            connection.execute("RELEASE agent_schema_v2")
+        else:
+            connection.commit()
     except Exception:
-        connection.rollback()
+        if nested:
+            connection.execute("ROLLBACK TO agent_schema_v2")
+            connection.execute("RELEASE agent_schema_v2")
+        else:
+            connection.rollback()
         raise
     return True

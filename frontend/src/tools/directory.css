@@ -63,15 +63,6 @@
 .tool-entry p { max-width: 58ch; margin: 5px 0 0; color: var(--tool-muted); font-size: var(--text-label); line-height: 1.7; }
 .tool-entry .tool-entry-arrow { flex: none; width: 15px; height: 15px; color: #788b72; }
 .tool-entry:hover .tool-entry-arrow { color: #285b3e; }
-.tools-planned { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--tool-line); }
-.tools-planned summary { width: fit-content; min-height: 40px; color: #53684d; font-size: var(--text-body); cursor: pointer; }
-.tools-planned summary span { margin-left: 12px; font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
-.tools-planned > p { margin: 0 0 14px; color: var(--tool-muted); font-size: var(--text-label); }
-.tools-planned ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; margin: 0; padding: 0; list-style: none; }
-.tools-planned li { display: flex; flex-direction: column; gap: 5px; }
-.tools-planned a { width: fit-content; padding-block: 4px; color: #415e49; text-underline-offset: 4px; }
-.tools-planned a:hover { color: #215a35; }
-.tools-planned li span { color: var(--tool-muted); font-size: var(--text-caption); }
 .tool-status { display: inline-flex; align-items: center; flex: none; padding: 3px 9px; border-radius: 5px; background: #edf4e6; color: #365d3e; font-size: var(--text-caption); }
 .tool-status.planned { background: #f0f0e9; color: #626854; }
 .tool-status.input { background: #f6efdd; color: #6a572b; }
@@ -109,7 +100,6 @@
   .tool-entry { align-items: start; }
   .tool-directory-icon { width: 30px; height: 30px; margin-top: 3px; }
   .tool-entry .tool-entry-arrow { display: none; }
-  .tools-planned ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tool-description { padding: 28px 24px; }
 }
 @media (max-width: 560px) {
@@ -124,5 +114,4 @@
   .tool-entry .tool-entry-arrow { display: block; margin-top: 9px; }
   .tools-group-heading { display: block; }
   .tools-group-heading p { margin-top: 4px; }
-  .tools-planned ul { grid-template-columns: 1fr; gap: 16px; }
 }

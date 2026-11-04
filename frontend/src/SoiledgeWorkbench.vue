@@ -16,7 +16,7 @@
         </form>
         <aside class="edge-result" aria-label="估算结果" aria-live="polite">
           <span class="section-kicker">SHI · 研究估算</span>
-          <template v-if="result"><h2>估算结果</h2><div class="edge-score"><strong>{{ result.score.toFixed(2) }}</strong><span>/ 100</span></div><p class="edge-threshold">{{ crop }}参照阈值 {{ result.threshold }} · {{ mode === 'basic' ? '6 项核心' : '11 项完整' }}</p><p class="edge-result-note">{{ result.score >= result.threshold ? '达到该小程序的参照阈值' : '低于该小程序的参照阈值' }}。此结论仅用于研究演示。</p><h3>指标标准化值</h3><div v-for="item in result.details" :key="item.key" class="edge-diagnostic"><div><span>{{ item.label }}</span><strong>{{ item.score.toFixed(2) }} / 100</strong></div><small>输入 {{ item.raw }} {{ item.unit }} · 权重 {{ (item.weight * 100).toFixed(1) }}%</small><div class="edge-track"><i :style="{ width: `${Math.min(100, item.score)}%` }"></i></div></div><details class="edge-method"><summary>计算方法</summary><p>各指标按小程序的固定范围归一化，加权求和并除以当前模式的权重和。超出参考范围的值截断至 0–1；需填写当前模式全部指标。</p></details><details class="edge-advice"><summary>查看原小程序的改良建议（未经核验）</summary><p v-for="item in result.recommendations" :key="item.key"><strong>{{ item.label }}</strong><br/>{{ item.advice }}</p><p v-if="!result.recommendations.length">当前没有标准化值低于 50 的指标；建议持续监测。</p></details><div class="edge-ai"><button type="button" :disabled="aiLoading" @click="requestAi">{{ aiLoading ? '正在生成…' : 'AI 解读 · Ollama' }}</button><p v-if="aiMessage" role="status">{{ aiMessage }}</p></div></template>
+          <template v-if="result"><h2>估算结果</h2><div class="edge-score"><strong>{{ result.score.toFixed(2) }}</strong><span>/ 100</span></div><p class="edge-threshold">{{ crop }}参照阈值 {{ result.threshold }} · {{ mode === 'basic' ? '6 项核心' : '11 项完整' }}</p><p class="edge-result-note">{{ result.score >= result.threshold ? '达到该小程序的参照阈值' : '低于该小程序的参照阈值' }}。此结论仅用于研究演示。</p><h3>指标标准化值</h3><div v-for="item in result.details" :key="item.key" class="edge-diagnostic"><div><span>{{ item.label }}</span><strong>{{ item.score.toFixed(2) }} / 100</strong></div><small>输入 {{ item.raw }} {{ item.unit }} · 权重 {{ (item.weight * 100).toFixed(1) }}%</small><div class="edge-track"><i :style="{ width: `${Math.min(100, item.score)}%` }"></i></div></div><details class="edge-method"><summary>计算方法</summary><p>各指标按小程序的固定范围归一化，加权求和并除以当前模式的权重和。超出参考范围的值截断至 0–1；需填写当前模式全部指标。</p></details><details class="edge-advice"><summary>查看原小程序的改良建议（未经核验）</summary><p v-for="item in result.recommendations" :key="item.key"><strong>{{ item.label }}</strong><br/>{{ item.advice }}</p><p v-if="!result.recommendations.length">当前没有标准化值低于 50 的指标；建议持续监测。</p></details><div class="edge-ai"><button type="button" :disabled="aiLoading" @click="requestAi">{{ aiLoading ? '正在生成…' : 'AI 解读 · 微调模型（需登录）' }}</button><p v-if="aiMessage" role="status">{{ aiMessage }}</p></div></template>
           <template v-else><h2>等待检测数据</h2><p>填写指标，或使用示例体验。</p><div class="edge-placeholder">06 <span>核心检测指标</span></div></template>
         </aside>
       </div>
@@ -109,11 +109,14 @@ async function requestAi() {
   if (!result.value || aiLoading.value) return
   aiLoading.value = true; aiMessage.value = ''
   try {
-    const response = await fetch('/api/soiledge/ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ crop: crop.value, score: result.value.score, threshold: result.value.threshold, diagnostics: result.value.details.map(item => ({ label: item.label, raw: item.raw, score: item.score })) }) })
+    const accountResponse=await fetch('/api/auth/me',{credentials:'same-origin'})
+    if(!accountResponse.ok)throw new Error('请先登录后使用微调模型解读。')
+    const account=await accountResponse.json()
+    const response = await fetch('/api/soiledge/ai', { method: 'POST', credentials:'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token':account.csrf_token }, body: JSON.stringify({ crop: crop.value, score: result.value.score, threshold: result.value.threshold, diagnostics: result.value.details.map(item => ({ label: item.label, raw: item.raw, score: item.score })) }) })
     const payload = await response.json()
-    if (!response.ok) throw new Error(payload.detail || `生成失败（${response.status}）`)
-    aiMessage.value = payload.evaluation || 'Ollama 没有返回内容。'
-  } catch (failure) { aiMessage.value = failure.message || '本机 Ollama 暂不可用。' }
+    if (!response.ok) throw new Error(typeof payload.detail==='object'?payload.detail.message:payload.detail || `生成失败（${response.status}）`)
+    aiMessage.value = (payload.evaluation ? payload.evaluation+'\n\n微调模型研究试用解读，需结合原始证据复核。' : '模型没有返回内容。')
+  } catch (failure) { aiMessage.value = failure.message || '微调模型暂不可用，请检查后端模型服务连接。' }
   finally { aiLoading.value = false }
 }
 </script>

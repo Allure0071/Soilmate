@@ -113,6 +113,18 @@ def failed_attempt(con, key):
         con.execute("INSERT OR REPLACE INTO auth_attempts VALUES(?,?,?)", (key, 1, current))
 
 
+def _ensure_demo(user_id):
+    try:
+        from ..assessment import demo as assessment_demo
+        from ..assessment import store as assessment_store
+
+        with assessment_store.db() as con:
+            assessment_demo.ensure_demo_assessment(con, user_id)
+    except Exception:
+        # Demo seeding must never block account access.
+        pass
+
+
 @router.get("/status")
 def status():
     """Tell the local login page whether the first account needs creating."""
@@ -139,7 +151,10 @@ def register(payload: Credentials, request: Request, response: Response):
         # The first local account takes ownership of the pre-account research records.
         if first:
             con.execute("UPDATE projects SET owner_user_id=? WHERE owner_user_id IS NULL", (user["id"],))
-        return issue_session(response, request, con, user)
+        result = issue_session(response, request, con, user)
+        user_id = user["id"]
+    _ensure_demo(user_id)
+    return result
 
 
 @router.post("/login")
@@ -159,7 +174,28 @@ def login(payload: Credentials, request: Request, response: Response):
             con.commit()
             raise HTTPException(401, "邮箱或密码不正确")
         con.execute("DELETE FROM auth_attempts WHERE key=?", (key,))
-        return issue_session(response, request, con, user)
+        result = issue_session(response, request, con, user)
+        user_id = user["id"]
+    _ensure_demo(user_id)
+    return result
+
+
+class ResetIn(Credentials):
+    pass
+
+
+@router.post("/reset")
+def reset_password(payload: ResetIn):
+    """Local workspace password reset (no email service required)."""
+    initialize()
+    email = normal_email(payload.email)
+    with connect() as con:
+        init_auth(con)
+        user = one(con, "SELECT id FROM users WHERE email=?", (email,))
+        if user:
+            con.execute("UPDATE users SET password_hash=? WHERE id=?", (password_hash(payload.password), user["id"]))
+            con.execute("DELETE FROM auth_sessions WHERE user_id=?", (user["id"],))
+    return {"ok": True, "message": "密码已重置，请使用新密码登录。"}
 
 
 @router.get("/me")
@@ -170,8 +206,10 @@ def me(request: Request):
         session = session_for(request, con)
         if not session:
             raise HTTPException(401, "请先登录")
-        return {"user": {"id": session["user_id"], "email": session["email"]},
-                "csrf_token": session["csrf_token"]}
+        payload = {"user": {"id": session["user_id"], "email": session["email"]},
+                   "csrf_token": session["csrf_token"]}
+    _ensure_demo(session["user_id"])
+    return payload
 
 
 @router.post("/logout")

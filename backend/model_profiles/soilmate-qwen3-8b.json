@@ -1,0 +1,29 @@
+{
+  "id": "soilmate-qwen3-8b-lora-r32",
+  "display_name": "Soilmate Qwen3-8B · LoRA r32",
+  "base_model": "Qwen/Qwen3-8B",
+  "status": "research_preview",
+  "adapter_sha256": "de04c25fb39af02b451029baa1c7d93b4680a2dc559a13bd40180607d1f78dd6",
+  "adapter_config_sha256": "177e767ef59d968b0a7f58263f25fe4056333fd064653e10d90ee078943d23ec",
+  "base_metadata_sha256": {
+    "config.json": "f7c4eadfbbf522470667b797a3c89be2524832d2d599797248dc304fff447c30",
+    "generation_config.json": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+    "tokenizer_config.json": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+    "model.safetensors.index.json": "f9fdbcb91c23971c13ec5d5f2573d2349e8f61f2f049371ec699281748fdb1bc"
+  },
+  "benchmark_sha256": "ee8b3708c609b4a286170d61941937c8457d026a8ef666dfff6dc3bfb7d64f76",
+  "prompt_version": "soilmate-grounded-answer-v1",
+  "max_input_tokens": 3072,
+  "max_output_tokens": 512,
+  "evaluation": {
+    "questions": 47,
+    "auto_passed": 7,
+    "auto_total": 13,
+    "refusal_passed": 2,
+    "refusal_total": 8,
+    "json_passed": 5,
+    "json_total": 5,
+    "rubric_pending": 34,
+    "validated_for_formal_assessment": false
+  }
+}

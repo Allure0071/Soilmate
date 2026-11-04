@@ -1,9 +1,11 @@
 """Authenticated Global Router and read-only task/event endpoints."""
 
+import json
+import sqlite3
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from ..agent.router import GlobalRouter
 from ..scientific.research_store import connect, one, many, ROOT
@@ -12,6 +14,10 @@ from ..agent.registry import REGISTRY
 from ..agent.artifact_store import ArtifactStore
 from ..agent.soil_expert import SoilExpert
 from .auth import current_user_id
+from ..models.gateway import ModelGateway, ModelUnavailable
+from ..models.grounded import answer_question
+from ..agent import local_assistant
+from ..assessment import evidence as assessment_evidence, store as assessment_store
 
 router = APIRouter(prefix="/api/agent", tags=["Super-agent Phase 2"])
 global_router = GlobalRouter()
@@ -185,3 +191,92 @@ def ask_soil_expert(task_id: str, payload: ExpertQueryIn):
                 continue
             facts.append({'artifact_id':row['id'],'kind':row['kind'],'content':content})
     return SoilExpert(ROOT.parent/'土壤健康知识库').answer(payload.query,facts)
+
+
+class ModelQueryIn(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    query: str = Field(min_length=1, max_length=4000)
+    task_id: Optional[str] = Field(default=None, max_length=256)
+
+
+@router.get('/model/status')
+def model_status():
+    current_user_id()
+    status = ModelGateway().status()
+    if not status.get('available'):
+        status['local_fallback'] = True
+        status['message'] = '研究助手已就绪（本地知识）'
+    return status
+
+
+def _assessment_context(con, task_id, user_id):
+    if not task_id:
+        return None
+    try:
+        assessment_store.init_assessment(con)
+        row = assessment_store.get_task_row(con, task_id, user_id)
+    except sqlite3.Error:
+        return None
+    if not row or not row.get('result_json'):
+        return None
+    try:
+        result = json.loads(row['result_json'])
+    except (TypeError, ValueError):
+        return None
+    analysis = result.get('analysis') if isinstance(result, dict) and result.get('kind') == 'analysis' else None
+    if not analysis:
+        return None
+    payload = json.loads(row['payload_json'])
+    measurement = None
+    measurement_ids = payload.get('measurement_ids') or []
+    if measurement_ids:
+        measurement = assessment_store.get_measurement(con, measurement_ids[0], user_id)
+    session = assessment_store.get_session(con, row['session_id'], user_id)
+    chain = assessment_evidence.build_evidence_chain(analysis, measurement, session, task_id)
+    return {
+        'analysis': analysis,
+        'task_id': task_id,
+        'session_id': row['session_id'],
+        'sample': measurement.get('sample_alias') if measurement else None,
+        'measurement_id': measurement.get('id') if measurement else None,
+        'chain': chain,
+        'evidence_refs': assessment_evidence.evidence_refs(chain, task_id),
+    }
+
+
+@router.post('/expert')
+def ask_model_expert(payload: ModelQueryIn):
+    user_id=current_user_id()
+    facts=[]
+    assessment_context=None
+    with connect() as con:
+        assessment_context = _assessment_context(con, payload.task_id, user_id)
+        if payload.task_id and not assessment_context:
+            task=owned_task(con,payload.task_id,user_id)
+            rows=many(con,'SELECT id,kind FROM artifacts WHERE task_id=? ORDER BY created_at,id',(payload.task_id,))
+            store=ArtifactStore(ROOT/'data'/'agent_artifacts')
+            for row in rows:
+                try: content=store.read(con,row['id'],payload.task_id,task['project_id'],user_id)
+                except (ValueError,OSError,PermissionError): continue
+                facts.append({'artifact_id':row['id'],'kind':row['kind'],'content':content})
+    gateway=ModelGateway()
+    model_ready=bool(gateway.status().get('available'))
+    if assessment_context:
+        if model_ready:
+            try:
+                return answer_question(payload.query,[{'artifact_id':payload.task_id,'kind':'assessment','content':assessment_context['analysis']}],[])
+            except ModelUnavailable:
+                pass
+        return local_assistant.answer(payload.query, assessment_context)
+    if payload.task_id and not facts:
+        return {'answer':'当前任务没有可核验的结果记录，请先完成分析后再解释本次结果。','answer_type':'clarification','evidence_refs':[],'knowledge_refs':[],'uncertainty':'missing_task_artifact','model':None}
+    expert=SoilExpert(ROOT.parent/'土壤健康知识库')
+    baseline=expert.answer(payload.query,facts)
+    if baseline.get('uncertainty')=='missing_task_artifact':
+        return {**baseline,'model':None}
+    if model_ready:
+        try:
+            return answer_question(payload.query,facts,baseline.get('knowledge_refs'))
+        except ModelUnavailable:
+            pass
+    return local_assistant.answer(payload.query, None)

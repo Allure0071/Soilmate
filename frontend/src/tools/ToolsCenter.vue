@@ -19,14 +19,14 @@
           <h2>工具分类</h2>
           <HoverSwitch as="nav" class="tools-categories" aria-label="工具分类">
             <button v-for="category in toolCategories" :key="category.id" type="button" :class="{ active: category.id === selectedCategory }" :aria-pressed="category.id === selectedCategory" @click="selectedCategory = category.id">
-              {{ category.label }}<span>{{ filterTools('', category.id).filter(tool => tool.status !== 'planned').length }}</span>
+              {{ category.label }}<span>{{ filterTools('', category.id).length }}</span>
             </button>
           </HoverSwitch>
           <p class="tools-sidebar-note">本地计算 · 无需登录</p>
         </aside>
         <div class="tools-directory">
           <div class="tools-directory-toolbar">
-            <p role="status">{{ availableTools.length }} 个可用工具<span v-if="plannedTools.length">，{{ plannedTools.length }} 个建设中</span></p>
+            <p role="status">{{ availableTools.length }} 个可用工具</p>
             <button v-if="visibleTools.length && (query || selectedCategory !== 'all' || domain !== 'all')" type="button" class="tools-reset-filters" @click="clearFilters">清空筛选</button>
           </div>
           <p v-if="domain !== 'all'" class="tools-restored-filter">当前方向：{{ domain }}<button type="button" @click="domain = 'all'">移除方向筛选</button></p>
@@ -42,11 +42,7 @@
               </li>
             </ul>
           </section>
-          <details v-if="plannedTools.length" :key="directoryHref" class="tools-planned" :open="Boolean(query.trim())">
-            <summary>建设中的工具<span>{{ plannedTools.length }} 个</span></summary>
-            <p>以下工具尚未接入，点击名称可查看建设说明。</p>
-            <ul><li v-for="tool in plannedTools" :key="tool.id"><a :href="href(tool)" @click="activate($event, tool)">{{ tool.name }}</a><span>{{ tool.description }}</span></li></ul>
-          </details>
+
           <div v-if="!visibleTools.length" class="tools-empty"><WorkspaceIcon name="search" /><h2>没有找到匹配的工具</h2><p>试试“含水”“SOC”或“换算”，也可以清空筛选查看全部。</p><button type="button" class="tool-primary-button" @click="clearFilters">清空筛选</button></div>
         </div>
       </div>
@@ -54,7 +50,7 @@
     <DataAuditWorkbench v-else-if="selectedTool?.workbench === 'data-audit'" @open-research="token => emit('import-research', { token, directory: directoryUrl() })" />
     <TextureWorkbench v-else-if="selectedTool?.workbench === 'texture'" />
     <CalculatorWorkbench v-else-if="selectedTool?.calculator" :key="selectedTool.id" :tool-id="selectedTool.id" />
-    <section v-else class="tool-description"><WorkspaceIcon :name="selectedTool?.icon || 'panel'" /><h2>{{ selectedTool?.status === 'planned' ? '这个工具正在建设中' : selectedTool ? '使用说明' : '请重新选择工具' }}</h2><p>{{ selectedTool?.note || '工具目录保留了所有可用入口，可返回后重新选择。' }}</p><p v-if="selectedTool?.status === 'planned'">具体方法和资料核查完成后再接入，当前不生成计算结果。</p><a v-if="selectedTool?.path" class="tool-primary-button" :href="href(selectedTool)" @click="activate($event, selectedTool)">打开工具<WorkspaceIcon name="expand" /></a><button v-else type="button" class="tool-primary-button" @click="backToDirectory">返回工具目录<WorkspaceIcon name="back" /></button></section>
+    <section v-else class="tool-description"><WorkspaceIcon :name="selectedTool?.icon || 'panel'" /><h2>{{ selectedTool ? '使用说明' : '请重新选择工具' }}</h2><p>{{ selectedTool?.note || '工具目录保留了所有可用入口，可返回后重新选择。' }}</p><a v-if="selectedTool?.path" class="tool-primary-button" :href="href(selectedTool)" @click="activate($event, selectedTool)">打开工具<WorkspaceIcon name="expand" /></a><button v-else type="button" class="tool-primary-button" @click="backToDirectory">返回工具目录<WorkspaceIcon name="back" /></button></section>
   </main>
 </template>
 
@@ -77,13 +73,12 @@ const searchInputRef = ref(null)
 const query = ref(''), selectedCategory = ref('all'), domain = ref('all'), selectedId = ref('')
 const selectedTool = computed(() => getTool(selectedId.value))
 const visibleTools = computed(() => filterTools(query.value, selectedCategory.value, domain.value))
-const availableTools = computed(() => visibleTools.value.filter(tool => tool.status !== 'planned'))
-const plannedTools = computed(() => visibleTools.value.filter(tool => tool.status === 'planned'))
+const availableTools = computed(() => visibleTools.value)
 const directoryGroups = [
   { id: 'lab', title: '土壤理化计算', note: '物理性质、有机碳与实验配液', ids: ['density', 'moisture', 'carbon', 'texture', 'dilution'] },
   { id: 'numbers', title: '数据检查与统计', note: '批量质控、实验结果与单位换算', ids: ['data-audit', 'units', 'curve', 'statistics'] },
   { id: 'data', title: '地图与数据查询', note: '进入空间探索和数据资源', ids: ['map-layers', 'indicator-catalog', 'database-browser'] },
-  { id: 'assessment', title: '健康评价', note: '需登录，当前支持录入与核验', ids: ['quick-assessment', 'deep-assessment'] },
+  { id: 'assessment', title: '健康评价', note: '需登录，支持录入、评价与报告', ids: ['quick-assessment', 'deep-assessment'] },
 ]
 const visibleGroups = computed(() => directoryGroups.map(group => ({ ...group, tools: group.ids.map(id => availableTools.value.find(tool => tool.id === id)).filter(Boolean) })).filter(group => group.tools.length))
 function directoryUrl() { const params = new URLSearchParams(); if (query.value) params.set('q', query.value); if (selectedCategory.value !== 'all') params.set('category', selectedCategory.value); if (domain.value !== 'all') params.set('domain', domain.value); return '/tools' + (params.size ? '?' + params.toString() : '') }

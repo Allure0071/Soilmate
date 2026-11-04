@@ -34,6 +34,9 @@ frontend/audit/
 /knowfeat-reproduction/
 /docs/*
 !/docs/assessment-api/
+!/docs/model-integration/
+!/docs/demo-mode/
+!/docs/soilgrids-data/
 /使用指南.md
 
 # Root lockfile has no matching root package.json
